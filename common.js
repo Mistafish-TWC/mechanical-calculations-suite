@@ -1310,45 +1310,10 @@ async function writeDirectToSharedFileHandle() {
         return true;
       }
     } catch (e) {
-      console.warn("Direct write to existing handle failed, prompting file link...", e);
+      console.warn("Direct write to existing handle failed:", e);
     }
   }
 
-  if ('showOpenFilePicker' in window) {
-    try {
-      const [handle] = await window.showOpenFilePicker({
-        types: [{
-          description: 'Shared Project Library File (shared_project_library.js)',
-          accept: { 'application/javascript': ['.js'], 'application/json': ['.json'] }
-        }],
-        multiple: false
-      });
-      if (handle) {
-        window.sharedDriveFileHandle = handle;
-        await saveFileHandleToDB(handle);
-        
-        let perm = await handle.requestPermission({ mode: 'readwrite' });
-        if (perm === 'granted') {
-          const isJS = handle.name.endsWith('.js');
-          const pathHeader = window.SHARED_PROJECT_LIBRARY_PATH ? `window.SHARED_PROJECT_LIBRARY_PATH = ${JSON.stringify(window.SHARED_PROJECT_LIBRARY_PATH)};\n` : '';
-          const fileContent = isJS 
-            ? pathHeader + "window.SHARED_PROJECT_LIBRARY = " + JSON.stringify(library, null, 2) + ";\n"
-            : JSON.stringify(library, null, 2);
-
-          const writable = await handle.createWritable();
-          await writable.write(fileContent);
-          await writable.close();
-          showToast('Shared Drive Linked & Saved', `Linked and saved directly to "${handle.name}"!`);
-          updateLinkedFileUI(true);
-          return true;
-        }
-      }
-    } catch (e) {
-      console.log("User cancelled file selection prompt:", e);
-    }
-  }
-
-  exportSharedProjectLibraryFile();
   return false;
 }
 
