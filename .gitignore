@@ -1,0 +1,26 @@
+# Windows shortcut and temporary files
+*.lnk
+~*
+~$*
+*.tmp
+*.bak
+
+# Backup files
+* - Copy.*
+* - Copy (*).*
+
+# Operating System metadata
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Python runtime artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+
+# IDE & Editor caches
+.vscode/
+.idea/
+*.swp
+*.swo
