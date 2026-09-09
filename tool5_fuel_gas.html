@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-950 text-slate-100 antialiased selection:bg-sky-500 selection:text-white">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mechanical System Calculations Suite</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#f0f7ff',
+              100: '#e0effe',
+              500: '#0284c7',
+              600: '#0369a1',
+              700: '#035480',
+              800: '#075985',
+              900: '#0c4a6e',
+            }
+          }
+        }
+      }
+    }
+
+    if (localStorage.getItem('ps_theme') === 'dark') {
+      document.documentElement.classList.remove('light');
+    } else {
+      document.documentElement.classList.add('light');
+    }
+  </script>
+
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #020617; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #475569; }
+    .glass-card {
+      background: rgba(30, 41, 59, 0.7);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .active-nav-btn {
+      background-color: #0284c7 !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+    }
+    .active-tab {
+      background-color: #0284c7 !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+    }
+    .animate-fade-in { animation: fadeIn 0.2s ease-in-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+    html.light { background-color: #f8fafc !important; color: #0f172a !important; }
+    html.light body { background-color: #f8fafc !important; color: #0f172a !important; }
+    html.light header { background-color: rgba(255, 255, 255, 0.95) !important; border-color: #e2e8f0 !important; color: #0f172a !important; }
+    html.light header h1, html.light header h2, html.light header h3 { color: #0f172a !important; }
+    html.light .glass-card { background: rgba(255, 255, 255, 0.92) !important; border: 1px solid #e2e8f0 !important; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); color: #1e293b !important; }
+    html.light .glass-card h2, html.light .glass-card h3, html.light .glass-card h4 { color: #0f172a !important; }
+    html.light .glass-card p { color: #475569 !important; }
+    html.light input[type="text"], html.light input[type="number"], html.light select { background-color: #ffffff !important; color: #0f172a !important; border-color: #cbd5e1 !important; }
+    html.light table th { background-color: #f1f5f9 !important; color: #334155 !important; border-color: #cbd5e1 !important; }
+    html.light table td { border-color: #e2e8f0 !important; color: #0f172a !important; }
+    html.light table tr:hover { background-color: #f8fafc !important; }
+    html.light tfoot { background-color: #f1f5f9 !important; color: #0f172a !important; border-color: #cbd5e1 !important; }
+    html.light .bg-slate-900, html.light .bg-slate-900\/80, html.light .bg-slate-900\/90, html.light .bg-slate-950 { background-color: #f1f5f9 !important; color: #0f172a !important; border-color: #e2e8f0 !important; }
+    
+    html.light button.bg-slate-800, html.light .bg-slate-800 { background-color: #e2e8f0 !important; color: #0f172a !important; border-color: #cbd5e1 !important; }
+    html.light button.bg-slate-800:hover, html.light .bg-slate-800:hover { background-color: #cbd5e1 !important; color: #020617 !important; }
+    html.light button.bg-sky-600, html.light button.bg-indigo-600, html.light button.bg-cyan-600, html.light button.bg-emerald-600 { color: #ffffff !important; }
+
+    html.light .text-white { color: #0f172a !important; }
+    html.light .text-slate-300, html.light .text-slate-400 { color: #475569 !important; }
+    html.light .text-slate-200 { color: #1e293b !important; }
+    html.light .border-slate-800, html.light .border-slate-800\/60, html.light .border-slate-800\/80, html.light .border-slate-700 { border-color: #e2e8f0 !important; }
+    html.light footer { background-color: #ffffff !important; border-color: #e2e8f0 !important; color: #64748b !important; }
+    html.light canvas { background-color: #ffffff !important; border-color: #cbd5e1 !important; }
+
+    html.light .text-sky-400 { color: #0284c7 !important; }
+    html.light .text-sky-300 { color: #0369a1 !important; }
+    html.light .text-indigo-400 { color: #4338ca !important; }
+    html.light .text-indigo-300 { color: #3730a3 !important; }
+    html.light .text-cyan-400 { color: #0e7490 !important; }
+    html.light .text-cyan-300 { color: #155e75 !important; }
+    html.light .text-teal-600 { color: #0f766e !important; }
+    html.light .text-emerald-400, html.light .text-emerald-600 { color: #047857 !important; }
+    html.light .text-purple-300, html.light .text-purple-400 { color: #7e22ce !important; }
+    html.light .text-amber-300, html.light .text-amber-400 { color: #b45309 !important; }
+
+    html.light #view-tool5 .glass-card {
+      background-color: #ffffff !important;
+      border: 1px solid #cbd5e1 !important;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+      color: #0f172a !important;
+    }
+    html.light #view-tool5 .text-white { color: #0f172a !important; }
+    html.light #view-tool5 .text-slate-300, html.light #view-tool5 .text-slate-400 { color: #334155 !important; }
+    html.light #view-tool5 .text-slate-200 { color: #1e293b !important; }
+    html.light #view-tool5 .text-amber-400, html.light #view-tool5 .text-amber-300, html.light #view-tool5 .text-amber-500 { color: #b45309 !important; }
+    html.light #view-tool5 .text-emerald-400 { color: #047857 !important; }
+    html.light #view-tool5 .bg-amber-500\/10, html.light #view-tool5 .bg-amber-500\/20 {
+      background-color: #fef3c7 !important;
+      color: #92400e !important;
+      border-color: #fde68a !important;
+    }
+    html.light #view-tool5 .bg-slate-900, html.light #view-tool5 .bg-slate-950 {
+      background-color: #f8fafc !important;
+      border-color: #cbd5e1 !important;
+      color: #0f172a !important;
+    }
+    html.light #view-tool5 input[type="text"],
+    html.light #view-tool5 input[type="number"],
+    html.light #view-tool5 select {
+      background-color: #ffffff !important;
+      color: #0f172a !important;
+      border-color: #cbd5e1 !important;
+      font-weight: 700 !important;
+    }
+    html.light #view-tool5 table th {
+      background-color: #f1f5f9 !important;
+      color: #334155 !important;
+      border-color: #cbd5e1 !important;
+    }
+    html.light #view-tool5 table td {
+      border-color: #e2e8f0 !important;
+      color: #0f172a !important;
+    }
+    html.light #view-tool5 tfoot {
+      background-color: #f1f5f9 !important;
+      color: #0f172a !important;
+      border-color: #cbd5e1 !important;
+    }
+    html.light .grid-cols-2 .rounded-2xl {
+      background: #ffffff !important;
+      border: 1.5px solid #cbd5e1 !important;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+    }
+    html.light .grid-cols-2 .rounded-2xl:nth-child(2) {
+      background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%) !important;
+      border: 1.5px solid #fde68a !important;
+    }
+    html.light .grid-cols-2 .text-slate-400 { color: #475569 !important; }
+    html.light .grid-cols-2 .text-emerald-400 { color: #047857 !important; }
+    html.light .grid-cols-2 .text-amber-300, html.light .grid-cols-2 .text-amber-400 { color: #b45309 !important; }
+    html.light .grid-cols-2 .text-sky-400 { color: #0369a1 !important; }
+    html.light .relative.w-full.h-\[220px\] {
+      background-color: #f8fafc !important;
+      border-color: #cbd5e1 !important;
+    }
+    html.light #toastNotification > div {
+      background-color: #ffffff !important;
+      border-color: #cbd5e1 !important;
+      color: #0f172a !important;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15) !important;
+    }
+    html.light #toastNotification #toastTitle { color: #0f172a !important; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col bg-slate-950 text-slate-100 antialiased selection:bg-sky-500 selection:text-white">
+
+  <header class="bg-slate-900/90 border-b border-slate-800 sticky top-0 z-50 backdrop-blur-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16 gap-4">
+        
+        <a href="Mechanical_Suite_Dashboard.html" onclick="saveActiveDraftState()" class="flex items-center gap-3 cursor-pointer">
+          <div class="p-2.5 bg-gradient-to-tr from-sky-600 to-blue-500 rounded-xl shadow-lg shadow-sky-500/20 text-white flex items-center justify-center">
+            <i class="fa-solid fa-compass-drafting text-xl"></i>
+          </div>
+          <div>
+            <h1 class="font-bold text-lg leading-snug tracking-tight text-white flex items-center gap-2">
+              Mechanical System Calculations Suite
+              <span class="text-xs font-semibold bg-sky-500/20 text-sky-500 border border-sky-400/30 px-2 py-0.5 rounded-full">v4.46</span>
+            </h1>
+          </div>
+        </a>
+
+        <div class="flex items-center gap-2">
+          <a href="Mechanical_Suite_Dashboard.html" onclick="saveActiveDraftState()" id="nav-btn-dashboard" class="px-3 py-2 text-xs font-bold rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 border border-slate-700/80 transition flex items-center gap-2" title="Return to Suite Dashboard Home">
+            <i class="fa-solid fa-house text-sky-400"></i>
+            <span>Dashboard</span>
+          </a>
+
+          <button onclick="openSaveSessionModal()" class="px-3.5 py-2 text-xs font-bold rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white transition flex items-center gap-1.5 shadow-md shadow-emerald-600/20" title="Save & Sync Project Session">
+            <i class="fa-solid fa-floppy-disk"></i>
+            <span>Save Session</span>
+          </button>
+
+          <button id="theme-toggle-btn" onclick="toggleTheme()" class="px-3 py-2 text-xs font-semibold rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 border border-slate-700/80 transition flex items-center gap-1.5" title="Toggle Light/Dark Visual Theme">
+            <i id="theme-toggle-icon" class="fa-solid fa-sun text-amber-400 text-sm"></i>
+            <span id="theme-toggle-text" class="hidden sm:inline">Light</span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div id="view-tool5" class="space-y-6 animate-fade-in">
+      <!-- TOOL 5 PAGE HEADER -->
+      <div class="glass-card rounded-2xl p-5 border border-slate-800 flex flex-col gap-4">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-3 border-b border-slate-800">
+          <div>
+            <h2 class="text-base font-bold text-white flex items-center gap-2">
+              <i class="fa-solid fa-fire-flame-curved text-amber-400"></i> Fuel Gas Pipe Sizing Calculator
+            </h2>
+            <p class="text-xs text-slate-400 mt-0.5">NFPA 54 / IFGC Fuel Gas Sizing Engine & Commercial Longest Length Sizer Builder</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-bold px-3 py-1 bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-xl">
+              NFPA 54 / IFGC Code Compliant
+            </span>
+          </div>
+        </div>
+
+        <!-- SUB-NAVIGATION TABS -->
+        <div class="flex flex-wrap items-center gap-2 text-xs">
+          <button id="tab-gasQuickSizer" onclick="switchGasSubTab('quickSizer')" class="px-4 py-2.5 rounded-xl font-bold transition-all shadow-md bg-amber-600 text-white flex items-center gap-2 active-tab">
+            <i class="fa-solid fa-bolt text-amber-200"></i> Quick Sizer
+          </button>
+          <button id="tab-gasNetworkBuilder" onclick="switchGasSubTab('networkBuilder')" class="px-4 py-2.5 rounded-xl font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 transition-all flex items-center gap-2">
+            <i class="fa-solid fa-sitemap text-slate-400"></i> Longest Length Sizer
+          </button>
+          <button id="tab-gasCodeTables" onclick="switchGasSubTab('codeTables')" class="px-4 py-2.5 rounded-xl font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 transition-all flex items-center gap-2">
+            <i class="fa-solid fa-table text-slate-400"></i> Code Capacity Tables
+          </button>
+        </div>
+      </div>
+
+      <!-- SUB-TAB 1: QUICK FEEDER SIZER -->
+      <div id="gasQuickSizerView" class="space-y-6">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <!-- INPUT CONTROLS (5 COLS) -->
+          <div class="lg:col-span-5 glass-card rounded-2xl p-5 border border-slate-800 space-y-5">
+            <h3 class="text-sm font-bold text-white flex items-center gap-2 border-b border-slate-800 pb-3">
+              <i class="fa-solid fa-sliders text-amber-400"></i> Design Parameters & System Load
+            </h3>
+
+            <div class="space-y-4 text-xs">
+              <div>
+                <label class="block font-bold text-slate-300 mb-1.5">Fuel Gas / Liquid Fuel Type</label>
+                <select id="gasFuelTypeSelect" onchange="syncGasFuelType(); calculateGasSizing()" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 font-bold text-amber-400 outline-none focus:border-amber-500 transition">
+                  <option value="natural_gas" selected>Natural Gas (Sp. Gr. 0.60, 1,000 BTU/cu ft)</option>
+                  <option value="propane">Undiluted Propane LP (Sp. Gr. 1.50, 2,500 BTU/cu ft)</option>
+                  <option value="butane">Commercial Butane (Sp. Gr. 2.00, 3,200 BTU/cu ft)</option>
+                  <option value="diesel_fuel">#2 Diesel Fuel / Fuel Oil (Sp. Gr. 0.85, 138,500 BTU/gal)</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block font-bold text-slate-300 mb-1.5">Pipe Material</label>
+                <select id="gasMaterialSelect" onchange="calculateGasSizing(); renderGasScheduleTable()" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 font-bold text-white outline-none focus:border-amber-500 transition">
+                  <option value="sch40_steel" selected>Schedule 40 Black Steel (Nominal Pipe)</option>
+                  <option value="sch80_steel">Schedule 80 Extra Heavy Steel Pipe</option>
+                  <option value="csst">CSST Corrugated Stainless Steel Tubing</option>
+                  <option value="copper_l">Copper Tubing (Type L)</option>
+                  <option value="pe_plastic">Polyethylene (PE) Plastic Underground Pipe</option>
+                </select>
+              </div>
+
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block font-bold text-slate-300 mb-1.5">Operating Pressure</label>
+                  <select id="gasPressureModeSelect" onchange="syncGasPressureDropDropdown(); calculateGasSizing()" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 font-bold text-amber-300 outline-none focus:border-amber-500 transition">
+                    <option value="0.5" selected>Low Pressure (&le; 0.5 psi / 14" w.g.)</option>
+                    <option value="2.0">Medium Pressure (2.0 psi)</option>
+                    <option value="5.0">High Pressure (5.0 psi)</option>
+                    <option value="10.0">Elevated High Pressure (10.0 psi)</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block font-bold text-slate-300 mb-1.5">Allowable Drop</label>
+                  <select id="gasAllowableDropSelect" onchange="calculateGasSizing()" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 font-bold text-emerald-400 outline-none focus:border-amber-500 transition">
+                    <option value="0.5" selected>0.5 in. w.g. (Standard Low Press Drop)</option>
+                    <option value="1.0">1.0 in. w.g. (Elevated Low Press Drop)</option>
+                    <option value="0.5_psi">0.5 psi Drop (2.0 psi System)</option>
+                    <option value="1.0_psi">1.0 psi Drop (2.0 psi System)</option>
+                    <option value="2.0_psi">2.0 psi Drop (5-10 psi System)</option>
+                    <option value="3.5_psi">3.5 psi Drop (5.0 psi System)</option>
+                    <option value="5.0_psi">5.0 psi Drop (10.0 psi System)</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- LOAD VALUE INPUT -->
+              <div class="bg-slate-900/80 p-3.5 rounded-xl border border-slate-800 space-y-2">
+                <div class="flex items-center justify-between">
+                  <label id="gasInputLoadUnitLabel" class="font-bold text-slate-200">Appliance Thermal / Flow Load (BTU/hr)</label>
+                  <div class="flex items-center gap-1 bg-slate-950 p-1 rounded-lg border border-slate-800">
+                    <button id="btnGasUnitBTU" onclick="setGasLoadUnit('btu')" class="px-3 py-1 bg-amber-600 text-white rounded-lg font-bold shadow transition text-xs">BTU/hr</button>
+                    <button id="btnGasUnitMBH" onclick="setGasLoadUnit('mbh')" class="px-3 py-1 bg-slate-800 text-slate-400 hover:text-white rounded-lg font-medium transition text-xs">MBH</button>
+                    <button id="btnGasUnitCFH" onclick="setGasLoadUnit('cfh')" class="px-3 py-1 bg-slate-800 text-slate-400 hover:text-white rounded-lg font-medium transition text-xs">CFH</button>
+                  </div>
+                </div>
+                <input type="number" id="gasInputLoadValue" value="500000" min="1000" step="50" oninput="calculateGasSizing()" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 font-bold text-amber-400 text-base mono outline-none focus:border-amber-500 transition">
+              </div>
+
+              <!-- PIPING LENGTH & FITTING EQUIVALENT -->
+              <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                  <label class="font-bold text-slate-300">Piping Distance (ft)</label>
+                  <input type="number" id="gasInputLength" value="100" min="5" max="2000" oninput="syncGasLength('input', this.value)" class="w-24 bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-center font-bold text-white mono outline-none focus:border-amber-500 text-xs">
+                </div>
+                <input type="range" id="gasSliderLength" min="5" max="1000" value="100" oninput="syncGasLength('slider', this.value)" class="w-full accent-amber-500 bg-slate-800 rounded-lg h-2 cursor-pointer">
+              </div>
+
+              <div class="space-y-2">
+                <div class="flex items-center justify-between">
+                  <label class="font-bold text-slate-300">Fitting Equivalent Length Allowance (%)</label>
+                  <span id="gasFittingValue" class="font-bold text-amber-400 mono">20% (+20 ft)</span>
+                </div>
+                <input type="range" id="gasSliderFitting" min="0" max="50" value="20" oninput="syncGasFitting(this.value)" class="w-full accent-amber-500 bg-slate-800 rounded-lg h-2 cursor-pointer">
+              </div>
+
+              <div class="p-3 bg-slate-900/90 rounded-xl border border-slate-800 flex items-center justify-between">
+                <span class="font-bold text-slate-300">Total Equivalent System Length</span>
+                <span id="gasTotalEquivLength" class="font-bold text-amber-400 mono text-sm">120.0 ft</span>
+              </div>
+
+              <!-- VELOCITY CAP SAFEGUARD SLIDER & INPUT -->
+              <div class="space-y-3 pt-2 border-t border-slate-800">
+                <div class="flex items-center justify-between">
+                  <label class="font-bold text-slate-300">Max Velocity Safeguard Limit (ft/s)</label>
+                  <input type="number" id="gasInputMaxVelocity" value="30" min="10" max="60" oninput="syncGasMaxVelocity('input', this.value)" class="w-20 bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-center font-bold text-amber-400 mono outline-none focus:border-amber-500 text-xs">
+                </div>
+                <input type="range" id="gasSliderMaxVelocity" min="10" max="60" value="30" step="1" oninput="syncGasMaxVelocity('slider', this.value)" class="w-full accent-amber-500 bg-slate-800 rounded-lg h-2 cursor-pointer">
+                <p class="text-[11px] text-slate-400">Adjusts recommended pipe sizing threshold independently of code minimum friction drop calculations (Default: 30 ft/s).</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- OUTPUT RESULTS & VISUALIZER (7 COLS) -->
+          <div class="lg:col-span-7 space-y-6">
+            <!-- 2x2 METRIC CARDS -->
+            <div class="grid grid-cols-2 gap-4">
+              <div class="bg-gradient-to-br from-slate-900 to-slate-950 rounded-2xl p-5 border border-slate-800 relative overflow-hidden shadow-lg">
+                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Code Minimum Size</p>
+                <h3 id="metricGasCodeMinSize" class="text-3xl font-black text-emerald-400 mono mt-1">1-1/4"</h3>
+                <p class="text-xs text-slate-400 mt-1">Based on allowable &Delta;P</p>
+              </div>
+
+              <div class="bg-gradient-to-br from-slate-900 to-amber-950/40 rounded-2xl p-5 border border-amber-500/30 relative overflow-hidden shadow-lg">
+                <p class="text-[11px] font-bold text-amber-400 uppercase tracking-wider">Recommended Size</p>
+                <h3 id="metricGasRecommendedSize" class="text-3xl font-black text-amber-300 mono mt-1">1-1/2"</h3>
+                <p class="text-xs text-amber-400/80 mt-1">Velocity &le; 30 ft/s safeguard</p>
+              </div>
+
+              <div class="bg-gradient-to-br from-slate-900 to-slate-950 rounded-2xl p-5 border border-slate-800 shadow-lg">
+                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Calculated Friction Drop</p>
+                <h3 id="metricGasActualDrop" class="text-2xl font-bold text-sky-400 mono mt-1">0.34 in.w.g.</h3>
+                <p id="metricGasDropLimit" class="text-xs text-slate-400 mt-1">Max Allowable: 0.50 in.w.g.</p>
+              </div>
+
+              <div class="bg-gradient-to-br from-slate-900 to-slate-950 rounded-2xl p-5 border border-slate-800 shadow-lg">
+                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Flow Velocity (Code Min)</p>
+                <h3 id="metricGasVelocity" class="text-2xl font-bold text-amber-400 mono mt-1">28.4 ft/s</h3>
+                <p id="metricGasCFH" class="text-xs text-slate-400 mt-1">500 CFH Total Demand</p>
+              </div>
+            </div>
+
+            <!-- CANVAS VISUALIZER CARD -->
+            <div class="glass-card rounded-2xl p-5 border border-slate-800 space-y-4">
+              <div class="flex items-center justify-between">
+                <h4 class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                  <i class="fa-solid fa-chart-area text-amber-400"></i> Pipe Size & Velocity Profile Visualizer
+                </h4>
+              </div>
+              <div class="relative w-full h-[220px] bg-slate-950 rounded-xl border border-slate-800 overflow-hidden">
+                <canvas id="gasVisualizerCanvas" class="w-full h-full block"></canvas>
+              </div>
+            </div>
+
+            <!-- WCAG AAA ALERTS CONTAINER -->
+            <div class="space-y-3">
+              <div id="gasVelocityAlert" class="hidden p-4 rounded-xl border flex items-start gap-3 transition-all">
+                <i class="fa-solid fa-triangle-exclamation text-lg mt-0.5"></i>
+                <div class="text-xs">
+                  <h5 class="font-bold">High Flow Velocity Alert (&gt; 30 ft/s)</h5>
+                  <p class="mt-0.5 opacity-90">Code minimum pipe size results in a velocity exceeding the recommended 30 ft/s threshold. Consider sizing up to the recommended size to prevent acoustic noise and regulator wear.</p>
+                </div>
+              </div>
+
+              <div id="gasRegulatorAlert" class="hidden p-4 rounded-xl border flex items-start gap-3 transition-all">
+                <i class="fa-solid fa-circle-info text-lg mt-0.5"></i>
+                <div class="text-xs">
+                  <h5 class="font-bold">Medium / High Pressure System Notice</h5>
+                  <p class="mt-0.5 opacity-90">Operating pressure exceeds 0.5 psi. A line pressure regulator (MPR) is required upstream of appliance connections to reduce pressure to standard operating levels (&le; 14" w.g.).</p>
+                </div>
+              </div>
+
+              <div id="gasPeAlert" class="hidden p-4 rounded-xl border flex items-start gap-3 transition-all">
+                <i class="fa-solid fa-shield-halved text-lg mt-0.5"></i>
+                <div class="text-xs">
+                  <h5 class="font-bold">PE Plastic Pipe Underground Requirement</h5>
+                  <p class="mt-0.5 opacity-90">Polyethylene (PE) piping is permitted for underground exterior gas mains only. PE pipe MUST NOT be installed inside buildings and requires an anodeless riser with tracer wire at all transitions to metal piping.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUB-TAB 2: LONGEST LENGTH SIZER TOOL -->
+      <div id="gasNetworkBuilderView" class="hidden space-y-6">
+        
+        <!-- TOP DESIGN PARAMETERS CARD -->
+        <div class="glass-card rounded-2xl p-5 border border-slate-800 space-y-5">
+          <h3 class="text-sm font-bold text-white flex items-center gap-2 border-b border-slate-800 pb-3">
+            <i class="fa-solid fa-sliders text-amber-400"></i> Longest Length System Parameters
+          </h3>
+
+          <div class="space-y-4 text-xs">
+            <div>
+              <label class="block font-bold text-slate-300 mb-1.5">Fuel Gas / Liquid Fuel Type</label>
+              <select id="gasFuelTypeSelectLL" onchange="syncGasFuelTypeLL(); calculateGasSizing(); renderGasScheduleTable()" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 font-bold text-amber-400 outline-none focus:border-amber-500 transition">
+                <option value="natural_gas" selected>Natural Gas (Sp. Gr. 0.60, 1,000 BTU/cu ft)</option>
+                <option value="propane">Undiluted Propane LP (Sp. Gr. 1.50, 2,500 BTU/cu ft)</option>
+                <option value="butane">Commercial Butane (Sp. Gr. 2.00, 3,200 BTU/cu ft)</option>
+                <option value="diesel_fuel">#2 Diesel Fuel / Fuel Oil (Sp. Gr. 0.85, 138,500 BTU/gal)</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block font-bold text-slate-300 mb-1.5">Pipe Material</label>
+              <select id="gasMaterialSelectLL" onchange="calculateGasSizing(); renderGasScheduleTable()" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 font-bold text-white outline-none focus:border-amber-500 transition">
+                <option value="sch40_steel" selected>Schedule 40 Black Steel (Nominal Pipe)</option>
+                <option value="sch80_steel">Schedule 80 Extra Heavy Steel Pipe</option>
+                <option value="csst">CSST Corrugated Stainless Steel Tubing</option>
+                <option value="copper_l">Copper Tubing (Type L)</option>
+                <option value="pe_plastic">Polyethylene (PE) Plastic Underground Pipe</option>
+              </select>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block font-bold text-slate-300 mb-1.5">Operating Pressure</label>
+                <select id="gasPressureModeSelectLL" onchange="syncGasPressureDropDropdownLL(); calculateGasSizing(); renderGasScheduleTable()" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 font-bold text-amber-300 outline-none focus:border-amber-500 transition">
+                  <option value="0.5" selected>Low Pressure (&le; 0.5 psi / 14" w.g.)</option>
+                  <option value="2.0">Medium Pressure (2.0 psi)</option>
+                  <option value="5.0">High Pressure (5.0 psi)</option>
+                  <option value="10.0">Elevated High Pressure (10.0 psi)</option>
+                </select>
+              </div>
+              <div>
+                <label class="block font-bold text-slate-300 mb-1.5">Allowable Drop</label>
+                <select id="gasAllowableDropSelectLL" onchange="calculateGasSizing()" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 font-bold text-emerald-400 outline-none focus:border-amber-500 transition">
+                  <option value="0.5" selected>0.5 in. w.g. (Standard Low Press Drop)</option>
+                  <option value="1.0">1.0 in. w.g. (Elevated Low Press Drop)</option>
+                  <option value="0.5_psi">0.5 psi Drop (2 psi System)</option>
+                  <option value="1.0_psi">1.0 psi Drop (2-5 psi System)</option>
+                  <option value="2.0_psi">2.0 psi Drop (5-10 psi System)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- LONGEST LENGTH PIPING DISTANCE & FITTING EQUIVALENT -->
+            <div class="space-y-3 pt-1 border-t border-slate-800">
+              <div class="flex items-center justify-between">
+                <label class="font-bold text-slate-200">Longest Length to Farthest Device (ft)</label>
+                <input type="number" id="gasInputLengthLL" value="750" min="5" max="2000" oninput="syncGasLengthLL('input', this.value)" class="w-24 bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-center font-bold text-white mono outline-none focus:border-amber-500 text-xs">
+              </div>
+              <input type="range" id="gasSliderLengthLL" min="5" max="1000" value="750" oninput="syncGasLengthLL('slider', this.value)" class="w-full accent-amber-500 bg-slate-800 rounded-lg h-2 cursor-pointer">
+            </div>
+
+            <div class="space-y-2">
+              <div class="flex items-center justify-between">
+                <label class="font-bold text-slate-300">Fitting Equivalent Length Allowance (%)</label>
+                <span id="gasFittingValueLL" class="font-bold text-amber-400 mono">20% (+150 ft)</span>
+              </div>
+              <input type="range" id="gasSliderFittingLL" min="0" max="50" step="5" value="20" oninput="syncGasFittingLL(this.value)" class="w-full accent-amber-500 bg-slate-800 rounded-lg h-2 cursor-pointer">
+            </div>
+
+            <div class="p-3 bg-slate-900/90 rounded-xl border border-slate-800 flex items-center justify-between">
+              <span class="font-bold text-slate-300">Total Longest Sizing Length</span>
+              <span id="gasTotalEquivLengthLL" class="font-bold text-amber-400 mono text-sm">900.0 ft</span>
+            </div>
+
+            <!-- APPLIANCE / EQUIPMENT CONNECTION LENGTH SLIDER -->
+            <div class="space-y-3 pt-2 border-t border-slate-800">
+              <div class="flex items-center justify-between">
+                <div>
+                  <label class="font-bold text-slate-200">Average Equipment Connection Length (ft)</label>
+                  <p class="text-[11px] text-slate-400">Regulator-to-appliance allowance for unit final connection sizing.</p>
+                </div>
+                <input type="number" id="gasInputConnLengthLL" value="20" min="1" max="20" step="1" oninput="syncGasConnLengthLL('input', this.value)" class="w-20 bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-center font-bold text-amber-400 mono outline-none focus:border-amber-500 text-xs">
+              </div>
+              <input type="range" id="gasSliderConnLengthLL" min="1" max="20" step="1" value="20" oninput="syncGasConnLengthLL('slider', this.value)" class="w-full accent-amber-500 bg-slate-800 rounded-lg h-2 cursor-pointer">
+            </div>
+          </div>
+        </div>
+
+        <!-- LONGEST LENGTH EQUIPMENT LOADS SCHEDULE TABLE -->
+        <div class="glass-card rounded-2xl border border-slate-800 overflow-hidden space-y-4">
+          <div class="p-4 sm:p-5 border-b border-slate-800 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div>
+              <h3 class="text-base font-bold text-white flex items-center gap-2"><i class="fa-solid fa-sitemap text-amber-500"></i> Longest Length Equipment Load Schedule & Branch Sizer</h3>
+              <p class="text-xs text-slate-400 mt-0.5">Define appliances and secondary branches from farthest point to meter. Automatically sizes Unit Connections, Piping Legs, Branch Pipes, and Main Gas Trunk.</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <button onclick="addGasNetworkSegment()" class="px-3.5 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-amber-600/20" title="Add individual equipment load">
+                <i class="fa-solid fa-plus"></i> Add Load
+              </button>
+              <button onclick="addGasBranchGroup()" class="px-3.5 py-2 bg-pink-600 hover:bg-pink-500 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-pink-600/20" title="Create a new secondary branch line">
+                <i class="fa-solid fa-code-branch"></i> + New Branch
+              </button>
+              <button onclick="loadExampleBenchmark()" class="px-3 py-2 bg-sky-700 hover:bg-sky-600 text-white rounded-xl text-xs font-semibold transition border border-sky-600/50 flex items-center gap-1.5" title="Load the 9-Unit Reference Diagram (Units A-I, Branch 1 & 2)">
+                <i class="fa-solid fa-diagram-project"></i> 9-Unit Example
+              </button>
+              <button onclick="clearGasSchedule()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition border border-slate-700">
+                Clear
+              </button>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-900 text-slate-300 border-b border-slate-800 uppercase font-semibold">
+                <tr>
+                  <th class="p-3 w-10 text-center">Zone</th>
+                  <th class="p-3 w-32">Connection Line</th>
+                  <th class="p-3 min-w-[140px]">Equipment ID / Description</th>
+                  <th class="p-3 min-w-[130px]">
+                    <div class="flex items-center gap-1.5">
+                      <span>Unit Load</span>
+                      <div class="flex items-center gap-1 bg-slate-950 p-0.5 rounded border border-slate-800 lowercase font-normal">
+                        <button id="btnGasScheduleUnitBTU" onclick="setGasScheduleLoadUnit('btuh')" class="px-1.5 py-0.5 bg-slate-800 text-slate-400 hover:text-white rounded transition text-[10px]">btuh</button>
+                        <button id="btnGasScheduleUnitMBH" onclick="setGasScheduleLoadUnit('mbh')" class="px-1.5 py-0.5 bg-amber-600 text-white rounded font-bold transition text-[10px]">mbh</button>
+                        <button id="btnGasScheduleUnitCFH" onclick="setGasScheduleLoadUnit('cfh')" class="px-1.5 py-0.5 bg-slate-800 text-slate-400 hover:text-white rounded transition text-[10px]">cfh</button>
+                      </div>
+                    </div>
+                  </th>
+                  <th class="p-3 text-cyan-400 bg-cyan-950/20 text-center" title="Sized at Average Connection Length after regulator">
+                    Unit Conn.<br><span class="text-[10px] text-cyan-300 font-normal">(@ Conn Length)</span>
+                  </th>
+                  <th class="p-3 text-emerald-400 bg-emerald-950/20 text-center" title="Sized for individual unit load at Longest Length">
+                    Piping Leg<br><span class="text-[10px] text-emerald-300 font-normal">(@ Longest Run)</span>
+                  </th>
+                  <th class="p-3 text-pink-400 bg-pink-950/20 text-center" title="Branch pipe sized for cumulative branch load at Longest Length">
+                    Branch Pipe<br><span class="text-[10px] text-pink-300 font-normal">(@ Longest Run)</span>
+                  </th>
+                  <th class="p-3 text-amber-400 bg-amber-950/30" title="Main trunk pipe sized for total cumulative downstream load">
+                    Main Gas Header<br><span class="text-[10px] text-amber-300 font-normal">(Cumulative Upstream)</span>
+                  </th>
+                  <th class="p-3 text-slate-300">Main &Delta;P &amp; Vel</th>
+                  <th class="p-3 text-center w-20">Order / Action</th>
+                </tr>
+              </thead>
+              <tbody id="gasScheduleTableBody" class="divide-y divide-slate-800 text-slate-200 mono"></tbody>
+              <tfoot class="bg-slate-900/90 font-bold text-white border-t-2 border-slate-700 text-xs">
+                <tr>
+                  <td class="p-3 text-center font-sans text-amber-400">MAIN</td>
+                  <td class="p-3 font-sans text-sky-400">Main Header</td>
+                  <td class="p-3 font-sans">Total Connected Demand (to Meter)</td>
+                  <td id="gasTotalUnitLoad" class="p-3 text-amber-400">0 MBH</td>
+                  <td class="p-3 text-center text-cyan-400 bg-cyan-950/30 font-sans">--</td>
+                  <td class="p-3 text-center text-emerald-400 bg-emerald-950/30 font-sans">--</td>
+                  <td class="p-3 text-center text-pink-400 bg-pink-950/30 font-sans">--</td>
+                  <td id="gasMainPipeSize" class="p-3 text-amber-300 bg-amber-950/40">--</td>
+                  <td id="gasMainDropVel" class="p-3 text-slate-300 font-mono">--</td>
+                  <td class="p-3 text-center">
+                    <button onclick="exportGasScheduleCSV()" class="text-xs text-amber-400 hover:text-amber-300 font-sans font-bold" title="Export CSV Schedule">
+                      <i class="fa-solid fa-download"></i> CSV
+                    </button>
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- SUB-TAB 3: CODE TABLES & REFERENCES -->
+      <div id="gasCodeTablesView" class="hidden space-y-6">
+        <div class="glass-card rounded-2xl border border-slate-800 overflow-hidden space-y-4">
+          <div class="p-4 sm:p-5 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h3 class="text-base font-bold text-white flex items-center gap-2"><i class="fa-solid fa-table text-amber-500"></i> Code Maximum Capacity Table (NFPA 54 / IFGC)</h3>
+              <p class="text-xs text-slate-400 mt-0.5">Maximum Pipe Capacities in Cubic Feet per Hour (CFH) calculated for selected Gas Type, Material, Pressure, and Drop.</p>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-900 text-slate-300 border-b border-slate-800 uppercase font-semibold">
+                <tr>
+                  <th class="p-3">Pipe Size</th>
+                  <th class="p-3">10 ft</th>
+                  <th class="p-3">20 ft</th>
+                  <th class="p-3">30 ft</th>
+                  <th class="p-3">40 ft</th>
+                  <th class="p-3">50 ft</th>
+                  <th class="p-3">60 ft</th>
+                  <th class="p-3">80 ft</th>
+                  <th class="p-3">100 ft</th>
+                  <th class="p-3">150 ft</th>
+                  <th class="p-3">200 ft</th>
+                </tr>
+              </thead>
+              <tbody id="gasCodeTableBody" class="divide-y divide-slate-800 text-slate-200 mono"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="bg-slate-900 border-t border-slate-800 py-4 text-center text-xs text-slate-500 mt-auto">
+    Mechanical & Plumbing System Calculations Suite — Commercial Engineering Edition
+  </footer>
+
+  <!-- EDIT SESSION DETAILS MODAL -->
+  <div id="editSessionModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div class="glass-card bg-slate-900/95 border border-slate-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-5 animate-fade-in relative">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-pen-to-square text-amber-400"></i> Edit Saved Session Details
+        </h3>
+        <button onclick="closeEditSessionModal()" class="text-slate-400 hover:text-white text-lg p-1">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <p class="text-xs text-slate-400 leading-normal">
+        Update the Project Name and Author for this saved session in your browser library.
+      </p>
+
+      <div class="space-y-4 text-xs">
+        <div>
+          <label class="block font-bold text-slate-300 mb-1">Project Name <span class="text-amber-400">*</span></label>
+          <input type="text" id="editModalProjectName" placeholder="e.g. Commercial Office Building" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 font-bold text-white outline-none focus:border-amber-500 transition">
+        </div>
+        <div>
+          <label class="block font-bold text-slate-400 mb-1">Author / Engineer <span class="text-amber-400">*</span></label>
+          <input type="text" id="editModalAuthor" placeholder="e.g. John Doe" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-slate-200 outline-none focus:border-amber-500 transition">
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
+        <button onclick="closeEditSessionModal()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition">Cancel</button>
+        <button onclick="saveEditedSessionDetails()" class="px-5 py-2.5 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-xl text-xs transition shadow-lg shadow-amber-600/20 flex items-center gap-1.5">
+          <i class="fa-solid fa-check"></i> Update Details
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SAVE SESSION MODAL -->
+  <div id="saveSessionModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div class="glass-card bg-slate-900/95 border border-slate-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-5 animate-fade-in relative">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-floppy-disk text-emerald-400"></i> Save & Sync Project Session
+        </h3>
+        <button onclick="closeSaveSessionModal()" class="text-slate-400 hover:text-white text-lg p-1">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <p class="text-xs text-slate-400 leading-normal">
+        Save your working session to your browser library so you can recall it anytime across all tools.
+      </p>
+
+      <div class="space-y-4 text-xs">
+        <div>
+          <label class="block font-bold text-slate-300 mb-1">Save Option / Target Session</label>
+          <select id="saveSessionTargetSelect" onchange="handleSaveSessionTargetChange(this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 font-semibold text-white outline-none focus:border-sky-500 transition">
+            <option value="new">+ Save as New Project Session</option>
+          </select>
+        </div>
+        <div>
+          <label class="block font-bold text-slate-300 mb-1">Project Name <span class="text-emerald-400">*</span></label>
+          <input type="text" id="modalProjectName" placeholder="e.g. Commercial Office Building" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 font-bold text-white outline-none focus:border-emerald-500 transition">
+        </div>
+        <div>
+          <label class="block font-bold text-slate-400 mb-1">Author / Engineer</label>
+          <input type="text" id="modalAuthor" placeholder="e.g. John Doe" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-slate-200 outline-none focus:border-emerald-500 transition">
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between gap-2 pt-3 border-t border-slate-800">
+        <button onclick="exportActiveSessionAsJSON()" class="px-3.5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold border border-slate-700 transition flex items-center gap-1.5" title="Download portable .json backup file">
+          <i class="fa-solid fa-download"></i> Export .JSON File
+        </button>
+        <div class="flex items-center gap-2">
+          <button onclick="closeSaveSessionModal()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition">Cancel</button>
+          <button onclick="saveActiveSessionToLibrary()" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs transition shadow-lg shadow-emerald-600/20 flex items-center gap-1.5">
+            <i class="fa-solid fa-floppy-disk"></i> Save Session
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="toastNotification" class="fixed bottom-6 right-6 z-50 hidden transition-all duration-300">
+    <div class="bg-slate-900 border border-slate-700 text-white px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3">
+      <div id="toastIcon" class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
+        <i class="fa-solid fa-circle-check"></i>
+      </div>
+      <div>
+        <p id="toastTitle" class="text-xs font-bold text-white">Project Exported</p>
+        <p id="toastMessage" class="text-[11px] text-slate-400">File downloaded successfully.</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="shared_project_library.js"></script>
+  <script src="common.js"></script>
+  <script src="tool5.js"></script>
+
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      initTheme();
+      setupDragAndDrop();
+      loadActiveDraftState();
+      calculateGasSizing();
+      setTimeout(drawGasCanvas, 100);
+      setTimeout(drawGasCanvas, 300);
+    });
+    window.addEventListener('input', () => saveActiveDraftState());
+    window.addEventListener('change', () => saveActiveDraftState());
+  </script>
+</body>
+</html>

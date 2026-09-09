@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-950 text-slate-100 antialiased selection:bg-sky-500 selection:text-white">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mechanical System Calculations Suite</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#f0f7ff',
+              100: '#e0effe',
+              500: '#0284c7',
+              600: '#0369a1',
+              700: '#035480',
+              800: '#075985',
+              900: '#0c4a6e',
+            }
+          }
+        }
+      }
+    }
+
+    // Default to Light Mode unless explicitly set to 'dark' in localStorage
+    if (localStorage.getItem('ps_theme') === 'dark') {
+      document.documentElement.classList.remove('light');
+    } else {
+      document.documentElement.classList.add('light');
+    }
+  </script>
+
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #020617; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #475569; }
+    .glass-card {
+      background: rgba(30, 41, 59, 0.7);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .active-nav-btn {
+      background-color: #0284c7 !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+    }
+    .active-tab {
+      background-color: #0284c7 !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+    }
+    .animate-fade-in { animation: fadeIn 0.2s ease-in-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* LIGHT MODE STYLING & HIGH CONTRAST SYSTEM */
+    html.light { background-color: #f8fafc !important; color: #0f172a !important; }
+    html.light body { background-color: #f8fafc !important; color: #0f172a !important; }
+    html.light header { background-color: rgba(255, 255, 255, 0.95) !important; border-color: #e2e8f0 !important; color: #0f172a !important; }
+    html.light header h1, html.light header h2, html.light header h3 { color: #0f172a !important; }
+    html.light .glass-card { background: rgba(255, 255, 255, 0.92) !important; border: 1px solid #e2e8f0 !important; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); color: #1e293b !important; }
+    html.light .glass-card h2, html.light .glass-card h3, html.light .glass-card h4 { color: #0f172a !important; }
+    html.light .glass-card p { color: #475569 !important; }
+    html.light input[type="text"], html.light input[type="number"], html.light select { background-color: #ffffff !important; color: #0f172a !important; border-color: #cbd5e1 !important; }
+    html.light table th { background-color: #f1f5f9 !important; color: #334155 !important; border-color: #cbd5e1 !important; }
+    html.light table td { border-color: #e2e8f0 !important; color: #0f172a !important; }
+    html.light table tr:hover { background-color: #f8fafc !important; }
+    html.light tfoot { background-color: #f1f5f9 !important; color: #0f172a !important; border-color: #cbd5e1 !important; }
+    html.light .bg-slate-900, html.light .bg-slate-900\/80, html.light .bg-slate-900\/90, html.light .bg-slate-950 { background-color: #f1f5f9 !important; color: #0f172a !important; border-color: #e2e8f0 !important; }
+    
+    /* BUTTON CONTRAST FIXES IN LIGHT MODE */
+    html.light button.bg-slate-800, html.light .bg-slate-800 { background-color: #e2e8f0 !important; color: #0f172a !important; border-color: #cbd5e1 !important; }
+    html.light button.bg-slate-800:hover, html.light .bg-slate-800:hover { background-color: #cbd5e1 !important; color: #020617 !important; }
+    html.light button.bg-sky-600, html.light button.bg-indigo-600, html.light button.bg-cyan-600, html.light button.bg-emerald-600 { color: #ffffff !important; }
+
+    /* TEXT CONTRAST & ACCENT COLORS IN LIGHT MODE */
+    html.light .text-white { color: #0f172a !important; }
+    html.light .text-slate-300, html.light .text-slate-400 { color: #475569 !important; }
+    html.light .text-slate-200 { color: #1e293b !important; }
+    html.light .border-slate-800, html.light .border-slate-800\/60, html.light .border-slate-800\/80, html.light .border-slate-700 { border-color: #e2e8f0 !important; }
+    html.light footer { background-color: #ffffff !important; border-color: #e2e8f0 !important; color: #64748b !important; }
+    html.light canvas { background-color: #ffffff !important; border-color: #cbd5e1 !important; }
+
+    html.light .text-sky-400 { color: #0284c7 !important; }
+    html.light .text-sky-300 { color: #0369a1 !important; }
+    html.light .text-indigo-400 { color: #4338ca !important; }
+    html.light .text-indigo-300 { color: #3730a3 !important; }
+    html.light .text-cyan-400 { color: #0e7490 !important; }
+    html.light .text-cyan-300 { color: #155e75 !important; }
+    html.light .text-teal-600 { color: #0f766e !important; }
+    html.light .text-emerald-400, html.light .text-emerald-600 { color: #047857 !important; }
+    html.light .text-purple-300, html.light .text-purple-400 { color: #7e22ce !important; }
+    html.light .text-amber-300, html.light .text-amber-400 { color: #b45309 !important; }
+
+    html.light #card-total-supply,
+    html.light #storm-schedule-summary-card,
+    html.light .sched-summary-card {
+      background: linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 100%) !important;
+      border: 1px solid #0284c7 !important;
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.12) !important;
+    }
+    html.light #card-total-supply .text-sky-500, html.light #storm-schedule-summary-card .text-sky-500 { color: #0369a1 !important; }
+    html.light #card-total-supply .text-white, html.light #storm-schedule-summary-card .text-white { color: #0c4a6e !important; }
+    html.light #card-total-supply .text-slate-400, html.light #storm-schedule-summary-card .text-slate-400 { color: #334155 !important; }
+    html.light #card-total-supply span.rounded-md {
+      background-color: rgba(2, 132, 199, 0.15) !important;
+      color: #0369a1 !important;
+      border: 1px solid rgba(3, 105, 161, 0.3) !important;
+      font-weight: 700 !important;
+    }
+
+    html.light .bg-cyan-950\/30, html.light .bg-sky-950\/30 {
+      background-color: #e0f2fe !important;
+      color: #0369a1 !important;
+    }
+
+    /* TOOL 5: FUEL GAS PIPE SIZING LIGHT MODE HIGH CONTRAST */
+    html.light #view-tool5 .glass-card {
+      background-color: #ffffff !important;
+      border: 1px solid #cbd5e1 !important;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+      color: #0f172a !important;
+    }
+    html.light #view-tool5 .text-white { color: #0f172a !important; }
+    html.light #view-tool5 .text-slate-300, html.light #view-tool5 .text-slate-400 { color: #334155 !important; }
+    html.light #view-tool5 .text-slate-200 { color: #1e293b !important; }
+    html.light #view-tool5 .text-amber-400, html.light #view-tool5 .text-amber-300, html.light #view-tool5 .text-amber-500 { color: #b45309 !important; }
+    html.light #view-tool5 .text-emerald-400 { color: #047857 !important; }
+    html.light #view-tool5 .bg-amber-500\/10, html.light #view-tool5 .bg-amber-500\/20 {
+      background-color: #fef3c7 !important;
+      color: #92400e !important;
+      border-color: #fde68a !important;
+    }
+    html.light #view-tool5 .bg-slate-900, html.light #view-tool5 .bg-slate-950 {
+      background-color: #f8fafc !important;
+      border-color: #cbd5e1 !important;
+      color: #0f172a !important;
+    }
+    html.light #view-tool5 input[type="text"],
+    html.light #view-tool5 input[type="number"],
+    html.light #view-tool5 select {
+      background-color: #ffffff !important;
+      color: #0f172a !important;
+      border-color: #cbd5e1 !important;
+      font-weight: 700 !important;
+    }
+    html.light #view-tool5 table th {
+      background-color: #f1f5f9 !important;
+      color: #334155 !important;
+      border-color: #cbd5e1 !important;
+    }
+    html.light #view-tool5 table td {
+      border-color: #e2e8f0 !important;
+      color: #0f172a !important;
+    }
+    html.light #view-tool5 tfoot {
+      background-color: #f1f5f9 !important;
+      color: #0f172a !important;
+      border-color: #cbd5e1 !important;
+    }
+    html.light #gas-summary-card {
+      background: linear-gradient(135deg, #fef3c7 0%, #fffbeb 100%) !important;
+      border: 1.5px solid #f59e0b !important;
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15) !important;
+    }
+    html.light #gas-summary-card p { color: #78350f !important; }
+    html.light #gas-summary-card h3 { color: #92400e !important; }
+    html.light #gas-summary-card #cardGasMainDrop,
+    html.light #gas-summary-card #cardGasTotalMBH,
+    html.light #gas-summary-card #cardGasMaxVel { color: #451a03 !important; }
+
+    /* 2x2 METRIC CARDS LIGHT MODE OVERRIDES */
+    html.light #view-tool5 .grid-cols-2 .rounded-2xl {
+      background: #ffffff !important;
+      border: 1.5px solid #cbd5e1 !important;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+    }
+    html.light #view-tool5 .grid-cols-2 .rounded-2xl:nth-child(2) {
+      background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%) !important;
+      border: 1.5px solid #fde68a !important;
+    }
+    html.light #view-tool5 .grid-cols-2 .text-slate-400 {
+      color: #475569 !important;
+    }
+    html.light #view-tool5 .grid-cols-2 .text-emerald-400 {
+      color: #047857 !important;
+    }
+    html.light #view-tool5 .grid-cols-2 .text-amber-300,
+    html.light #view-tool5 .grid-cols-2 .text-amber-400 {
+      color: #b45309 !important;
+    }
+    html.light #view-tool5 .grid-cols-2 .text-sky-400 {
+      color: #0369a1 !important;
+    }
+    html.light #view-tool5 .relative.w-full.h-\[220px\] {
+      background-color: #f8fafc !important;
+      border-color: #cbd5e1 !important;
+    }
+
+    /* FLUSHOMETER ALERT LIGHT MODE HIGH CONTRAST */
+    html.light #flushometer-alert {
+      background-color: #fff7ed !important;
+      border: 1.5px solid #d97706 !important;
+      color: #451a03 !important;
+    }
+    html.light #flushometer-alert .text-amber-400 {
+      color: #d97706 !important;
+    }
+    html.light #flushometer-alert .text-amber-300 {
+      color: #78350f !important;
+    }
+    html.light #flushometer-alert span {
+      color: #451a03 !important;
+    }
+
+    /* BEST FIT MATRIX ROW CONTRAST SYSTEM */
+    .best-fit-row {
+      background: linear-gradient(90deg, rgba(2, 132, 199, 0.35) 0%, rgba(99, 102, 241, 0.25) 100%) !important;
+      border-top: 2px solid #38bdf8 !important;
+      border-bottom: 2px solid #38bdf8 !important;
+    }
+    .best-fit-row td {
+      color: #ffffff !important;
+      font-weight: 700 !important;
+    }
+
+    html.light .best-fit-row {
+      background: #e0f2fe !important;
+      border-top: 2px solid #0284c7 !important;
+      border-bottom: 2px solid #0284c7 !important;
+    }
+    html.light .best-fit-row td {
+      color: #0369a1 !important;
+      font-weight: 700 !important;
+    }
+    html.light .best-fit-row td span.text-slate-400 {
+      color: #0284c7 !important;
+    }
+
+    /* REVERSE DUCTULATOR GUIDE CALLOUT LIGHT MODE CONTRAST */
+    #rev-callout-guide {
+      background-color: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(20, 184, 166, 0.3);
+    }
+    html.light #rev-callout-guide {
+      background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%) !important;
+      border: 1.5px solid #0d9488 !important;
+      box-shadow: 0 4px 12px rgba(13, 148, 136, 0.12) !important;
+      color: #0f172a !important;
+    }
+    html.light #rev-callout-guide .guide-title {
+      color: #0f766e !important;
+      font-weight: 700 !important;
+    }
+    html.light #rev-callout-guide p {
+      color: #134e4a !important;
+      font-weight: 500 !important;
+    }
+    html.light #rev-callout-guide .mono-formula {
+      color: #042f2e !important;
+      background-color: rgba(13, 148, 136, 0.14) !important;
+      border: 1px solid rgba(13, 148, 136, 0.3) !important;
+      padding: 1px 5px !important;
+      border-radius: 4px !important;
+      font-weight: 700 !important;
+    }
+    html.light #rev-callout-guide i {
+      color: #0d9488 !important;
+    }
+
+    /* RECOMMENDED DUCT SIZE BOX (LIGHT & DARK MODE) */
+    #ductRecSizeBox {
+      background: rgba(30, 41, 59, 0.7);
+      border: 1.5px solid rgba(245, 158, 11, 0.4);
+    }
+    html.light #ductRecSizeBox {
+      background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%) !important;
+      border: 1.5px solid #f59e0b !important;
+      box-shadow: 0 4px 14px rgba(245, 158, 11, 0.18) !important;
+      color: #451a03 !important;
+    }
+    html.light #ductRecSizeBox h5 {
+      color: #92400e !important;
+    }
+    html.light #ductRecSizeBox #recDuctReasonText {
+      color: #78350f !important;
+    }
+    html.light #ductRecSizeBox .border-slate-800 {
+      border-color: #fde68a !important;
+    }
+    html.light #ductRecSizeBox .text-slate-400 {
+      color: #92400e !important;
+    }
+    html.light #ductRecSizeBox #recDuctDims {
+      color: #b45309 !important;
+    }
+    html.light #ductRecSizeBox #recDuctVelocity {
+      color: #0f172a !important;
+    }
+    html.light #ductRecSizeBox #recDuctDe {
+      color: #0f766e !important;
+    }
+    html.light #inputPlenumLimitY {
+      background-color: #ffffff !important;
+      color: #0f172a !important;
+      border-color: #cbd5e1 !important;
+    }
+
+    /* MODAL OVERLAYS IN LIGHT MODE */
+    html.light #importModal .glass-card,
+    html.light #exportModal .glass-card {
+      background-color: #ffffff !important;
+      border-color: #cbd5e1 !important;
+      color: #0f172a !important;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+    }
+    html.light #exportModal input[type="text"] {
+      background-color: #f8fafc !important;
+      color: #0f172a !important;
+      border-color: #cbd5e1 !important;
+    }
+    html.light #exportModal .bg-slate-950 {
+      background-color: #f1f5f9 !important;
+      border-color: #cbd5e1 !important;
+    }
+    html.light #dropZone {
+      background-color: #f8fafc !important;
+      border-color: #cbd5e1 !important;
+      color: #0f172a !important;
+    }
+    html.light #dropZone:hover {
+      border-color: #0284c7 !important;
+      background-color: #f0f9ff !important;
+    }
+    html.light #importPreview {
+      background-color: #f1f5f9 !important;
+      border-color: #cbd5e1 !important;
+      color: #0f172a !important;
+    }
+    html.light #toastNotification > div {
+      background-color: #ffffff !important;
+      border-color: #cbd5e1 !important;
+      color: #0f172a !important;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15) !important;
+    }
+    html.light #toastNotification #toastTitle {
+      color: #0f172a !important;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col bg-slate-950 text-slate-100 antialiased selection:bg-sky-500 selection:text-white">
+
+  
+
+      <header class="bg-slate-900/90 border-b border-slate-800 sticky top-0 z-50 backdrop-blur-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16 gap-4">
+        
+        <a href="Mechanical_Suite_Dashboard.html" onclick="saveActiveDraftState()" class="flex items-center gap-3 cursor-pointer">
+          <div class="p-2.5 bg-gradient-to-tr from-sky-600 to-blue-500 rounded-xl shadow-lg shadow-sky-500/20 text-white flex items-center justify-center">
+            <i class="fa-solid fa-compass-drafting text-xl"></i>
+          </div>
+          <div>
+            <h1 class="font-bold text-lg leading-snug tracking-tight text-white flex items-center gap-2">
+              Mechanical System Calculations Suite
+              <span class="text-xs font-semibold bg-sky-500/20 text-sky-500 border border-sky-400/30 px-2 py-0.5 rounded-full">v4.46</span>
+            </h1>
+          </div>
+        </a>
+
+        <div class="flex items-center gap-2">
+          <a href="Mechanical_Suite_Dashboard.html" onclick="saveActiveDraftState()" id="nav-btn-dashboard" class="px-3 py-2 text-xs font-bold rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 border border-slate-700/80 transition flex items-center gap-2" title="Return to Suite Dashboard Home">
+            <i class="fa-solid fa-house text-sky-400"></i>
+            <span>Dashboard</span>
+          </a>
+
+          <button onclick="openSaveSessionModal()" class="px-3.5 py-2 text-xs font-bold rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white transition flex items-center gap-1.5 shadow-md shadow-emerald-600/20" title="Save & Sync Project Session">
+            <i class="fa-solid fa-floppy-disk"></i>
+            <span>Save Session</span>
+          </button>
+
+          <button id="theme-toggle-btn" onclick="toggleTheme()" class="px-3 py-2 text-xs font-semibold rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 border border-slate-700/80 transition flex items-center gap-1.5" title="Toggle Light/Dark Visual Theme">
+            <i id="theme-toggle-icon" class="fa-solid fa-sun text-amber-400 text-sm"></i>
+            <span id="theme-toggle-text" class="hidden sm:inline">Light</span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+
+  <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div id="view-tool4" class="space-y-5 animate-fade-in">
+
+      <!-- SUBTOOL NAVIGATION TAB BAR -->
+      <div class="flex items-center justify-between gap-4 border-b border-slate-800 pb-3">
+        <div class="flex items-center gap-2">
+          <button id="tool4-tab-btn-direct" onclick="switchTool4Tab('direct')" class="px-4 py-2 text-xs font-bold rounded-xl transition flex items-center gap-2 bg-teal-600 text-white shadow-md shadow-teal-600/25">
+            <i class="fa-solid fa-calculator"></i>
+            <span>Direct Sizing Engine</span>
+          </button>
+          <button id="tool4-tab-btn-reverse" onclick="switchTool4Tab('reverse')" class="px-4 py-2 text-xs font-semibold rounded-xl transition flex items-center gap-2 text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-800">
+            <i class="fa-solid fa-arrows-rotate text-teal-400"></i>
+            <span>Reverse CFM Lookup</span>
+          </button>
+        </div>
+        <span class="text-[11px] text-slate-400 hidden sm:inline-flex items-center gap-1.5">
+          <i class="fa-solid fa-circle-info text-teal-500"></i> Toggle between Direct Sizing & Reverse Airflow Lookup
+        </span>
+      </div>
+
+      <!-- SUBPAGE 1: DIRECT SIZING ENGINE -->
+      <div id="tool4-subpage-direct" class="space-y-6">
+      <div class="glass-card rounded-2xl p-5 border border-slate-800 flex flex-col gap-4">
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-3 border-b border-slate-800">
+          <div>
+            <h2 class="text-base font-bold text-white flex items-center gap-2"><i class="fa-solid fa-wind text-teal-600"></i> HVAC Ductulator Engine</h2>
+            <p class="text-xs text-slate-400 mt-0.5">ASHRAE Fundamentals & SMACNA English Air Duct Sizing Engine</p>
+          </div>
+          <span class="bg-teal-500/10 text-teal-600 font-bold px-3 py-1 rounded-lg border border-teal-500/20 text-xs">English Units (CFM / FPM / in. w.g.)</span>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div class="lg:col-span-5 space-y-5">
+            <div class="bg-slate-900/90 rounded-xl p-4 border border-slate-800 space-y-4">
+              <h3 class="text-xs font-bold text-teal-600 uppercase tracking-wider pb-1 border-b border-slate-800 flex items-center gap-2"><i class="fa-solid fa-sliders text-teal-600"></i> Airflow & Loss Criteria</h3>
+              <div>
+                <div class="flex items-center justify-between mb-1">
+                  <label class="text-xs font-semibold text-slate-300">Air Volume (CFM)</label>
+                  <span id="ductDisplayCFM" class="text-xs font-bold text-teal-600 mono">2,500 CFM</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <input type="range" id="ductSliderCFM" min="10" max="50000" step="10" value="2500" oninput="onDuctCFMInput('slider', this.value)" class="w-full accent-teal-500">
+                  <input type="number" id="ductInputCFM" min="10" max="100000" step="10" value="2500" oninput="onDuctCFMInput('input', this.value)" class="w-28 bg-slate-950 border border-slate-700 rounded-lg p-1.5 text-xs font-bold text-white text-right mono outline-none focus:border-teal-500">
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Static Design Constraint Mode:</label>
+                <div class="grid grid-cols-2 gap-2 bg-slate-950 p-1 rounded-xl border border-slate-800">
+                  <label class="cursor-pointer flex items-center justify-center gap-2 p-2 rounded-lg text-xs font-bold transition-all shadow-sm bg-teal-600 text-white" id="lbl-mode-friction">
+                    <input type="radio" name="ductMode" value="friction" checked onchange="setDuctMode('friction')" class="hidden"><i class="fa-solid fa-gauge-high"></i> Static Friction
+                  </label>
+                  <label class="cursor-pointer flex items-center justify-center gap-2 p-2 rounded-lg text-xs font-semibold transition-all text-slate-400" id="lbl-mode-velocity">
+                    <input type="radio" name="ductMode" value="velocity" onchange="setDuctMode('velocity')" class="hidden"><i class="fa-solid fa-tachometer-alt"></i> Target Velocity
+                  </label>
+                </div>
+              </div>
+
+              <div id="ductFrictionGroup" class="space-y-1">
+                <div class="flex items-center justify-between">
+                  <label class="text-xs font-semibold text-slate-300">Friction Loss (in. w.g. / 100 ft)</label>
+                  <span id="ductDisplayFriction" class="text-xs font-bold text-amber-400 mono">0.08 in. w.g.</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <input type="range" id="ductSliderFriction" min="0.01" max="1.00" step="0.01" value="0.08" oninput="onDuctFrictionInput('slider', this.value)" class="w-full accent-amber-500">
+                  <input type="number" id="ductInputFriction" min="0.01" max="2.00" step="0.01" value="0.08" oninput="onDuctFrictionInput('input', this.value)" class="w-28 bg-slate-950 border border-slate-700 rounded-lg p-1.5 text-xs font-bold text-amber-300 text-right mono outline-none focus:border-amber-500">
+                </div>
+              </div>
+
+              <div id="ductVelocityGroup" class="space-y-1 opacity-50 pointer-events-none">
+                <div class="flex items-center justify-between">
+                  <label class="text-xs font-semibold text-slate-300">Target Air Velocity (FPM)</label>
+                  <span id="ductDisplayVelocity" class="text-xs font-bold text-sky-400 mono">1,200 FPM</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <input type="range" id="ductSliderVelocity" min="100" max="4000" step="50" value="1200" oninput="onDuctVelocityInput('slider', this.value)" class="w-full accent-sky-500">
+                  <input type="number" id="ductInputVelocity" min="100" max="6000" step="25" value="1200" oninput="onDuctVelocityInput('input', this.value)" class="w-28 bg-slate-950 border border-slate-700 rounded-lg p-1.5 text-xs font-bold text-sky-500 text-right mono outline-none focus:border-sky-500">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="lg:col-span-7 space-y-4">
+            <div class="bg-slate-900/90 rounded-xl p-4 border border-slate-800 space-y-4">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-2">
+                <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                  <i class="fa-solid fa-arrows-left-right-to-line text-sky-400"></i> Interactive Rectangular Dimension Solvers
+                </h4>
+                <div class="flex items-center gap-2">
+                  <button type="button" id="btnTogglePlenumLimit" onclick="togglePlenumLimit()" class="px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700" title="Toggle clamping maximum allowable Duct Height (Y)">
+                    <i id="iconPlenumLock" class="fa-solid fa-lock-open text-slate-400"></i>
+                    <span id="textPlenumLock">Lock Height (Plenum Limit)</span>
+                  </button>
+                  <div class="flex items-center gap-1">
+                    <input type="number" id="inputPlenumLimitY" min="4" max="60" step="1" value="15" oninput="onPlenumLimitInput(this.value)" class="w-12 bg-slate-950 border border-slate-700 rounded-lg p-1 text-xs font-bold text-white text-center mono outline-none focus:border-sky-500" title="Plenum Height Limit (Inches)">
+                    <span class="text-xs font-bold text-slate-400">"</span>
+                  </div>
+                </div>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="space-y-1">
+                  <div class="flex items-center justify-between"><label class="text-xs font-semibold text-slate-300">Duct Width - Side X (Inches)</label><span id="ductDisplayX" class="text-xs font-bold text-sky-400 mono">18"</span></div>
+                  <div class="flex items-center gap-2">
+                    <input type="range" id="ductSliderX" min="4" max="120" step="1" value="18" oninput="syncDuctX('slider', this.value)" class="w-full accent-sky-500">
+                    <input type="number" id="ductInputX" min="4" max="120" step="1" value="18" oninput="syncDuctX('input', this.value)" class="w-20 bg-slate-950 border border-slate-700 rounded-lg p-1 text-xs font-bold text-white text-right mono outline-none focus:border-sky-500">
+                  </div>
+                </div>
+                <div class="space-y-1">
+                  <div class="flex items-center justify-between">
+                    <label class="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                      <span>Duct Height - Side Y (Inches)</span>
+                      <span id="badgePlenumLimitStatus" class="hidden text-[10px] font-bold px-1.5 py-0.2 rounded bg-sky-500/20 text-sky-400 border border-sky-500/30">Max 15"</span>
+                    </label>
+                    <span id="ductDisplayY" class="text-xs font-bold text-amber-400 mono">16"</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <input type="range" id="ductSliderY" min="4" max="120" step="1" value="16" oninput="syncDuctY('slider', this.value)" class="w-full accent-amber-500">
+                    <input type="number" id="ductInputY" min="4" max="120" step="1" value="16" oninput="syncDuctY('input', this.value)" class="w-20 bg-slate-950 border border-slate-700 rounded-lg p-1 text-xs font-bold text-white text-right mono outline-none focus:border-amber-500">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div class="glass-card rounded-2xl p-5 border border-slate-800 relative overflow-hidden group hover:border-teal-500/50 transition-all">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-xs font-bold tracking-wider text-teal-600 uppercase flex items-center gap-1.5"><i class="fa-solid fa-circle"></i> Round Duct Geometry</span>
+                  <span class="text-[10px] font-bold bg-teal-500/20 text-teal-600 px-2 py-0.5 rounded border border-teal-500/30">Commercial Size</span>
+                </div>
+                <div class="flex items-baseline gap-2 mt-1"><span id="ductOutputRoundDia" class="text-3xl font-extrabold text-white tracking-tight mono">18"</span><span class="text-xs font-semibold text-slate-400">Diameter</span></div>
+                <p class="text-[11px] text-slate-400 mt-1">Exact Diameter: <span id="ductOutputRoundExact" class="font-bold text-slate-200 mono">17.80"</span></p>
+                <div class="mt-3 pt-2 border-t border-slate-800/80 space-y-1.5 text-xs">
+                  <div class="flex justify-between text-slate-300"><span>Air Velocity:</span><span id="ductOutputRoundFPM" class="font-bold text-teal-600 mono">1,415 FPM</span></div>
+                  <div class="flex justify-between text-slate-300"><span>Rated Max Capacity:</span><span id="ductOutputRoundMaxCap" class="font-bold text-emerald-400 mono">2,560 CFM</span></div>
+                </div>
+              </div>
+
+              <div class="glass-card rounded-2xl p-5 border border-slate-800 relative overflow-hidden group hover:border-amber-500/50 transition-all">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-xs font-bold tracking-wider text-amber-400 uppercase flex items-center gap-1.5"><i class="fa-solid fa-vector-square"></i> Rectangular Geometry</span>
+                  <span id="ductOutputAspectBadge" class="text-[10px] font-bold bg-emerald-500/20 text-emerald-600 px-2 py-0.5 rounded border border-emerald-500/30">Aspect &lt; 2.5:1</span>
+                </div>
+                <div class="flex items-baseline gap-2 mt-1"><span id="ductOutputRectDims" class="text-3xl font-extrabold text-white tracking-tight mono">18" × 16"</span></div>
+                <p class="text-[11px] text-slate-400 mt-1">Equivalent Diameter: <span id="ductOutputRectDe" class="font-bold text-slate-200 mono">18.10"</span></p>
+                <div class="mt-3 pt-2 border-t border-slate-800/80 space-y-1.5 text-xs">
+                  <div class="flex justify-between text-slate-300"><span>Air Velocity:</span><span id="ductOutputRectFPM" class="font-bold text-amber-300 mono">1,250 FPM</span></div>
+                  <div class="flex justify-between text-slate-300"><span>Rated Max Capacity:</span><span id="ductOutputRectMaxCap" class="font-bold text-emerald-400 mono">2,600 CFM</span></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- OPTIMAL RECOMMENDED DUCT SIZE CARD -->
+            <div id="ductRecSizeBox" class="hidden rounded-2xl p-4 border transition-all animate-fade-in space-y-2">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div class="flex items-start gap-2.5">
+                  <div class="p-2 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-sm mt-0.5">
+                    <i class="fa-solid fa-star"></i>
+                  </div>
+                  <div>
+                    <div class="flex items-center gap-2 flex-wrap">
+                      <h5 class="text-xs font-bold text-white">Recommended Optimal Duct Size</h5>
+                      <span id="recDuctAspectBadge" class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Aspect 2.0:1</span>
+                    </div>
+                    <p id="recDuctReasonText" class="text-[11px] text-slate-300 mt-0.5">Evaluated for lowest velocity & commercial even-inch increments under plenum limit.</p>
+                  </div>
+                </div>
+                <button type="button" id="btnApplyRecSize" onclick="applyRecommendedDuctSize()" class="px-3.5 py-1.5 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white text-xs font-bold rounded-xl transition shadow-md shadow-amber-600/20 flex items-center gap-1.5 shrink-0">
+                  <i class="fa-solid fa-check"></i>
+                  <span id="btnApplyRecSizeText">Apply Recommended (6" × 12")</span>
+                </button>
+              </div>
+              <div class="grid grid-cols-3 gap-2 pt-2 border-t border-slate-800 text-xs">
+                <div>
+                  <span class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Recommended Size</span>
+                  <p id="recDuctDims" class="font-extrabold text-amber-300 mono text-sm">6" × 12"</p>
+                </div>
+                <div>
+                  <span class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Calculated Velocity</span>
+                  <p id="recDuctVelocity" class="font-bold text-white mono text-sm">500 FPM</p>
+                </div>
+                <div>
+                  <span class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Equivalent Dia (De)</span>
+                  <p id="recDuctDe" class="font-bold text-teal-400 mono text-sm">9.14"</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="glass-card rounded-2xl p-5 border border-slate-800 space-y-4">
+        <h3 class="text-sm font-bold text-white flex items-center justify-between border-b border-slate-800 pb-3">
+          <span><i class="fa-solid fa-shapes text-teal-600"></i> Duct Cross-Section & Acoustic Noise Inspector</span>
+          <span id="ductNoiseBadge" class="text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/30">Standard Commercial Office</span>
+        </h3>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+          <div class="lg:col-span-8 space-y-3">
+            <div class="w-full h-56 bg-slate-950 rounded-xl border border-slate-800 flex items-center justify-center p-3">
+              <canvas id="ductCanvas" class="max-w-full max-h-full"></canvas>
+            </div>
+          </div>
+          <div class="lg:col-span-4 space-y-3 text-xs">
+            <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800 space-y-1">
+              <span class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Equivalent Cross-Section Area</span>
+              <p id="metricDuctArea" class="text-base font-bold text-white mono">2.00 sq ft (288 sq in)</p>
+            </div>
+            <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800 space-y-1">
+              <span class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Evaluated Friction Loss</span>
+              <p id="metricDuctFriction" class="text-base font-bold text-amber-400 mono">0.080 in. w.g. / 100 ft</p>
+            </div>
+            <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800 space-y-1">
+              <span class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Acoustic Noise Rating</span>
+              <p id="metricDuctAcoustic" class="text-base font-bold text-teal-400 mono">NC 30-35 (Commercial Office)</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      </div>
+      <!-- END SUBPAGE 1: DIRECT SIZING ENGINE -->
+
+      <!-- SUBPAGE 2: REVERSE CFM LOOKUP ENGINE -->
+      <div id="tool4-subpage-reverse" class="space-y-6 hidden">
+        <div class="glass-card rounded-2xl p-5 border border-slate-800 flex flex-col gap-4">
+          <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-3 border-b border-slate-800">
+            <div>
+              <h2 class="text-base font-bold text-white flex items-center gap-2"><i class="fa-solid fa-arrows-rotate text-teal-600"></i> HVAC Reverse CFM Duct Engine</h2>
+              <p class="text-xs text-slate-400 mt-0.5">Lookup Approximate Air Volume (CFM) & Velocity from Duct Dimensions & Pressure</p>
+            </div>
+            <span class="bg-teal-500/10 text-teal-600 font-bold px-3 py-1 rounded-lg border border-teal-500/20 text-xs">English Units (CFM / FPM / in. w.g.)</span>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <!-- LEFT COLUMN: Pressure Constraint & Dimensional Sliders -->
+            <div class="lg:col-span-5 space-y-5">
+              <div class="bg-slate-900/90 rounded-xl p-4 border border-slate-800 space-y-4">
+                <h3 class="text-xs font-bold text-teal-600 uppercase tracking-wider pb-1 border-b border-slate-800 flex items-center gap-2"><i class="fa-solid fa-sliders text-teal-600"></i> Pressure & Flow Constraint</h3>
+
+                <div>
+                  <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Static Design Constraint Mode:</label>
+                  <div class="grid grid-cols-2 gap-2 bg-slate-950 p-1 rounded-xl border border-slate-800">
+                    <label class="cursor-pointer flex items-center justify-center gap-2 p-2 rounded-lg text-xs font-bold transition-all shadow-sm bg-teal-600 text-white" id="lbl-rev-mode-friction">
+                      <input type="radio" name="revDuctMode" value="friction" checked onchange="setRevDuctMode('friction')" class="hidden"><i class="fa-solid fa-gauge-high"></i> Static Friction
+                    </label>
+                    <label class="cursor-pointer flex items-center justify-center gap-2 p-2 rounded-lg text-xs font-semibold transition-all text-slate-400" id="lbl-rev-mode-velocity">
+                      <input type="radio" name="revDuctMode" value="velocity" onchange="setRevDuctMode('velocity')" class="hidden"><i class="fa-solid fa-tachometer-alt"></i> Target Velocity
+                    </label>
+                  </div>
+                </div>
+
+                <div id="revDuctFrictionGroup" class="space-y-1">
+                  <div class="flex items-center justify-between">
+                    <label class="text-xs font-semibold text-slate-300">Friction Loss (in. w.g. / 100 ft)</label>
+                    <span id="revDuctDisplayFriction" class="text-xs font-bold text-amber-400 mono">0.08 in. w.g.</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <input type="range" id="revDuctSliderFriction" min="0.01" max="1.00" step="0.01" value="0.08" oninput="onRevDuctFrictionInput('slider', this.value)" class="w-full accent-amber-500">
+                    <input type="number" id="revDuctInputFriction" min="0.01" max="2.00" step="0.01" value="0.08" oninput="onRevDuctFrictionInput('input', this.value)" class="w-28 bg-slate-950 border border-slate-700 rounded-lg p-1.5 text-xs font-bold text-amber-300 text-right mono outline-none focus:border-amber-500">
+                  </div>
+                </div>
+
+                <div id="revDuctVelocityGroup" class="space-y-1 opacity-50 pointer-events-none">
+                  <div class="flex items-center justify-between">
+                    <label class="text-xs font-semibold text-slate-300">Target Air Velocity (FPM)</label>
+                    <span id="revDuctDisplayVelocity" class="text-xs font-bold text-sky-400 mono">1,200 FPM</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <input type="range" id="revDuctSliderVelocity" min="100" max="4000" step="50" value="1200" oninput="onRevDuctVelocityInput('slider', this.value)" class="w-full accent-sky-500">
+                    <input type="number" id="revDuctInputVelocity" min="100" max="6000" step="25" value="1200" oninput="onRevDuctVelocityInput('input', this.value)" class="w-28 bg-slate-950 border border-slate-700 rounded-lg p-1.5 text-xs font-bold text-sky-500 text-right mono outline-none focus:border-sky-500">
+                  </div>
+                </div>
+              </div>
+
+              <!-- TANDEM DUCT DIMENSION SLIDERS (ROUND & RECTANGULAR) -->
+              <div class="bg-slate-900/90 rounded-xl p-4 border border-slate-800 space-y-4">
+                <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center justify-between border-b border-slate-800 pb-2">
+                  <span><i class="fa-solid fa-arrows-left-right-to-line text-sky-400"></i> Interactive Duct Dimensions</span>
+                  <span class="text-[11px] text-teal-400 font-semibold flex items-center gap-1"><i class="fa-solid fa-link text-[10px]"></i> Tandem Coupling</span>
+                </h4>
+
+                <!-- ROUND DUCT SLIDER -->
+                <div class="space-y-1">
+                  <div class="flex items-center justify-between">
+                    <label class="text-xs font-semibold text-slate-300 flex items-center gap-1.5"><i class="fa-solid fa-circle text-teal-400 text-[10px]"></i> Round Duct Diameter (Inches)</label>
+                    <span id="revDuctDisplayRound" class="text-xs font-bold text-teal-400 mono">18"</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <input type="range" id="revDuctSliderRound" min="4" max="60" step="1" value="18" oninput="onRevDuctRoundInput('slider', this.value)" class="w-full accent-teal-500">
+                    <input type="number" id="revDuctInputRound" min="4" max="100" step="1" value="18" oninput="onRevDuctRoundInput('input', this.value)" class="w-20 bg-slate-950 border border-slate-700 rounded-lg p-1 text-xs font-bold text-teal-300 text-right mono outline-none focus:border-teal-500">
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-slate-800/80">
+                  <!-- DUCT WIDTH (X) SLIDER -->
+                  <div class="space-y-1">
+                    <div class="flex items-center justify-between">
+                      <label class="text-xs font-semibold text-slate-300 flex items-center gap-1.5"><i class="fa-solid fa-arrows-left-right text-sky-400 text-[10px]"></i> Width - Side X</label>
+                      <span id="revDuctDisplayX" class="text-xs font-bold text-sky-400 mono">18"</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <input type="range" id="revDuctSliderX" min="4" max="120" step="1" value="18" oninput="onRevDuctXInput('slider', this.value)" class="w-full accent-sky-500">
+                      <input type="number" id="revDuctInputX" min="4" max="120" step="1" value="18" oninput="onRevDuctXInput('input', this.value)" class="w-20 bg-slate-950 border border-slate-700 rounded-lg p-1 text-xs font-bold text-white text-right mono outline-none focus:border-sky-500">
+                    </div>
+                  </div>
+
+                  <!-- DUCT HEIGHT (Y) SLIDER -->
+                  <div class="space-y-1">
+                    <div class="flex items-center justify-between">
+                      <label class="text-xs font-semibold text-slate-300 flex items-center gap-1.5"><i class="fa-solid fa-arrows-up-down text-amber-400 text-[10px]"></i> Height - Side Y</label>
+                      <span id="revDuctDisplayY" class="text-xs font-bold text-amber-400 mono">16"</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <input type="range" id="revDuctSliderY" min="4" max="120" step="1" value="16" oninput="onRevDuctYInput('slider', this.value)" class="w-full accent-amber-500">
+                      <input type="number" id="revDuctInputY" min="4" max="120" step="1" value="16" oninput="onRevDuctYInput('input', this.value)" class="w-20 bg-slate-950 border border-slate-700 rounded-lg p-1 text-xs font-bold text-white text-right mono outline-none focus:border-amber-500">
+                    </div>
+                  </div>
+                </div>
+                <p class="text-[11px] text-slate-400 italic">Adjusting Round Duct updates rectangular dimensions in tandem. Adjusting Width or Height updates equivalent Round Diameter.</p>
+              </div>
+            </div>
+
+            <!-- RIGHT COLUMN: Solved Airflow & Geometry Cards -->
+            <div class="lg:col-span-7 space-y-4">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <!-- ROUND DUCT RESULTS CARD -->
+                <div class="glass-card rounded-2xl p-5 border border-slate-800 relative overflow-hidden group hover:border-teal-500/50 transition-all">
+                  <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-bold tracking-wider text-teal-600 uppercase flex items-center gap-1.5"><i class="fa-solid fa-circle"></i> Solved Round Airflow</span>
+                    <span id="revDuctOutputRoundDiaBadge" class="text-[10px] font-bold bg-teal-500/20 text-teal-600 px-2 py-0.5 rounded border border-teal-500/30">18" Round</span>
+                  </div>
+                  <div class="flex items-baseline gap-2 mt-1">
+                    <span id="revDuctOutputRoundCFM" class="text-3xl font-extrabold text-white tracking-tight mono">2,560 CFM</span>
+                    <span class="text-xs font-semibold text-slate-400">Air Volume</span>
+                  </div>
+                  <p class="text-[11px] text-slate-400 mt-1">Cross-Section Area: <span id="revDuctOutputRoundArea" class="font-bold text-slate-200 mono">1.77 sq ft</span></p>
+                  <div class="mt-3 pt-2 border-t border-slate-800/80 space-y-1.5 text-xs">
+                    <div class="flex justify-between text-slate-300"><span>Calculated Air Velocity:</span><span id="revDuctOutputRoundFPM" class="font-bold text-teal-600 mono">1,448 FPM</span></div>
+                    <div class="flex justify-between text-slate-300"><span>Design Friction Loss:</span><span id="revDuctOutputRoundFriction" class="font-bold text-amber-400 mono">0.080 in. w.g.</span></div>
+                  </div>
+                </div>
+
+                <!-- RECTANGULAR DUCT RESULTS CARD -->
+                <div class="glass-card rounded-2xl p-5 border border-slate-800 relative overflow-hidden group hover:border-amber-500/50 transition-all">
+                  <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-bold tracking-wider text-amber-400 uppercase flex items-center gap-1.5"><i class="fa-solid fa-vector-square"></i> Solved Rectangular Airflow</span>
+                    <span id="revDuctOutputAspectBadge" class="text-[10px] font-bold bg-emerald-500/20 text-emerald-600 px-2 py-0.5 rounded border border-emerald-500/30">Aspect 1.1:1 (Optimal)</span>
+                  </div>
+                  <div class="flex items-baseline gap-2 mt-1">
+                    <span id="revDuctOutputRectCFM" class="text-3xl font-extrabold text-white tracking-tight mono">2,500 CFM</span>
+                    <span class="text-xs font-semibold text-slate-400">Air Volume</span>
+                  </div>
+                  <p class="text-[11px] text-slate-400 mt-1">Equivalent Diameter: <span id="revDuctOutputRectDe" class="font-bold text-slate-200 mono">18.10"</span> (<span id="revDuctOutputRectDims" class="font-bold text-white">18" × 16"</span>)</p>
+                  <div class="mt-3 pt-2 border-t border-slate-800/80 space-y-1.5 text-xs">
+                    <div class="flex justify-between text-slate-300"><span>Calculated Air Velocity:</span><span id="revDuctOutputRectFPM" class="font-bold text-amber-300 mono">1,250 FPM</span></div>
+                    <div class="flex justify-between text-slate-300"><span>Cross-Section Area:</span><span id="revDuctOutputRectArea" class="font-bold text-emerald-400 mono">2.00 sq ft</span></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- REFERENCE CALLOUT CARD -->
+              <div id="rev-callout-guide" class="rounded-xl p-4 text-xs space-y-2">
+                <div class="flex items-center gap-2 font-bold guide-title text-slate-200">
+                  <i class="fa-solid fa-circle-info text-teal-400"></i> Reverse Airflow Lookup Engineering Guide
+                </div>
+                <p class="text-slate-300 leading-relaxed">Airflow volume is computed based on Huebscher circular equivalence relation (<span class="mono mono-formula text-teal-300">De = 1.30·(a·b)^0.625 / (a+b)^0.25</span>) and Colebrook-White friction derivation (<span class="mono mono-formula text-teal-300">Q = [(hf · De^5.02) / 0.10913]^(1/1.9)</span>). Use this reverse subtool to instantly verify existing field ductwork or evaluate capacity limitations.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- REVERSE CROSS-SECTION & ACOUSTIC NOISE INSPECTOR -->
+        <div class="glass-card rounded-2xl p-5 border border-slate-800 space-y-4">
+          <h3 class="text-sm font-bold text-white flex items-center justify-between border-b border-slate-800 pb-3">
+            <span><i class="fa-solid fa-shapes text-teal-600"></i> Duct Cross-Section & Acoustic Noise Inspector</span>
+            <span id="revDuctNoiseBadge" class="text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/30">Standard Commercial Office</span>
+          </h3>
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+            <div class="lg:col-span-8 space-y-3">
+              <div class="w-full h-56 bg-slate-950 rounded-xl border border-slate-800 flex items-center justify-center p-3">
+                <canvas id="revDuctCanvas" class="max-w-full max-h-full"></canvas>
+              </div>
+            </div>
+            <div class="lg:col-span-4 space-y-3 text-xs">
+              <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800 space-y-1">
+                <span class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Equivalent Cross-Section Area</span>
+                <p id="revMetricDuctArea" class="text-base font-bold text-white mono">2.00 sq ft (288 sq in)</p>
+              </div>
+              <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800 space-y-1">
+                <span class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Evaluated Friction Loss</span>
+                <p id="revMetricDuctFriction" class="text-base font-bold text-amber-400 mono">0.080 in. w.g. / 100 ft</p>
+              </div>
+              <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800 space-y-1">
+                <span class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Acoustic Noise Rating</span>
+                <p id="revMetricDuctAcoustic" class="text-base font-bold text-teal-400 mono">NC 30-35 (Commercial Office)</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- END SUBPAGE 2: REVERSE CFM LOOKUP ENGINE -->
+    </div>
+
+    
+  </main>
+
+  <footer class="bg-slate-900 border-t border-slate-800 py-4 text-center text-xs text-slate-500 mt-auto">
+    Mechanical & Plumbing System Calculations Suite — Commercial Engineering Edition
+  </footer>
+
+  <script src="shared_project_library.js"></script>
+  <script src="common.js"></script>
+  <script src="tool4.js"></script>
+
+  <script>
+      window.addEventListener('DOMContentLoaded', () => {
+        initTheme();
+        calculateDuctulator('init');
+        if (typeof calculateReverseDuctulator === 'function') calculateReverseDuctulator('init');
+        setupDragAndDrop();
+        loadActiveDraftState();
+        setTimeout(() => {
+          if (typeof drawDuctCanvas === 'function') drawDuctCanvas();
+          if (typeof drawReverseDuctCanvas === 'function') drawReverseDuctCanvas();
+        }, 60);
+      });
+      window.addEventListener('input', () => saveActiveDraftState());
+      window.addEventListener('change', () => saveActiveDraftState());
+      window.addEventListener('resize', () => {
+        requestAnimationFrame(() => {
+          if (typeof activeTool4Tab !== 'undefined' && activeTool4Tab === 'reverse') {
+            if (typeof drawReverseDuctCanvas === 'function') drawReverseDuctCanvas();
+          } else {
+            if (typeof drawDuctCanvas === 'function') drawDuctCanvas();
+          }
+        });
+      });
+    </script>
+
+      <!-- EDIT SESSION DETAILS MODAL -->
+  <div id="editSessionModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div class="glass-card bg-slate-900/95 border border-slate-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-5 animate-fade-in relative">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-pen-to-square text-amber-400"></i> Edit Saved Session Details
+        </h3>
+        <button onclick="closeEditSessionModal()" class="text-slate-400 hover:text-white text-lg p-1">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <p class="text-xs text-slate-400 leading-normal">
+        Update the Project Name and Author for this saved session in your browser library.
+      </p>
+
+      <div class="space-y-4 text-xs">
+        <div>
+          <label class="block font-bold text-slate-300 mb-1">Project Name <span class="text-amber-400">*</span></label>
+          <input type="text" id="editModalProjectName" placeholder="e.g. Commercial Office Building" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 font-bold text-white outline-none focus:border-amber-500 transition">
+        </div>
+        <div>
+          <label class="block font-bold text-slate-400 mb-1">Author / Engineer <span class="text-amber-400">*</span></label>
+          <input type="text" id="editModalAuthor" placeholder="e.g. John Doe" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-slate-200 outline-none focus:border-amber-500 transition">
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
+        <button onclick="closeEditSessionModal()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition">Cancel</button>
+        <button onclick="saveEditedSessionDetails()" class="px-5 py-2.5 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-xl text-xs transition shadow-lg shadow-amber-600/20 flex items-center gap-1.5">
+          <i class="fa-solid fa-check"></i> Update Details
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SAVE SESSION MODAL -->
+  <div id="saveSessionModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div class="glass-card bg-slate-900/95 border border-slate-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-5 animate-fade-in relative">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-floppy-disk text-emerald-400"></i> Save & Sync Project Session
+        </h3>
+        <button onclick="closeSaveSessionModal()" class="text-slate-400 hover:text-white text-lg p-1">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <p class="text-xs text-slate-400 leading-normal">
+        Save your working session to your browser library so you can recall it anytime across all tools.
+      </p>
+
+      <div class="space-y-4 text-xs">
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <label class="block font-bold text-slate-300">Save Option / Target Session</label>
+            <button type="button" id="btnModalLoadSession" onclick="loadSelectedSessionFromModal()" class="hidden px-2.5 py-0.5 rounded-lg text-[11px] font-bold bg-sky-600 hover:bg-sky-500 text-white transition flex items-center gap-1 shadow-sm" title="Load this saved session immediately into Tool 4">
+              <i class="fa-solid fa-folder-open"></i> Load This Session
+            </button>
+          </div>
+          <select id="saveSessionTargetSelect" onchange="handleSaveSessionTargetChange(this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 font-semibold text-white outline-none focus:border-sky-500 transition">
+            <option value="new">+ Save as New Project Session</option>
+          </select>
+        </div>
+        <div>
+          <label class="block font-bold text-slate-300 mb-1">Project Name <span class="text-emerald-400">*</span></label>
+          <input type="text" id="modalProjectName" placeholder="e.g. Commercial Office Building" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 font-bold text-white outline-none focus:border-emerald-500 transition">
+        </div>
+        <div>
+          <label class="block font-bold text-slate-400 mb-1">Author / Engineer</label>
+          <input type="text" id="modalAuthor" placeholder="e.g. John Doe" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-slate-200 outline-none focus:border-emerald-500 transition">
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between gap-2 pt-3 border-t border-slate-800">
+        <button onclick="exportActiveSessionAsJSON()" class="px-3.5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold border border-slate-700 transition flex items-center gap-1.5" title="Download portable .json backup file">
+          <i class="fa-solid fa-download"></i> Export .JSON File
+        </button>
+        <div class="flex items-center gap-2">
+          <button onclick="closeSaveSessionModal()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition">Cancel</button>
+          <button onclick="saveActiveSessionToLibrary()" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs transition shadow-lg shadow-emerald-600/20 flex items-center gap-1.5">
+            <i class="fa-solid fa-floppy-disk"></i> Save Session
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="toastNotification" class="fixed bottom-6 right-6 z-50 hidden transition-all duration-300">
+    <div class="bg-slate-900 border border-slate-700 text-white px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3">
+      <div id="toastIcon" class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
+        <i class="fa-solid fa-circle-check"></i>
+      </div>
+      <div>
+        <p id="toastTitle" class="text-xs font-bold text-white">Project Exported</p>
+        <p id="toastMessage" class="text-[11px] text-slate-400">File downloaded successfully.</p>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

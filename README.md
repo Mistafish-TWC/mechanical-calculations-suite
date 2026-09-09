@@ -1,5 +1,5 @@
 # Mechanical System Calculations Suite (Commercial Engineering Edition)
-[![Version](https://img.shields.io/badge/Version-v4.46-0284c7.svg)](Mechanical_Suite_Dashboard.html)
+[![Version](https://img.shields.io/badge/Version-v4.46-0284c7.svg)](file:///c:/Users/michael.salmon/OneDrive%20-%20The%20Waldinger%20Corporation%20waldinger.com/Desktop/AI%20App%20Working%20Folder/Mechanical_Suite_Dashboard.html)
 [![Platform](https://img.shields.io/badge/Platform-GitHub%20Pages%20%7C%20Local-10b981.svg)](https://pages.github.com/)
 [![License](https://img.shields.io/badge/License-Internal%20Commercial%20Use-64748b.svg)](#)
 
@@ -13,7 +13,7 @@ The application runs with **zero external dependencies** and requires no build p
 
 Once deployed via GitHub Pages, your live web portal is accessible at:
 ```text
-https://<your-github-username>.github.io/mechanical-calculations-suite/
+https://<your-github-username>.github.io/<your-repository-name>/
 ```
 
 ---
@@ -54,6 +54,12 @@ This suite runs completely client-side without any server:
 
 When adjusting calculations or introducing new features to any module, follow the authoritative standard in:
 👉 **[`IMPLEMENTATION_GUIDELINES.md`](IMPLEMENTATION_GUIDELINES.md)**
+
+This document details:
+- The **6-Point State Synchronization Protocol** required for any new input field or parameter.
+- The **Dual-Theme Rule** for dark/light styling.
+- Mathematical safety limits and boundary clamping rules.
+- Step-by-step playbooks for adding materials, schedules, and new calculation tools.
 
 ---
 

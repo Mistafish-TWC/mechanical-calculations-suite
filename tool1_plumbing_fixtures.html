@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-950 text-slate-100 antialiased selection:bg-sky-500 selection:text-white">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mechanical System Calculations Suite</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#f0f7ff',
+              100: '#e0effe',
+              500: '#0284c7',
+              600: '#0369a1',
+              700: '#035480',
+              800: '#075985',
+              900: '#0c4a6e',
+            }
+          }
+        }
+      }
+    }
+
+    // Default to Light Mode unless explicitly set to 'dark' in localStorage
+    if (localStorage.getItem('ps_theme') === 'dark') {
+      document.documentElement.classList.remove('light');
+    } else {
+      document.documentElement.classList.add('light');
+    }
+  </script>
+
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #020617; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #475569; }
+    .glass-card {
+      background: rgba(30, 41, 59, 0.7);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .active-nav-btn {
+      background-color: #0284c7 !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+    }
+    .active-tab {
+      background-color: #0284c7 !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+    }
+    .animate-fade-in { animation: fadeIn 0.2s ease-in-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* LIGHT MODE STYLING & HIGH CONTRAST SYSTEM */
+    html.light { background-color: #f8fafc !important; color: #0f172a !important; }
+    html.light body { background-color: #f8fafc !important; color: #0f172a !important; }
+    html.light header { background-color: rgba(255, 255, 255, 0.95) !important; border-color: #e2e8f0 !important; color: #0f172a !important; }
+    html.light header h1, html.light header h2, html.light header h3 { color: #0f172a !important; }
+    html.light .glass-card { background: rgba(255, 255, 255, 0.92) !important; border: 1px solid #e2e8f0 !important; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); color: #1e293b !important; }
+    html.light .glass-card h2, html.light .glass-card h3, html.light .glass-card h4 { color: #0f172a !important; }
+    html.light .glass-card p { color: #475569 !important; }
+    html.light input[type="text"], html.light input[type="number"], html.light select { background-color: #ffffff !important; color: #0f172a !important; border-color: #cbd5e1 !important; }
+    html.light table th { background-color: #f1f5f9 !important; color: #334155 !important; border-color: #cbd5e1 !important; }
+    html.light table td { border-color: #e2e8f0 !important; color: #0f172a !important; }
+    html.light table tr:hover { background-color: #f8fafc !important; }
+    html.light tfoot { background-color: #f1f5f9 !important; color: #0f172a !important; border-color: #cbd5e1 !important; }
+    html.light .bg-slate-900, html.light .bg-slate-900\/80, html.light .bg-slate-900\/90, html.light .bg-slate-950 { background-color: #f1f5f9 !important; color: #0f172a !important; border-color: #e2e8f0 !important; }
+    
+    /* BUTTON CONTRAST FIXES IN LIGHT MODE */
+    html.light button.bg-slate-800, html.light .bg-slate-800 { background-color: #e2e8f0 !important; color: #0f172a !important; border-color: #cbd5e1 !important; }
+    html.light button.bg-slate-800:hover, html.light .bg-slate-800:hover { background-color: #cbd5e1 !important; color: #020617 !important; }
+    html.light button.bg-sky-600, html.light button.bg-indigo-600, html.light button.bg-cyan-600, html.light button.bg-emerald-600 { color: #ffffff !important; }
+
+    /* TEXT CONTRAST & ACCENT COLORS IN LIGHT MODE */
+    html.light .text-white { color: #0f172a !important; }
+    html.light .text-slate-300, html.light .text-slate-400 { color: #475569 !important; }
+    html.light .text-slate-200 { color: #1e293b !important; }
+    html.light .border-slate-800, html.light .border-slate-800\/60, html.light .border-slate-800\/80, html.light .border-slate-700 { border-color: #e2e8f0 !important; }
+    html.light footer { background-color: #ffffff !important; border-color: #e2e8f0 !important; color: #64748b !important; }
+    html.light canvas { background-color: #ffffff !important; border-color: #cbd5e1 !important; }
+
+    html.light .text-sky-400 { color: #0284c7 !important; }
+    html.light .text-sky-300 { color: #0369a1 !important; }
+    html.light .text-indigo-400 { color: #4338ca !important; }
+    html.light .text-indigo-300 { color: #3730a3 !important; }
+    html.light .text-cyan-400 { color: #0e7490 !important; }
+    html.light .text-cyan-300 { color: #155e75 !important; }
+    html.light .text-teal-600 { color: #0f766e !important; }
+    html.light .text-emerald-400, html.light .text-emerald-600 { color: #047857 !important; }
+    html.light .text-purple-300, html.light .text-purple-400 { color: #7e22ce !important; }
+    html.light .text-amber-300, html.light .text-amber-400 { color: #b45309 !important; }
+
+    html.light #card-total-supply,
+    html.light #storm-schedule-summary-card,
+    html.light .sched-summary-card {
+      background: linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 100%) !important;
+      border: 1px solid #0284c7 !important;
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.12) !important;
+    }
+    html.light #card-total-supply .text-sky-500, html.light #storm-schedule-summary-card .text-sky-500 { color: #0369a1 !important; }
+    html.light #card-total-supply .text-white, html.light #storm-schedule-summary-card .text-white { color: #0c4a6e !important; }
+    html.light #card-total-supply .text-slate-400, html.light #storm-schedule-summary-card .text-slate-400 { color: #334155 !important; }
+    html.light #card-total-supply span.rounded-md {
+      background-color: rgba(2, 132, 199, 0.15) !important;
+      color: #0369a1 !important;
+      border: 1px solid rgba(3, 105, 161, 0.3) !important;
+      font-weight: 700 !important;
+    }
+
+    html.light .bg-cyan-950\/30, html.light .bg-sky-950\/30 {
+      background-color: #e0f2fe !important;
+      color: #0369a1 !important;
+    }
+
+    /* TOOL 5: FUEL GAS PIPE SIZING LIGHT MODE HIGH CONTRAST */
+    html.light #view-tool5 .glass-card {
+      background-color: #ffffff !important;
+      border: 1px solid #cbd5e1 !important;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+      color: #0f172a !important;
+    }
+    html.light #view-tool5 .text-white { color: #0f172a !important; }
+    html.light #view-tool5 .text-slate-300, html.light #view-tool5 .text-slate-400 { color: #334155 !important; }
+    html.light #view-tool5 .text-slate-200 { color: #1e293b !important; }
+    html.light #view-tool5 .text-amber-400, html.light #view-tool5 .text-amber-300, html.light #view-tool5 .text-amber-500 { color: #b45309 !important; }
+    html.light #view-tool5 .text-emerald-400 { color: #047857 !important; }
+    html.light #view-tool5 .bg-amber-500\/10, html.light #view-tool5 .bg-amber-500\/20 {
+      background-color: #fef3c7 !important;
+      color: #92400e !important;
+      border-color: #fde68a !important;
+    }
+    html.light #view-tool5 .bg-slate-900, html.light #view-tool5 .bg-slate-950 {
+      background-color: #f8fafc !important;
+      border-color: #cbd5e1 !important;
+      color: #0f172a !important;
+    }
+    html.light #view-tool5 input[type="text"],
+    html.light #view-tool5 input[type="number"],
+    html.light #view-tool5 select {
+      background-color: #ffffff !important;
+      color: #0f172a !important;
+      border-color: #cbd5e1 !important;
+      font-weight: 700 !important;
+    }
+    html.light #view-tool5 table th {
+      background-color: #f1f5f9 !important;
+      color: #334155 !important;
+      border-color: #cbd5e1 !important;
+    }
+    html.light #view-tool5 table td {
+      border-color: #e2e8f0 !important;
+      color: #0f172a !important;
+    }
+    html.light #view-tool5 tfoot {
+      background-color: #f1f5f9 !important;
+      color: #0f172a !important;
+      border-color: #cbd5e1 !important;
+    }
+    html.light #gas-summary-card {
+      background: linear-gradient(135deg, #fef3c7 0%, #fffbeb 100%) !important;
+      border: 1.5px solid #f59e0b !important;
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15) !important;
+    }
+    html.light #gas-summary-card p { color: #78350f !important; }
+    html.light #gas-summary-card h3 { color: #92400e !important; }
+    html.light #gas-summary-card #cardGasMainDrop,
+    html.light #gas-summary-card #cardGasTotalMBH,
+    html.light #gas-summary-card #cardGasMaxVel { color: #451a03 !important; }
+
+    /* 2x2 METRIC CARDS LIGHT MODE OVERRIDES */
+    html.light #view-tool5 .grid-cols-2 .rounded-2xl {
+      background: #ffffff !important;
+      border: 1.5px solid #cbd5e1 !important;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+    }
+    html.light #view-tool5 .grid-cols-2 .rounded-2xl:nth-child(2) {
+      background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%) !important;
+      border: 1.5px solid #fde68a !important;
+    }
+    html.light #view-tool5 .grid-cols-2 .text-slate-400 {
+      color: #475569 !important;
+    }
+    html.light #view-tool5 .grid-cols-2 .text-emerald-400 {
+      color: #047857 !important;
+    }
+    html.light #view-tool5 .grid-cols-2 .text-amber-300,
+    html.light #view-tool5 .grid-cols-2 .text-amber-400 {
+      color: #b45309 !important;
+    }
+    html.light #view-tool5 .grid-cols-2 .text-sky-400 {
+      color: #0369a1 !important;
+    }
+    html.light #view-tool5 .relative.w-full.h-\[220px\] {
+      background-color: #f8fafc !important;
+      border-color: #cbd5e1 !important;
+    }
+
+    /* FLUSHOMETER ALERT LIGHT MODE HIGH CONTRAST */
+    html.light #flushometer-alert {
+      background-color: #fff7ed !important;
+      border: 1.5px solid #d97706 !important;
+      color: #451a03 !important;
+    }
+    html.light #flushometer-alert .text-amber-400 {
+      color: #d97706 !important;
+    }
+    html.light #flushometer-alert .text-amber-300 {
+      color: #78350f !important;
+    }
+    html.light #flushometer-alert span {
+      color: #451a03 !important;
+    }
+
+    /* BEST FIT MATRIX ROW CONTRAST SYSTEM */
+    .best-fit-row {
+      background: linear-gradient(90deg, rgba(2, 132, 199, 0.35) 0%, rgba(99, 102, 241, 0.25) 100%) !important;
+      border-top: 2px solid #38bdf8 !important;
+      border-bottom: 2px solid #38bdf8 !important;
+    }
+    .best-fit-row td {
+      color: #ffffff !important;
+      font-weight: 700 !important;
+    }
+
+    html.light .best-fit-row {
+      background: #e0f2fe !important;
+      border-top: 2px solid #0284c7 !important;
+      border-bottom: 2px solid #0284c7 !important;
+    }
+    html.light .best-fit-row td {
+      color: #0369a1 !important;
+      font-weight: 700 !important;
+    }
+    html.light .best-fit-row td span.text-slate-400 {
+      color: #0284c7 !important;
+    }
+
+    /* MODAL OVERLAYS IN LIGHT MODE */
+    html.light #importModal .glass-card,
+    html.light #exportModal .glass-card {
+      background-color: #ffffff !important;
+      border-color: #cbd5e1 !important;
+      color: #0f172a !important;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+    }
+    html.light #exportModal input[type="text"] {
+      background-color: #f8fafc !important;
+      color: #0f172a !important;
+      border-color: #cbd5e1 !important;
+    }
+    html.light #exportModal .bg-slate-950 {
+      background-color: #f1f5f9 !important;
+      border-color: #cbd5e1 !important;
+    }
+    html.light #dropZone {
+      background-color: #f8fafc !important;
+      border-color: #cbd5e1 !important;
+      color: #0f172a !important;
+    }
+    html.light #dropZone:hover {
+      border-color: #0284c7 !important;
+      background-color: #f0f9ff !important;
+    }
+    html.light #importPreview {
+      background-color: #f1f5f9 !important;
+      border-color: #cbd5e1 !important;
+      color: #0f172a !important;
+    }
+    html.light #toastNotification > div {
+      background-color: #ffffff !important;
+      border-color: #cbd5e1 !important;
+      color: #0f172a !important;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15) !important;
+    }
+    html.light #toastNotification #toastTitle {
+      color: #0f172a !important;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col bg-slate-950 text-slate-100 antialiased selection:bg-sky-500 selection:text-white">
+
+  
+
+      <header class="bg-slate-900/90 border-b border-slate-800 sticky top-0 z-50 backdrop-blur-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16 gap-4">
+        
+        <a href="Mechanical_Suite_Dashboard.html" onclick="saveActiveDraftState()" class="flex items-center gap-3 cursor-pointer">
+          <div class="p-2.5 bg-gradient-to-tr from-sky-600 to-blue-500 rounded-xl shadow-lg shadow-sky-500/20 text-white flex items-center justify-center">
+            <i class="fa-solid fa-compass-drafting text-xl"></i>
+          </div>
+          <div>
+            <h1 class="font-bold text-lg leading-snug tracking-tight text-white flex items-center gap-2">
+              Mechanical System Calculations Suite
+              <span class="text-xs font-semibold bg-sky-500/20 text-sky-500 border border-sky-400/30 px-2 py-0.5 rounded-full">v4.46</span>
+            </h1>
+          </div>
+        </a>
+
+        <div class="flex items-center gap-2">
+          <a href="Mechanical_Suite_Dashboard.html" onclick="saveActiveDraftState()" id="nav-btn-dashboard" class="px-3 py-2 text-xs font-bold rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 border border-slate-700/80 transition flex items-center gap-2" title="Return to Suite Dashboard Home">
+            <i class="fa-solid fa-house text-sky-400"></i>
+            <span>Dashboard</span>
+          </a>
+
+          <button onclick="openSaveSessionModal()" class="px-3.5 py-2 text-xs font-bold rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white transition flex items-center gap-1.5 shadow-md shadow-emerald-600/20" title="Save & Sync Project Session">
+            <i class="fa-solid fa-floppy-disk"></i>
+            <span>Save Session</span>
+          </button>
+
+          <button id="theme-toggle-btn" onclick="toggleTheme()" class="px-3 py-2 text-xs font-semibold rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 border border-slate-700/80 transition flex items-center gap-1.5" title="Toggle Light/Dark Visual Theme">
+            <i id="theme-toggle-icon" class="fa-solid fa-sun text-amber-400 text-sm"></i>
+            <span id="theme-toggle-text" class="hidden sm:inline">Light</span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+
+  <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+<div id="view-tool1" class=" space-y-6 animate-fade-in">
+      <div class="glass-card rounded-2xl p-5 border border-slate-800 flex flex-col gap-4">
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-3 border-b border-slate-800">
+          <div>
+            <h2 class="text-base font-bold text-white flex items-center gap-2">
+              <i class="fa-solid fa-faucet-drip text-sky-400"></i> Plumbing Fixture Unit Calculator
+            </h2>
+            <p class="text-xs text-slate-400 mt-0.5">IPC & UPC Complete Library for Commercial WSFU / DFU / GPM Sizing</p>
+          </div>
+          <div class="flex items-center gap-3">
+            <select id="preset-select" onchange="loadPreset(this.value)" class="bg-slate-900 text-slate-200 border border-slate-700 rounded-xl text-xs font-medium px-3 py-2 outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer hover:bg-slate-800 transition">
+              <option value="" selected>⚡ Load Preset Schedule...</option>
+              <option value="commercial_restroom">Commercial Restroom (Office / Retail)</option>
+              <option value="commercial_kitchen">Commercial Kitchen / Restaurant</option>
+              <option value="medical_clinic">Hospital / Medical Clinic</option>
+              <option value="multi_family">Multi-Family Commercial (20 Units)</option>
+              <option value="residential">Single Family Home (3 Bed, 2.5 Bath)</option>
+            </select>
+            <button onclick="resetAll()" title="Reset Schedule" class="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl border border-slate-700 transition">
+              <i class="fa-solid fa-rotate-left"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="flex flex-col gap-1.5">
+            <label class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Plumbing Code:</label>
+            <div class="bg-slate-900 p-1 rounded-xl flex border border-slate-800">
+              <button id="btn-code-ipc" onclick="setCode('IPC')" class="flex-1 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm bg-sky-600 text-white flex items-center justify-center gap-1.5">IPC Standard</button>
+              <button id="btn-code-upc" onclick="setCode('UPC')" class="flex-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 transition-all flex items-center justify-center gap-1.5">UPC Standard</button>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-1.5">
+            <label class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">System Supply Type:</label>
+            <div class="bg-slate-900 p-1 rounded-xl flex border border-slate-800">
+              <button id="btn-sys-valve" onclick="setSystem('valve')" class="flex-1 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm bg-sky-600 text-white flex items-center justify-center gap-1.5">Flushometer</button>
+              <button id="btn-sys-tank" onclick="setSystem('tank')" class="flex-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 transition-all flex items-center justify-center gap-1.5">Flush Tank</button>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-1.5">
+            <label class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Piping Material & Rating:</label>
+            <div class="flex items-center gap-2">
+              <select id="material-family-select" onchange="onMaterialFamilyChange(this.value)" class="bg-slate-900 text-slate-200 border border-slate-700 rounded-xl text-xs font-bold px-3 py-2 outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer transition w-1/2">
+                <option value="copper" selected>Copper Tubing</option>
+                <option value="stainless">Stainless Steel</option>
+                <option value="cpvc">CPVC Pipe</option>
+                <option value="pex">PEX Tubing</option>
+              </select>
+              <select id="material-type-select" onchange="setMaterialType(this.value)" class="bg-slate-900 text-slate-200 border border-slate-700 rounded-xl text-xs font-bold px-3 py-2 outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer transition w-1/2"></select>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-1.5">
+            <label class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Drain Orientation & Pitch:</label>
+            <div class="flex items-center gap-2">
+              <select id="drain-type-select" onchange="setDrainType(this.value)" class="bg-slate-900 text-slate-200 border border-slate-700 rounded-xl text-xs font-bold px-2.5 py-2 outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer transition w-1/2">
+                <option value="horizontal" selected>Horiz. Drain / Sewer</option>
+                <option value="vertical">Vertical Waste Stack</option>
+              </select>
+              <select id="drain-slope-select" onchange="setDrainSlope(this.value)" class="bg-slate-900 text-slate-200 border border-slate-700 rounded-xl text-xs font-bold px-2.5 py-2 outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer transition w-1/2">
+                <option value="1_16">1/16"/ft (0.5%)</option>
+                <option value="1_8">1/8"/ft (1.0%)</option>
+                <option value="1_4" selected>1/4"/ft (2.0%)</option>
+                <option value="1_2">1/2"/ft (4.0%)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-3 border-t border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs">
+          <div class="flex items-center gap-2 w-full sm:w-auto">
+            <span class="font-bold text-slate-300 flex items-center gap-1.5"><i class="fa-solid fa-bolt text-amber-400"></i> Continuous Supply Load (GPM):</span>
+            <input type="number" id="continuous-gpm-input" min="0" step="0.5" value="0" oninput="updateContinuousGPM(this.value)" placeholder="e.g., 5 GPM" class="w-28 font-bold text-white bg-slate-900 border border-slate-700 focus:border-sky-500 rounded-lg px-2.5 py-1 text-xs outline-none transition mono" />
+          </div>
+          <span class="bg-sky-500/10 text-sky-500 font-semibold px-2.5 py-1 rounded-md border border-sky-500/20 text-[11px]">Water Service Floor: Min 3/4" Commercial (IPC 604.4 / UPC 610.8)</span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="glass-card rounded-2xl p-5 border border-slate-800 relative overflow-hidden group hover:border-sky-500/50 transition-all">
+          <div class="relative">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-bold tracking-wider text-sky-400 uppercase flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-sky-500"></span> Cold Water Demand</span>
+              <span class="text-[10px] font-semibold bg-sky-500/20 text-sky-500 px-2 py-0.5 rounded-md border border-sky-500/30">Branch</span>
+            </div>
+            <div class="flex items-baseline gap-2 mt-1">
+              <span id="metric-cold-wsfu" class="text-3xl font-extrabold text-white tracking-tight mono">0.0</span>
+              <span class="text-xs font-semibold text-slate-400">WSFU</span>
+            </div>
+            <div class="mt-2 pt-2 border-t border-slate-800 flex items-center justify-between text-xs">
+              <span class="text-slate-400">Interpolated Demand:</span>
+              <span id="metric-cold-gpm" class="font-bold text-sky-400 text-sm mono">0.0 GPM</span>
+            </div>
+            <div class="mt-1 flex items-center justify-between text-[11px] text-slate-400">
+              <span>Max Velocity:</span>
+              <select id="cold-velocity-select" onchange="setCustomVelocity('cold', this.value)" class="bg-slate-900 border border-slate-700 text-slate-200 font-bold text-[11px] rounded-md px-1.5 py-0.5 outline-none focus:ring-1 focus:ring-sky-500">
+                <option value="4.0">4.0 fps</option><option value="5.0">5.0 fps</option><option value="6.0">6.0 fps</option><option value="8.0" selected>8.0 fps</option><option value="10.0">10.0 fps</option>
+              </select>
+            </div>
+            <div class="mt-1 flex items-center justify-between text-[11px] text-slate-400"><span>Est. Pipe Size:</span><span id="metric-cold-pipe" class="font-bold text-slate-200 mono">-</span></div>
+            <div class="mt-1 flex items-center justify-between text-[11px] text-slate-400"><span>Calculated Velocity:</span><span id="metric-cold-vel-display" class="font-bold text-sky-400 mono">0.0 fps</span></div>
+          </div>
+        </div>
+
+        <div class="glass-card rounded-2xl p-5 border border-slate-800 relative overflow-hidden group hover:border-rose-500/50 transition-all">
+          <div class="relative">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-bold tracking-wider text-rose-400 uppercase flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span> Hot Water Demand</span>
+              <span class="text-[10px] font-semibold bg-rose-500/20 text-rose-500 px-2 py-0.5 rounded-md border border-rose-500/30">Heater Line</span>
+            </div>
+            <div class="flex items-baseline gap-2 mt-1">
+              <span id="metric-hot-wsfu" class="text-3xl font-extrabold text-white tracking-tight mono">0.0</span>
+              <span class="text-xs font-semibold text-slate-400">WSFU</span>
+            </div>
+            <div class="mt-2 pt-2 border-t border-slate-800 flex items-center justify-between text-xs">
+              <span class="text-slate-400">Interpolated Demand:</span>
+              <span id="metric-hot-gpm" class="font-bold text-rose-400 text-sm mono">0.0 GPM</span>
+            </div>
+            <div class="mt-1 flex items-center justify-between text-[11px] text-slate-400">
+              <span>Max Velocity:</span>
+              <select id="hot-velocity-select" onchange="setCustomVelocity('hot', this.value)" class="bg-slate-900 border border-slate-700 text-slate-200 font-bold text-[11px] rounded-md px-1.5 py-0.5 outline-none focus:ring-1 focus:ring-rose-500">
+                <option value="3.0">3.0 fps</option><option value="4.0">4.0 fps</option><option value="5.0" selected>5.0 fps</option><option value="6.0">6.0 fps</option><option value="8.0">8.0 fps</option>
+              </select>
+            </div>
+            <div class="mt-1 flex items-center justify-between text-[11px] text-slate-400"><span>Est. Pipe Size:</span><span id="metric-hot-pipe" class="font-bold text-slate-200 mono">-</span></div>
+            <div class="mt-1 flex items-center justify-between text-[11px] text-slate-400"><span>Calculated Velocity:</span><span id="metric-hot-vel-display" class="font-bold text-rose-400 mono">0.0 fps</span></div>
+          </div>
+        </div>
+
+        <div id="card-total-supply" class="bg-gradient-to-br from-slate-900 to-sky-950 rounded-2xl p-5 border border-sky-500/30 shadow-lg relative overflow-hidden">
+          <div class="relative">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-bold tracking-wider text-sky-500 uppercase flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span> Total Supply Main</span>
+              <span class="text-[10px] font-bold bg-sky-500/20 text-sky-500 border border-sky-500/30 px-2.5 py-0.5 rounded-md">Combined</span>
+            </div>
+            <div class="flex items-baseline gap-2 mt-1">
+              <span id="metric-total-wsfu" class="text-3xl font-extrabold text-white tracking-tight mono">0.0</span>
+              <span class="text-xs font-semibold text-slate-400">WSFU</span>
+            </div>
+            <div class="mt-2 pt-2 border-t border-slate-800 flex items-center justify-between text-xs">
+              <span class="text-slate-400">Peak Design Flow:</span>
+              <span id="metric-total-gpm" class="font-extrabold text-amber-300 text-base mono">0.0 GPM</span>
+            </div>
+            <div class="mt-1 flex items-center justify-between text-[11px] text-slate-400"><span>Main Service Size:</span><span id="metric-total-pipe" class="font-bold text-sky-500 mono">-</span></div>
+            <div class="mt-1 flex items-center justify-between text-[11px] text-slate-400"><span>Calculated Velocity:</span><span id="metric-total-vel-display" class="font-bold text-amber-300 mono">0.0 fps</span></div>
+          </div>
+        </div>
+
+        <div class="glass-card rounded-2xl p-5 border border-slate-800 relative overflow-hidden group hover:border-emerald-500/50 transition-all">
+          <div class="relative">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-bold tracking-wider text-emerald-400 uppercase flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Drainage &amp; Venting</span>
+              <span id="metric-drain-badge" class="text-[10px] font-semibold bg-emerald-500/20 text-emerald-600 border border-emerald-500/30 px-2 py-0.5 rounded-md">Building Drain</span>
+            </div>
+            <div class="flex items-baseline gap-2 mt-1">
+              <span id="metric-dfu" class="text-3xl font-extrabold text-white tracking-tight mono">0.0</span>
+              <span class="text-xs font-semibold text-slate-400">DFU</span>
+            </div>
+            <div class="mt-2 pt-2 border-t border-slate-800 flex items-center justify-between text-xs">
+              <span class="text-slate-400">Est. Drain Size:</span>
+              <span id="metric-dfu-pipe" class="font-bold text-emerald-400 text-sm mono">-</span>
+            </div>
+            <div class="mt-1 flex items-center justify-between text-xs">
+              <span class="text-cyan-400 font-semibold flex items-center gap-1"><i class="fa-solid fa-wind text-cyan-400 text-[10px]"></i> Est. Vent Size:</span>
+              <span id="metric-vent-pipe" class="font-bold text-cyan-300 text-sm mono">-</span>
+            </div>
+            <div class="mt-1 flex items-center justify-between text-[11px] text-slate-400">
+              <span>Member Mode:</span>
+              <span id="metric-slope-label" class="font-semibold text-slate-300">Horiz. @ 1/4"/ft</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="flushometer-alert" class="hidden bg-amber-500/10 border border-amber-500/30 text-amber-200 rounded-2xl p-4 flex items-start gap-3 text-xs">
+        <i class="fa-solid fa-triangle-exclamation text-amber-400 text-base mt-0.5"></i>
+        <div><span class="font-bold text-amber-300">Commercial Code Requirement Alert (IPC Table 604.5 / UPC Table 610.5):</span> Commercial Flushometer fixtures require a minimum individual branch line size of <span class="font-bold underline">1 inch nominal diameter</span> up to the valve connection.</div>
+      </div>
+
+      <div class="glass-card rounded-2xl border border-slate-800 overflow-hidden">
+        <div class="p-4 sm:p-5 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h3 class="text-base font-bold text-white flex items-center gap-2"><i class="fa-solid fa-list text-sky-400"></i> Fixture Schedule</h3>
+            <p class="text-xs text-slate-400 mt-0.5">Add fixture types and quantities to evaluate WSFU, DFU, and GPM load.</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="addCustomFixtureRow()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-md shadow-indigo-600/20">
+              <i class="fa-solid fa-plus-circle"></i> Add Custom Fixture
+            </button>
+            <button onclick="addFixtureRow()" class="px-4 py-2 bg-sky-600 hover:bg-sky-500 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-md shadow-sky-600/20">
+              <i class="fa-solid fa-plus"></i> Add Fixture Type
+            </button>
+            <button onclick="clearFixtureSchedule()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-100 rounded-xl text-xs font-semibold transition border border-slate-700">
+              Clear
+            </button>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="bg-slate-900/80 border-b border-slate-800 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                <th class="py-3 px-4 sm:px-6">Fixture Description</th>
+                <th class="py-3 px-3 text-center w-28">Quantity</th>
+                <th class="py-3 px-4 text-right">Cold WSFU</th>
+                <th class="py-3 px-4 text-right">Hot WSFU</th>
+                <th class="py-3 px-4 text-right">Total WSFU</th>
+                <th class="py-3 px-4 text-right">Drainage DFU</th>
+                <th class="py-3 px-4 text-center w-20">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="fixture-table-body" class="divide-y divide-slate-800/60 text-slate-200 mono"></tbody>
+            <tfoot class="bg-slate-900/90 font-bold border-t border-slate-800 text-xs text-white">
+              <tr>
+                <td class="py-3.5 px-4 sm:px-6 font-sans">Schedule Totals</td>
+                <td id="foot-total-qty" class="py-3.5 px-3 text-center text-slate-300">0</td>
+                <td id="foot-total-cold" class="py-3.5 px-4 text-right text-sky-400">0.00</td>
+                <td id="foot-total-hot" class="py-3.5 px-4 text-right text-rose-400">0.00</td>
+                <td id="foot-total-wsfu" class="py-3.5 px-4 text-right text-white font-extrabold">0.00</td>
+                <td id="foot-total-dfu" class="py-3.5 px-4 text-right text-emerald-400 font-extrabold">0.00</td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <div id="empty-state" class="hidden p-8 text-center">
+          <p class="text-sm font-semibold text-slate-400">No fixtures added to schedule yet</p>
+          <p class="text-xs text-slate-500 mt-1">Click "+ Add Fixture Type" above or select a preset schedule.</p>
+        </div>
+      </div>
+
+      <div class="glass-card rounded-2xl border border-slate-800 p-4 sm:p-5 space-y-4">
+        <div class="flex justify-between items-center pb-3 border-b border-slate-800">
+          <h3 class="text-sm font-bold text-white flex items-center gap-2"><i class="fa-solid fa-chart-pie text-amber-400"></i> Commercial Fixture Subtotal Breakdown</h3>
+          <span id="breakdown-code-badge" class="text-xs font-bold text-sky-400 bg-sky-500/10 px-3 py-1 rounded-lg border border-sky-500/20">IPC Standard</span>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="bg-slate-900/80 border-b border-slate-800 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                <th class="py-2.5 px-4">Fixture Type</th><th class="py-2.5 px-3 text-center">Unit Count</th><th class="py-2.5 px-3 text-center">Unit Weights (C / H / Tot / DFU)</th>
+                <th class="py-2.5 px-4 text-right">Cold Subtotal</th><th class="py-2.5 px-4 text-right">Hot Subtotal</th><th class="py-2.5 px-4 text-right">Total WSFU</th><th class="py-2.5 px-4 text-right">DFU Subtotal</th><th class="py-2.5 px-4 text-right">% Share</th>
+              </tr>
+            </thead>
+            <tbody id="breakdown-table-body" class="divide-y divide-slate-800/60 text-slate-300 mono"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="glass-card rounded-2xl p-5 border border-slate-800 space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div>
+            <h3 class="text-sm font-bold text-white flex items-center gap-2"><i class="fa-solid fa-book-open text-sky-400"></i> Pipe Hydraulics & Reference Capacities</h3>
+            <p class="text-[11px] text-slate-400 mt-0.5">Active Material: <span id="ref-material-name" class="font-bold text-sky-500">Copper Type L</span></p>
+          </div>
+          <span id="ref-velocity-badge" class="text-[11px] text-slate-400 bg-slate-900 px-2.5 py-1 rounded-md border border-slate-800">Limits: Cold ≤ 8.0 fps | Hot ≤ 5.0 fps</span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+          <div class="bg-slate-900/80 p-3.5 rounded-xl border border-slate-800">
+            <h4 id="ref-cold-title" class="font-bold text-sky-400 mb-1">Cold Water Max Capacity</h4>
+            <div id="ref-cold-list" class="grid grid-cols-2 gap-y-1 text-[11px] text-slate-300 mono"></div>
+          </div>
+          <div class="bg-slate-900/80 p-3.5 rounded-xl border border-slate-800">
+            <h4 id="ref-hot-title" class="font-bold text-rose-400 mb-1">Hot Water Max Capacity</h4>
+            <div id="ref-hot-list" class="grid grid-cols-2 gap-y-1 text-[11px] text-slate-300 mono"></div>
+          </div>
+          <div class="bg-slate-900/80 p-3.5 rounded-xl border border-slate-800">
+            <h4 id="ref-drain-title" class="font-bold text-emerald-400 mb-1">Drainage DFU Capacity</h4>
+            <p id="ref-drain-sub" class="text-[11px] text-slate-400 mb-2">Max DFU capacity @ 1/4" per ft slope (2%):</p>
+            <div id="ref-drain-list" class="grid grid-cols-2 gap-y-1 text-[11px] text-slate-300 mono"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    
+  </main>
+
+  <footer class="bg-slate-900 border-t border-slate-800 py-4 text-center text-xs text-slate-500 mt-auto">
+    Mechanical & Plumbing System Calculations Suite — Commercial Engineering Edition
+  </footer>
+
+  <script src="shared_project_library.js"></script>
+  <script src="common.js"></script>
+  <script src="tool1.js"></script>
+
+  <script>
+      window.addEventListener('DOMContentLoaded', () => {
+        initTheme();
+        populateMaterialTypes();
+        calculateTool1();
+        setupDragAndDrop();
+        loadActiveDraftState();
+      });
+      window.addEventListener('input', () => saveActiveDraftState());
+      window.addEventListener('change', () => saveActiveDraftState());
+    </script>
+
+      <!-- EDIT SESSION DETAILS MODAL -->
+  <div id="editSessionModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div class="glass-card bg-slate-900/95 border border-slate-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-5 animate-fade-in relative">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-pen-to-square text-amber-400"></i> Edit Saved Session Details
+        </h3>
+        <button onclick="closeEditSessionModal()" class="text-slate-400 hover:text-white text-lg p-1">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <p class="text-xs text-slate-400 leading-normal">
+        Update the Project Name and Author for this saved session in your browser library.
+      </p>
+
+      <div class="space-y-4 text-xs">
+        <div>
+          <label class="block font-bold text-slate-300 mb-1">Project Name <span class="text-amber-400">*</span></label>
+          <input type="text" id="editModalProjectName" placeholder="e.g. Commercial Office Building" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 font-bold text-white outline-none focus:border-amber-500 transition">
+        </div>
+        <div>
+          <label class="block font-bold text-slate-400 mb-1">Author / Engineer <span class="text-amber-400">*</span></label>
+          <input type="text" id="editModalAuthor" placeholder="e.g. John Doe" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-slate-200 outline-none focus:border-amber-500 transition">
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
+        <button onclick="closeEditSessionModal()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition">Cancel</button>
+        <button onclick="saveEditedSessionDetails()" class="px-5 py-2.5 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-xl text-xs transition shadow-lg shadow-amber-600/20 flex items-center gap-1.5">
+          <i class="fa-solid fa-check"></i> Update Details
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SAVE SESSION MODAL -->
+  <div id="saveSessionModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div class="glass-card bg-slate-900/95 border border-slate-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-5 animate-fade-in relative">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-floppy-disk text-emerald-400"></i> Save & Sync Project Session
+        </h3>
+        <button onclick="closeSaveSessionModal()" class="text-slate-400 hover:text-white text-lg p-1">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <p class="text-xs text-slate-400 leading-normal">
+        Save your working session to your browser library so you can recall it anytime across all tools.
+      </p>
+
+      <div class="space-y-4 text-xs">
+        <div>
+          <label class="block font-bold text-slate-300 mb-1">Save Option / Target Session</label>
+          <select id="saveSessionTargetSelect" onchange="handleSaveSessionTargetChange(this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 font-semibold text-white outline-none focus:border-sky-500 transition">
+            <option value="new">+ Save as New Project Session</option>
+          </select>
+        </div>
+        <div>
+          <label class="block font-bold text-slate-300 mb-1">Project Name <span class="text-emerald-400">*</span></label>
+          <input type="text" id="modalProjectName" placeholder="e.g. Commercial Office Building" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 font-bold text-white outline-none focus:border-emerald-500 transition">
+        </div>
+        <div>
+          <label class="block font-bold text-slate-400 mb-1">Author / Engineer</label>
+          <input type="text" id="modalAuthor" placeholder="e.g. John Doe" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-slate-200 outline-none focus:border-emerald-500 transition">
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between gap-2 pt-3 border-t border-slate-800">
+        <button onclick="exportActiveSessionAsJSON()" class="px-3.5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold border border-slate-700 transition flex items-center gap-1.5" title="Download portable .json backup file">
+          <i class="fa-solid fa-download"></i> Export .JSON File
+        </button>
+        <div class="flex items-center gap-2">
+          <button onclick="closeSaveSessionModal()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition">Cancel</button>
+          <button onclick="saveActiveSessionToLibrary()" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs transition shadow-lg shadow-emerald-600/20 flex items-center gap-1.5">
+            <i class="fa-solid fa-floppy-disk"></i> Save Session
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="toastNotification" class="fixed bottom-6 right-6 z-50 hidden transition-all duration-300">
+    <div class="bg-slate-900 border border-slate-700 text-white px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3">
+      <div id="toastIcon" class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
+        <i class="fa-solid fa-circle-check"></i>
+      </div>
+      <div>
+        <p id="toastTitle" class="text-xs font-bold text-white">Project Exported</p>
+        <p id="toastMessage" class="text-[11px] text-slate-400">File downloaded successfully.</p>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
