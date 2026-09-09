@@ -39,6 +39,93 @@ function isTool5Active(t) {
 const ACTIVE_SESSION_KEY = 'mech_suite_active_draft_v446';
 const PROJECT_LIBRARY_KEY = 'mech_suite_project_library_v446';
 
+// -------------------------------------------------------------------
+// GOOGLE FIREBASE FIRESTORE CLOUD SYNC CONFIGURATION
+// -------------------------------------------------------------------
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyB6DwIsgHEqMNwV58vkB2pAccbe4jXF1ow",
+  authDomain: "mechanical-suite-db.firebaseapp.com",
+  projectId: "mechanical-suite-db",
+  storageBucket: "mechanical-suite-db.firebasestorage.app",
+  messagingSenderId: "83672983040",
+  appId: "1:83672983040:web:efb06647bd7a9ee13c1ae5"
+};
+
+let firestoreDB = null;
+let isFirestoreInitialized = false;
+
+function initFirebaseFirestore() {
+  if (isFirestoreInitialized) return;
+  try {
+    if (typeof firebase !== 'undefined') {
+      if (!firebase.apps.length) {
+        firebase.initializeApp(FIREBASE_CONFIG);
+      }
+      firestoreDB = firebase.firestore();
+      isFirestoreInitialized = true;
+      updateCloudSyncBadge(true);
+      setupFirestoreRealtimeListener();
+    } else {
+      updateCloudSyncBadge(false);
+    }
+  } catch (err) {
+    console.warn("Firebase initialization skipped or failed:", err);
+    updateCloudSyncBadge(false);
+  }
+}
+
+function updateCloudSyncBadge(isConnected) {
+  const syncBadge = document.getElementById('autoSyncBadge');
+  if (syncBadge) {
+    if (isConnected) {
+      syncBadge.className = "text-[10px] font-semibold text-emerald-400 flex items-center gap-1";
+      syncBadge.innerHTML = `<i class="fa-solid fa-cloud text-emerald-400"></i> Cloud Synced (Firestore)`;
+      syncBadge.title = "Live real-time cross-device cloud synchronization is active via Google Firebase Firestore.";
+    } else {
+      syncBadge.className = "text-[10px] font-semibold text-slate-400 flex items-center gap-1";
+      syncBadge.innerHTML = `<i class="fa-solid fa-hard-drive text-slate-400"></i> Local Storage Only`;
+      syncBadge.title = "Operating in local browser storage mode.";
+    }
+  }
+}
+
+function setupFirestoreRealtimeListener() {
+  if (!firestoreDB) return;
+  firestoreDB.collection("mech_suite_projects").onSnapshot((snapshot) => {
+    const cloudProjects = [];
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      data._firestoreId = doc.id;
+      cloudProjects.push(data);
+    });
+
+    if (cloudProjects.length > 0) {
+      cloudProjects.sort((a, b) => new Date(b.metadata?.savedDate || b.metadata?.lastModified || 0) - new Date(a.metadata?.savedDate || a.metadata?.lastModified || 0));
+      localStorage.setItem(PROJECT_LIBRARY_KEY, JSON.stringify(cloudProjects));
+      window.SHARED_PROJECT_LIBRARY = cloudProjects;
+      renderProjectLibraryTable();
+    } else if (window.SHARED_PROJECT_LIBRARY && window.SHARED_PROJECT_LIBRARY.length > 0) {
+      seedInitialProjectsToFirestore();
+    }
+  }, (err) => {
+    console.warn("Firestore listener error:", err);
+    updateCloudSyncBadge(false);
+  });
+}
+
+async function seedInitialProjectsToFirestore() {
+  if (!firestoreDB || !window.SHARED_PROJECT_LIBRARY || window.SHARED_PROJECT_LIBRARY.length === 0) return;
+  try {
+    for (const proj of window.SHARED_PROJECT_LIBRARY) {
+      const pName = proj.metadata?.projectName || 'Project';
+      const docId = pName.toLowerCase().replace(/[^a-z0-9_-]/g, '_').slice(0, 100);
+      await firestoreDB.collection("mech_suite_projects").doc(docId).set(proj);
+    }
+  } catch (e) {
+    console.warn("Could not seed initial projects to Firestore:", e);
+  }
+}
+
 function toggleTheme() {
   const html = document.documentElement;
   const isDark = !html.classList.contains('light');
@@ -336,9 +423,15 @@ async function saveActiveSessionToLibrary() {
   const targetSelect = document.getElementById('saveSessionTargetSelect');
   const targetVal = targetSelect ? targetSelect.value : 'new';
 
+  let docId = (projName || 'project').toLowerCase().replace(/[^a-z0-9_-]/g, '_').slice(0, 100);
+
   if (targetVal !== 'new' && !isNaN(parseInt(targetVal, 10))) {
     const idx = parseInt(targetVal, 10);
     if (library[idx]) {
+      const oldDocId = library[idx]._firestoreId || (library[idx].metadata?.projectName || '').toLowerCase().replace(/[^a-z0-9_-]/g, '_').slice(0, 100);
+      if (oldDocId && oldDocId !== docId && firestoreDB) {
+        try { firestoreDB.collection("mech_suite_projects").doc(oldDocId).delete(); } catch(e) {}
+      }
       library[idx] = activeState;
       showToast('Session Overwritten', `Overwrote saved session "${projName}" in library.`);
     }
@@ -346,10 +439,10 @@ async function saveActiveSessionToLibrary() {
     const existingIdx = library.findIndex(p => (p.metadata?.projectName || '').toLowerCase() === projName.toLowerCase());
     if (existingIdx >= 0) {
       library[existingIdx] = activeState;
-      showToast('Library Updated', `Updated saved session "${projName}" in browser library.`);
+      showToast('Library Updated', `Updated saved session "${projName}" in library.`);
     } else {
       library.unshift(activeState);
-      showToast('Session Saved', `Saved "${projName}" to in-browser Project Library.`);
+      showToast('Session Saved', `Saved "${projName}" to Project Library.`);
     }
   }
 
@@ -357,6 +450,19 @@ async function saveActiveSessionToLibrary() {
   localStorage.setItem(ACTIVE_SESSION_KEY, JSON.stringify(activeState));
   window.SHARED_PROJECT_LIBRARY = library;
   renderProjectLibraryTable();
+
+  // Save directly to Google Cloud Firestore across all devices
+  if (firestoreDB) {
+    try {
+      activeState._firestoreId = docId;
+      await firestoreDB.collection("mech_suite_projects").doc(docId).set(activeState);
+      showToast('Cloud Synced', `Saved "${projName}" to Cloud Database across all devices!`);
+      updateCloudSyncBadge(true);
+    } catch (cloudErr) {
+      console.warn("Error saving to Firestore:", cloudErr);
+      showToast('Local Saved', `Saved locally. Cloud sync: ${cloudErr.message || 'Error'}`, false);
+    }
+  }
   
   await writeDirectToSharedFileHandle();
   closeSaveSessionModal();
@@ -376,10 +482,19 @@ function loadProjectFromLibrary(index) {
 async function deleteProjectFromLibrary(index) {
   let library = getSavedProjectsLibrary();
   if (!library[index]) return;
-  const name = library[index].metadata?.projectName || 'Project';
-  if (confirm(`Delete saved session "${name}" from your browser library?
+  const proj = library[index];
+  const name = proj.metadata?.projectName || 'Project';
+  if (confirm(`Delete saved session "${name}" from the project library?
 
-This will remove the session and automatically update the shared project library file on disk.`)) {
+This will remove the session from the cloud database and your local browser.`)) {
+    const docId = proj._firestoreId || (name.toLowerCase().replace(/[^a-z0-9_-]/g, '_').slice(0, 100));
+    if (firestoreDB) {
+      try {
+        await firestoreDB.collection("mech_suite_projects").doc(docId).delete();
+      } catch (cloudErr) {
+        console.warn("Error deleting from Firestore:", cloudErr);
+      }
+    }
     library.splice(index, 1);
     localStorage.setItem(PROJECT_LIBRARY_KEY, JSON.stringify(library));
     window.SHARED_PROJECT_LIBRARY = library;
@@ -446,10 +561,14 @@ async function saveEditedSessionDetails() {
     return;
   }
 
+  const oldDocId = library[currentEditLibraryIdx]._firestoreId || (library[currentEditLibraryIdx].metadata?.projectName || '').toLowerCase().replace(/[^a-z0-9_-]/g, '_').slice(0, 100);
+  const newDocId = newName.toLowerCase().replace(/[^a-z0-9_-]/g, '_').slice(0, 100);
+
   if (!library[currentEditLibraryIdx].metadata) library[currentEditLibraryIdx].metadata = {};
   library[currentEditLibraryIdx].metadata.projectName = newName;
   library[currentEditLibraryIdx].metadata.author = newAuthor;
   library[currentEditLibraryIdx].metadata.lastModified = new Date().toISOString();
+  library[currentEditLibraryIdx]._firestoreId = newDocId;
 
   const rawActive = localStorage.getItem(ACTIVE_SESSION_KEY);
   if (rawActive) {
@@ -468,6 +587,20 @@ async function saveEditedSessionDetails() {
   window.SHARED_PROJECT_LIBRARY = library;
   showToast('Session Updated', `Updated details for "${newName}".`);
   renderProjectLibraryTable();
+
+  // Update in Google Cloud Firestore
+  if (firestoreDB) {
+    try {
+      if (oldDocId && oldDocId !== newDocId) {
+        firestoreDB.collection("mech_suite_projects").doc(oldDocId).delete();
+      }
+      firestoreDB.collection("mech_suite_projects").doc(newDocId).set(library[currentEditLibraryIdx]);
+      showToast('Cloud Updated', `Updated "${newName}" in Cloud Database!`);
+    } catch (cloudErr) {
+      console.warn("Error updating Firestore:", cloudErr);
+    }
+  }
+
   await writeDirectToSharedFileHandle();
   closeEditSessionModal();
 }
@@ -1299,7 +1432,7 @@ function updateLinkedFileUI(isLinked) {
       btn.innerHTML = `<i class="fa-solid fa-link text-white"></i> Link Shared Drive File`;
       btn.title = "Link directly to shared_project_library.js on your shared drive for automatic 1-click file overwriting";
       
-      if (syncBadge) {
+      if (syncBadge && !firestoreDB) {
         syncBadge.className = "text-[10px] font-semibold text-slate-400 flex items-center gap-1";
         syncBadge.innerHTML = `<i class="fa-solid fa-link-slash text-slate-500"></i> Default Container`;
       }
@@ -1311,5 +1444,6 @@ function updateLinkedFileUI(isLinked) {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
+  initFirebaseFirestore();
   initSharedFileHandleOnPageLoad();
 });
