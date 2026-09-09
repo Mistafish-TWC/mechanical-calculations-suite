@@ -29,16 +29,22 @@ The **Mechanical System Calculations Suite** is an engineering calculation platf
 3. **Multi-Tier Persistence Architecture**
    - **Tier 1 (Instant Draft):** Browser `localStorage` actively caches live inputs on every keystroke (`input`/`change` events).
    - **Tier 2 (In-Browser Library):** Users can save named, immutable snapshots of complete multi-tool project states in `localStorage`.
-   - **Tier 3 (Serverless Direct-to-Disk Sync):** Uses the native Chromium **File System Access API** (`showOpenFilePicker`, `createWritable`) with handle persistence in **IndexedDB** (`MechSuiteDB`) to write project sessions directly to `shared_project_library.js` on local or network shared drives without requiring any backend.
-   - **Tier 4 (Python Backend Fallback):** Optional lightweight Python multithreaded server (`suite_server.py`) serving static files and exposing `/api/get-library` and `/api/save-library` endpoints.
+   - **Tier 3 (Google Firebase Firestore Cloud Sync):** Real-time, cross-device cloud synchronization without login. Projects saved by any estimator on any device appear instantly for all users.
+   - **Tier 4 (Portable JSON File Backup):** 1-click import/export of complete project backup files.
+   - **Tier 5 (Local Python Server Fallback):** Optional lightweight Python multithreaded server (`suite_server.py`) serving static files and exposing `/api/get-library` and `/api/save-library` endpoints.
 
 ---
 
 ## 2. Directory & Component Topology
 
 ```text
-AI App Working Folder/
-├── Mechanical_Suite_Dashboard.html    # Main portal, project session library, global controls
+mechanical-calculations-suite/         # Primary active Git repository & GitHub Pages root
+├── index.html                        # GitHub Pages root redirector
+├── .nojekyll                         # GitHub Pages Jekyll bypass flag
+├── .gitignore                        # Git exclusion rules
+├── README.md                         # Repository documentation
+├── IMPLEMENTATION_GUIDELINES.md      # Authoritative development standard
+├── Mechanical_Suite_Dashboard.html   # Main portal, project session library, global controls
 ├── tool1_plumbing_fixtures.html      # Tool 1 UI: WSFU / DFU Hunter's Curve demand & pipe sizer
 ├── tool1.js                          # Tool 1 Engine: IPC/UPC fixture DB, Hunter curves, velocity sizing
 ├── tool2_pumping_economics.html      # Tool 2 UI: Hydronic pipe matrix up to 24", lifecycle economics
@@ -49,10 +55,14 @@ AI App Working Folder/
 ├── tool4.js                          # Tool 4 Engine: ASHRAE friction/velocity solver, Huebscher equation
 ├── tool5_fuel_gas.html               # Tool 5 UI: NFPA 54 / IFGC fuel gas pipe sizer, longest length scheduler
 ├── tool5.js                          # Tool 5 Engine: Spitzglass / Weymouth equations, gas properties DB
-├── common.js                         # Core framework: state sync, session library, DB, theme toggling
+├── common.js                         # Core framework: state sync, session library, Firestore, theme toggling
 ├── shared_project_library.js         # Static serialized JavaScript array for team-wide project sharing
-├── suite_server.py                   # Optional zero-dependency Python 3 HTTP server (Port 8080)
-└── IMPLEMENTATION_GUIDELINES.md      # This document
+├── LAUNCH_LOCAL_SERVER.bat           # 1-click local server launcher
+├── start_server.ps1                  # Native Windows PowerShell HTTP server (zero dependencies)
+└── suite_server.py                   # Optional zero-dependency Python 3 HTTP server (Port 8080)
+```
+
+*(Note: `Desktop\AI App Working Folder` is disconnected and preserved strictly as an untouched static archive/backup).*
 ```
 
 ---
