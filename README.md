@@ -1,5 +1,5 @@
 # Mechanical System Calculations Suite (Commercial Engineering Edition)
-[![Version](https://img.shields.io/badge/Version-v4.46-0284c7.svg)](file:///c:/Users/michael.salmon/OneDrive%20-%20The%20Waldinger%20Corporation%20waldinger.com/Desktop/AI%20App%20Working%20Folder/Mechanical_Suite_Dashboard.html)
+[![Version](https://img.shields.io/badge/Version-v4.46-0284c7.svg)](Mechanical_Suite_Dashboard.html)
 [![Platform](https://img.shields.io/badge/Platform-GitHub%20Pages%20%7C%20Local-10b981.svg)](https://pages.github.com/)
 [![License](https://img.shields.io/badge/License-Internal%20Commercial%20Use-64748b.svg)](#)
 
@@ -27,6 +27,7 @@ https://<your-github-username>.github.io/<your-repository-name>/
 | **3** | **[Storm Drainage & Manning Channel Inspector](tool3_storm_drainage.html)** | IPC Chapter 11 / Manning | Roof drainage area flow rate solver, vertical leaders, horizontal mains at 4 slopes (1/16", 1/8", 1/4", 1/2"), multi-zone drain scheduler, and real-time interactive HTML5 canvas open-channel flow inspector. |
 | **4** | **[HVAC Ductulator & Acoustic Inspector](tool4_hvac_ductulator.html)** | ASHRAE / Huebscher | Equal friction and velocity air duct solver with Huebscher rectangular equivalence ($D_e$), plenum height constraint locking, aspect ratio warning indicators, and acoustic Noise Criteria (NC) spectrum estimation. |
 | **5** | **[Fuel Gas Pipe Sizing Calculator](tool5_fuel_gas.html)** | NFPA 54 / IFGC | Low-pressure ($\le 0.5$ psi Spitzglass) and elevated-pressure ($> 0.5$ to 10 psi Weymouth) gas sizing for Natural Gas, Propane, Butane, and Diesel. Includes multi-appliance Longest Length Method branch tree scheduling and interactive canvas schematics. |
+| **6** | **[Duct Loss Estimator & Critical Path Calculator](tool6_duct_loss.html)** | SMACNA / Loren Cook | Critical path duct route equivalent length (TEL) & external static pressure (ESP) calculator. Supports rectangular and round ducts, 10 fitting families (elbows, tees, crosses, transitions, flex drops), dynamic downstream dimension propagation, component pressure drops, and 3D fitting diagram lightbox. |
 
 ---
 

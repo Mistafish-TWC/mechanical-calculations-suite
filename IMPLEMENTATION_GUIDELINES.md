@@ -16,13 +16,14 @@ The **Mechanical System Calculations Suite** is an engineering calculation platf
    - **Strict Constraint:** Do **not** introduce ES6 module syntax (`import` / `export`) into shared scripts, as standard Chromium browsers block ES module loading over `file:///` due to CORS constraints. All inter-script communication relies on controlled global variables and shared utility functions.
 
 2. **Decoupled Modular Tool Pattern**
-   - The suite consists of a central **Dashboard** and **5 specialized engineering tools**, each divided cleanly between an HTML presentation view and a JavaScript calculation engine:
+   - The suite consists of a central **Dashboard** and **6 specialized engineering tools**, each divided cleanly between an HTML presentation view and a JavaScript calculation engine:
      - **Dashboard:** `Mechanical_Suite_Dashboard.html`
      - **Tool 1 (Plumbing Fixtures):** `tool1_plumbing_fixtures.html` + `tool1.js`
      - **Tool 2 (Pumping Economics):** `tool2_pumping_economics.html` + `tool2.js`
      - **Tool 3 (Storm Drainage):** `tool3_storm_drainage.html` + `tool3.js`
      - **Tool 4 (HVAC Ductulator):** `tool4_hvac_ductulator.html` + `tool4.js`
      - **Tool 5 (Fuel Gas Sizer):** `tool5_fuel_gas.html` + `tool5.js`
+     - **Tool 6 (Duct Loss Estimator):** `tool6_duct_loss.html` + `tool6.js`
      - **Shared Core:** `common.js` + `shared_project_library.js`
      - **Optional Local Server:** `suite_server.py`
 
@@ -55,6 +56,8 @@ mechanical-calculations-suite/         # Primary active Git repository & GitHub 
 ├── tool4.js                          # Tool 4 Engine: ASHRAE friction/velocity solver, Huebscher equation
 ├── tool5_fuel_gas.html               # Tool 5 UI: NFPA 54 / IFGC fuel gas pipe sizer, longest length scheduler
 ├── tool5.js                          # Tool 5 Engine: Spitzglass / Weymouth equations, gas properties DB
+├── tool6_duct_loss.html              # Tool 6 UI: Critical path equivalent length & static pressure loss sizer
+├── tool6.js                          # Tool 6 Engine: Loren Cook Cookbook fitting loss tables & solver
 ├── common.js                         # Core framework: state sync, session library, Firestore, theme toggling
 ├── shared_project_library.js         # Static serialized JavaScript array for team-wide project sharing
 ├── LAUNCH_LOCAL_SERVER.bat           # 1-click local server launcher
@@ -182,6 +185,7 @@ Calculations in this suite guide million-dollar commercial construction estimate
 - **Storm Drainage:** IPC Chapter 11 (Roof Drainage, Table 1106.2, 1106.3); Manning’s Equation ($n = 0.009$ for PVC/PE, $n = 0.012$ for Cast Iron).
 - **HVAC Ductwork:** ASHRAE Equal Friction Method; Huebscher Rectangular Equivalent Diameter Equation (1948); SMACNA HVAC Duct Construction Standards.
 - **Fuel Gas:** NFPA 54 (National Fuel Gas Code); IFGC (International Fuel Gas Code); Spitzglass Low-Pressure Equation ($\le 0.5$ psig); Weymouth / Mueller High-Pressure Equation ($> 0.5$ psig to 10 psig).
+- **Duct Loss Estimator:** Loren Cook Pocket Guide (Cookbook, Pages 49–76); SMACNA HVAC Systems Duct Design (Fittings Equivalent Length, Leakage Classes $L_{max} = C_l \times P^{0.65}$); AMCA Standard 99-10 (Fan Inlet/Outlet Conditions).
 
 ### 4.2 Numerical Safety Guidelines
 1. **Division by Zero Protection:** Always protect denominators. Example:
@@ -221,6 +225,7 @@ The suite employs a dual-theme architecture: **Dark Glassmorphic Theme** (defaul
 | **Tool 3: Storm** | Cyan / Teal | `bg-cyan-600` | `focus:border-cyan-500` | `bg-cyan-500/10 text-cyan-400 border-cyan-500/20` |
 | **Tool 4: Ductulator** | Teal / Mint | `bg-teal-600` | `focus:border-teal-500` | `bg-teal-500/10 text-teal-600 border-teal-500/20` |
 | **Tool 5: Fuel Gas** | Amber / Orange | `bg-amber-600` | `focus:border-amber-500` | `bg-amber-500/10 text-amber-400 border-amber-500/20` |
+| **Tool 6: Duct Loss** | Rose / Crimson | `bg-rose-600` | `focus:border-rose-500` | `bg-rose-500/10 text-rose-400 border-rose-500/20` |
 
 ### 5.2 Light Mode CSS Blueprint
 Every tool HTML file contains a `<style>` block with explicit Light Mode contrast rules. When adding new custom cards or tables, add matching rules:

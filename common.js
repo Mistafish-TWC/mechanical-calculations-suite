@@ -31,6 +31,18 @@ function isTool5Active(t) {
   if (t.userModified || (t.gasNetworkRows && t.gasNetworkRows.length > 0)) return true;
   return (t.loadValue && t.loadValue !== 500000) || (t.sizingLength && t.sizingLength !== 100) || (t.fuelType && t.fuelType !== 'natural_gas') || (t.material && t.material !== 'sch40_steel') || (t.pressureMode && t.pressureMode !== '0.5') || (t.allowableDrop && t.allowableDrop !== '0.5') || (t.loadUnit && t.loadUnit !== 'btu');
 }
+function isTool6Active(t) {
+  if (!t) return false;
+  if (t.userModified) return true;
+  if (t.chainedScheduleRows && t.chainedScheduleRows.length > 0) return true;
+  if (t.fittingsRows && t.fittingsRows.length > 0) return true;
+  if (t.componentRows && t.componentRows.length !== 3) return true;
+  return (t.designCFM && t.designCFM !== 1200) ||
+         (t.designVelocity && t.designVelocity !== 1000) ||
+         (t.designDFL && t.designDFL !== 0.10) ||
+         (t.tdlSupply && t.tdlSupply !== 55) ||
+         (t.tdlReturn && t.tdlReturn !== 48);
+}
 
 // ===================================================================
 // MECHANICAL SYSTEM CALCULATIONS SUITE - SHARED CORE UTILITIES (v4.46)
@@ -283,6 +295,40 @@ function saveActiveDraftState() {
       };
     }
 
+    // Tool 6 (Duct Loss Estimator - Loren Cook) - Update if loaded, else preserve
+    if (document.getElementById('ductLossCFM')) {
+      let velVal = 1000;
+      const velEl = document.getElementById('metricCalculatedVelocity');
+      if (velEl) {
+        const match = velEl.innerText.match(/[\d,.]+/);
+        if (match) velVal = parseFloat(match[0].replace(/,/g, '')) || 1000;
+      } else if (document.getElementById('ductLossVelocity')) {
+        velVal = parseFloat(document.getElementById('ductLossVelocity').value) || 1000;
+      }
+
+      let dflVal = 0.10;
+      const dflEl = document.getElementById('metricCalculatedDFL');
+      if (dflEl) {
+        const match = dflEl.innerText.match(/[\d,.]+/);
+        if (match) dflVal = parseFloat(match[0]) || 0.10;
+      } else if (document.getElementById('ductLossDFL')) {
+        dflVal = parseFloat(document.getElementById('ductLossDFL').value) || 0.10;
+      }
+
+      state.tool6 = {
+        userModified: !!(window.tool6_modified || isTool6Active(state.tool6) || (parseFloat(document.getElementById('ductLossCFM')?.value || 1200) !== 1200)),
+        designCFM: parseFloat(document.getElementById('ductLossCFM')?.value || 1200),
+        designVelocity: velVal,
+        designDFL: dflVal,
+        tdlSupply: parseFloat(document.getElementById('tdlSupply')?.value || 55),
+        tdlReturn: parseFloat(document.getElementById('tdlReturn')?.value || 48),
+        activeTool6Tab: typeof activeTool6Tab !== 'undefined' ? activeTool6Tab : 'estimator',
+        chainedScheduleRows: typeof chainedScheduleRows !== 'undefined' ? chainedScheduleRows : [],
+        fittingsRows: typeof fittingsRows !== 'undefined' ? fittingsRows : [],
+        componentRows: typeof componentRows !== 'undefined' ? componentRows : []
+      };
+    }
+
     localStorage.setItem(ACTIVE_SESSION_KEY, JSON.stringify(state));
   } catch (e) {
     console.error("Error saving active draft:", e);
@@ -323,6 +369,7 @@ function resetActiveDraftToDefaults() {
     window.tool3_modified = false;
     window.tool4_modified = false;
     window.tool5_modified = false;
+    window.tool6_modified = false;
 
     const draftKeys = [
       ACTIVE_SESSION_KEY,
@@ -535,12 +582,18 @@ function openEditSessionModal(index) {
   if (editAuthorInput) editAuthorInput.value = project.metadata?.author || '';
 
   const modal = document.getElementById('editSessionModal');
-  if (modal) modal.classList.remove('hidden');
+  if (modal) {
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+  }
 }
 
 function closeEditSessionModal() {
   const modal = document.getElementById('editSessionModal');
-  if (modal) modal.classList.add('hidden');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  }
   currentEditLibraryIdx = -1;
 }
 
@@ -693,12 +746,18 @@ function openSaveSessionModal() {
   }
 
   const modal = document.getElementById('saveSessionModal');
-  if (modal) modal.classList.remove('hidden');
+  if (modal) {
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+  }
 }
 
 function closeSaveSessionModal() {
   const modal = document.getElementById('saveSessionModal');
-  if (modal) modal.classList.add('hidden');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  }
 }
 
 function exportActiveSessionAsJSON() {
@@ -793,8 +852,8 @@ function renderProjectLibraryTable() {
     } else if (sortMode === 'author_asc') {
       return (pA.metadata?.author || '').localeCompare(pB.metadata?.author || '');
     } else if (sortMode === 'tools_desc') {
-      const countA = (pA.tool1?.fixtureRows?.length > 0 ? 1 : 0) + (pA.tool2?.flowRate ? 1 : 0) + (pA.tool3?.roofArea ? 1 : 0) + (pA.tool4?.currentDuctCFM ? 1 : 0) + (pA.tool5?.loadValue ? 1 : 0);
-      const countB = (pB.tool1?.fixtureRows?.length > 0 ? 1 : 0) + (pB.tool2?.flowRate ? 1 : 0) + (pB.tool3?.roofArea ? 1 : 0) + (pB.tool4?.currentDuctCFM ? 1 : 0) + (pB.tool5?.loadValue ? 1 : 0);
+      const countA = (isTool1Active(pA.tool1) ? 1 : 0) + (isTool2Active(pA.tool2) ? 1 : 0) + (isTool3Active(pA.tool3) ? 1 : 0) + (isTool4Active(pA.tool4) ? 1 : 0) + (isTool5Active(pA.tool5) ? 1 : 0) + (isTool6Active(pA.tool6) ? 1 : 0);
+      const countB = (isTool1Active(pB.tool1) ? 1 : 0) + (isTool2Active(pB.tool2) ? 1 : 0) + (isTool3Active(pB.tool3) ? 1 : 0) + (isTool4Active(pB.tool4) ? 1 : 0) + (isTool5Active(pB.tool5) ? 1 : 0) + (isTool6Active(pB.tool6) ? 1 : 0);
       return countB - countA;
     }
     return 0;
@@ -825,6 +884,11 @@ function renderProjectLibraryTable() {
     }
     if (isTool5Active(proj.tool5)) {
       iconsHtml += `<span title="Fuel Gas Pipe Sizer" class="p-1.5 bg-amber-500/10 text-amber-400 rounded-lg border border-amber-500/20"><i class="fa-solid fa-fire-flame-curved text-xs"></i></span> `;
+    }
+    if (isTool6Active(proj.tool6)) {
+      const itemsCount = (proj.tool6.chainedScheduleRows && proj.tool6.chainedScheduleRows.length) || (proj.tool6.fittingsRows && proj.tool6.fittingsRows.length) || 0;
+      const cfm = proj.tool6.designCFM || 1200;
+      iconsHtml += `<span title="Duct Loss Estimator (${cfm} CFM${itemsCount > 0 ? ', ' + itemsCount + ' items' : ''})" class="p-1.5 bg-rose-500/10 text-rose-400 rounded-lg border border-rose-500/20"><i class="fa-solid fa-route text-xs"></i></span> `;
     }
 
     if (!iconsHtml) {
@@ -1114,6 +1178,49 @@ function importProjectState(data) {
         if (typeof renderGasScheduleTable === 'function') renderGasScheduleTable();
       }
       calculateGasSizing();
+    }
+
+    if (data.tool6 && typeof calculateDuctLoss === 'function') {
+      if (data.tool6.designCFM && document.getElementById('ductLossCFM')) document.getElementById('ductLossCFM').value = data.tool6.designCFM;
+      if (data.tool6.designVelocity && document.getElementById('ductLossVelocity')) document.getElementById('ductLossVelocity').value = data.tool6.designVelocity;
+      if (data.tool6.designDFL && document.getElementById('ductLossDFL')) document.getElementById('ductLossDFL').value = data.tool6.designDFL;
+      if (data.tool6.tdlSupply !== undefined && document.getElementById('tdlSupply')) document.getElementById('tdlSupply').value = data.tool6.tdlSupply;
+      if (data.tool6.tdlReturn !== undefined && document.getElementById('tdlReturn')) document.getElementById('tdlReturn').value = data.tool6.tdlReturn;
+      if (Array.isArray(data.tool6.chainedScheduleRows)) {
+        if (data.tool6.chainedScheduleRows.length > 0) {
+          chainedScheduleRows = data.tool6.chainedScheduleRows;
+          chainedScheduleRowIdCounter = chainedScheduleRows.reduce((max, r) => Math.max(max, r.id || 0), 0) + 1;
+        } else if (Array.isArray(data.tool6.fittingsRows) && data.tool6.fittingsRows.length > 0) {
+          // Upgrade legacy fittingsRows to chainedScheduleRows
+          chainedScheduleRows = data.tool6.fittingsRows.map((f, i) => ({
+            id: f.id || (i + 1),
+            type: 'fitting',
+            path: f.path || 'supply',
+            name: f.customName || f.fittingKey || 'Fitting',
+            fittingKey: f.fittingKey,
+            paramKey: f.paramKey,
+            angle: f.angle || '90',
+            baseEL: f.baseEL || 0,
+            width: 18,
+            height: 12,
+            shape: 'rect'
+          }));
+          chainedScheduleRowIdCounter = chainedScheduleRows.reduce((max, r) => Math.max(max, r.id || 0), 0) + 1;
+        } else {
+          chainedScheduleRows = [];
+          chainedScheduleRowIdCounter = 1;
+        }
+      }
+      if (typeof renderFittingsTable === 'function') renderFittingsTable();
+      if (Array.isArray(data.tool6.componentRows)) {
+        componentRows = data.tool6.componentRows;
+        componentRowIdCounter = componentRows.reduce((max, r) => Math.max(max, r.id || 0), 0) + 1;
+        if (typeof renderComponentsTable === 'function') renderComponentsTable();
+      }
+      if (data.tool6.activeTool6Tab && typeof switchTool6Tab === 'function') {
+        switchTool6Tab(data.tool6.activeTool6Tab);
+      }
+      calculateDuctLoss();
     }
   } catch (err) {
     console.error("Error restoring project state:", err);

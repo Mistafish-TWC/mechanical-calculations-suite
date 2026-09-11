@@ -85,6 +85,11 @@
     html.light .text-slate-200 { color: #1e293b !important; }
     html.light .border-slate-800, html.light .border-slate-800\/60, html.light .border-slate-800\/80, html.light .border-slate-700 { border-color: #e2e8f0 !important; }
     html.light footer { background-color: #ffffff !important; border-color: #e2e8f0 !important; color: #64748b !important; }
+
+    /* Tool 6 (Duct Loss Estimator) Card Contrast in Light Mode */
+    html.light .text-rose-400 { color: #9f1239 !important; font-weight: 700 !important; }
+    html.light .bg-rose-500\/10 { background-color: #ffe4e6 !important; color: #881337 !important; border: 1px solid #fca5a5 !important; }
+    html.light .group:hover .text-rose-400 { color: #be123c !important; }
   </style>
 </head>
 <body class="min-h-screen flex flex-col bg-slate-950 text-slate-100 antialiased selection:bg-sky-500 selection:text-white">
@@ -143,8 +148,8 @@
         </div>
       </div>
 
-      <!-- 5 TOOL LAUNCHER CARDS (STREAMLINED & COMPACT) -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+      <!-- 6 TOOL LAUNCHER CARDS (STREAMLINED & COMPACT) -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         
         <!-- CARD 1: FIXTURE SIZER -->
         <div onclick="window.location.href='tool1_plumbing_fixtures.html'" class="glass-card rounded-2xl p-5 hover:border-sky-500/50 transition-all duration-300 cursor-pointer group flex flex-col justify-between hover:scale-[1.02] shadow-lg">
@@ -242,6 +247,26 @@
           </div>
           <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs font-bold text-amber-400">
             <span>Launch Gas Tool</span>
+            <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
+          </div>
+        </div>
+
+        <!-- CARD 6: DUCT LOSS ESTIMATOR -->
+        <div onclick="window.location.href='tool6_duct_loss.html'" class="glass-card rounded-2xl p-5 hover:border-rose-500/50 transition-all duration-300 cursor-pointer group flex flex-col justify-between hover:scale-[1.02] shadow-lg">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <div class="p-2.5 bg-rose-500/10 text-rose-400 rounded-xl group-hover:bg-rose-500 group-hover:text-white transition-colors">
+                <i class="fa-solid fa-route text-xl"></i>
+              </div>
+              <span class="text-[10px] font-bold uppercase tracking-wider text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/20">Loren Cook / SMACNA</span>
+            </div>
+            <h3 class="text-base font-bold text-white group-hover:text-rose-400 transition-colors">Duct Loss Estimator</h3>
+            <p class="text-xs text-slate-400 mt-1.5 leading-normal">
+              Critical path equivalent length (TEL) & external static pressure sizer for supply/return fittings & components.
+            </p>
+          </div>
+          <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs font-bold text-rose-400">
+            <span>Launch Loss Tool</span>
             <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
           </div>
         </div>
