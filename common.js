@@ -585,6 +585,7 @@ function openEditSessionModal(index) {
   if (modal) {
     modal.classList.remove('hidden');
     modal.classList.add('flex');
+    document.body.classList.add('overflow-hidden');
   }
 }
 
@@ -595,6 +596,10 @@ function closeEditSessionModal() {
     modal.classList.remove('flex');
   }
   currentEditLibraryIdx = -1;
+  const openModals = document.querySelectorAll('.fixed.inset-0:not(.hidden)');
+  if (!openModals || openModals.length === 0) {
+    document.body.classList.remove('overflow-hidden');
+  }
 }
 
 async function saveEditedSessionDetails() {
@@ -749,6 +754,7 @@ function openSaveSessionModal() {
   if (modal) {
     modal.classList.remove('hidden');
     modal.classList.add('flex');
+    document.body.classList.add('overflow-hidden');
   }
 }
 
@@ -757,6 +763,10 @@ function closeSaveSessionModal() {
   if (modal) {
     modal.classList.add('hidden');
     modal.classList.remove('flex');
+  }
+  const openModals = document.querySelectorAll('.fixed.inset-0:not(.hidden)');
+  if (!openModals || openModals.length === 0) {
+    document.body.classList.remove('overflow-hidden');
   }
 }
 

@@ -761,6 +761,18 @@ function getFittingImagePath(imageName) {
   return encodeURI('Duct Fittings/' + imageName);
 }
 
+function lockBodyScroll() {
+  document.body.classList.add('overflow-hidden');
+}
+
+function unlockBodyScroll() {
+  // Check if any modal is still visible before restoring body scroll
+  const openModals = document.querySelectorAll('#addFittingModal:not(.hidden), #firstDuctModal:not(.hidden), #saveSessionModal:not(.hidden), #editSessionModal:not(.hidden), #imageLightboxModal:not(.hidden)');
+  if (!openModals || openModals.length === 0) {
+    document.body.classList.remove('overflow-hidden');
+  }
+}
+
 function openImageLightbox(src, title) {
   const modal = document.getElementById('imageLightboxModal');
   const img = document.getElementById('lightboxModalImg');
@@ -770,6 +782,7 @@ function openImageLightbox(src, title) {
   if (titleEl) titleEl.textContent = title || 'Fitting Diagram';
   modal.classList.remove('hidden');
   modal.classList.add('flex');
+  lockBodyScroll();
 }
 
 function closeImageLightbox() {
@@ -777,6 +790,7 @@ function closeImageLightbox() {
   if (!modal) return;
   modal.classList.add('hidden');
   modal.classList.remove('flex');
+  unlockBodyScroll();
 }
 
 // -------------------------------------------------------------------
@@ -1765,6 +1779,7 @@ function openFirstDuctModal() {
 
   modal.classList.remove('hidden');
   modal.classList.add('flex');
+  lockBodyScroll();
   setTimeout(() => {
     if (widthIn) {
       widthIn.focus();
@@ -1808,6 +1823,7 @@ function openEditDuctModal(row) {
 
   modal.classList.remove('hidden');
   modal.classList.add('flex');
+  lockBodyScroll();
 }
 
 function closeFirstDuctModal() {
@@ -1816,6 +1832,7 @@ function closeFirstDuctModal() {
     modal.classList.add('hidden');
     modal.classList.remove('flex');
   }
+  unlockBodyScroll();
   editingDuctRowId = null;
 
   const titleEl = document.getElementById('firstDuctModalTitle');
@@ -2293,7 +2310,14 @@ function deleteChainedRow(id) {
 function clearAllChainedSchedule() {
   if (confirm("Clear all items from the chained critical path schedule?")) {
     chainedScheduleRows = [];
+    chainedScheduleRowIdCounter = 1;
+    if (Array.isArray(componentRows)) {
+      componentRows.forEach(c => {
+        c.qty = 0;
+      });
+    }
     window.tool6_modified = true;
+    renderComponentsTable();
     calculateDuctLoss();
     renderFittingsTable();
     if (typeof saveActiveDraftState === 'function') saveActiveDraftState();
@@ -2796,6 +2820,7 @@ function openAddFittingModal(preselectedKey = null, defaultPath = null) {
   } finally {
     modal.classList.remove('hidden');
     modal.classList.add('flex');
+    lockBodyScroll();
   }
 }
 
@@ -2895,6 +2920,7 @@ function openEditFittingModal(row) {
   } finally {
     modal.classList.remove('hidden');
     modal.classList.add('flex');
+    lockBodyScroll();
   }
 }
 
@@ -2904,6 +2930,7 @@ function closeAddFittingModal() {
     modal.classList.add('hidden');
     modal.classList.remove('flex');
   }
+  unlockBodyScroll();
   editingFittingRowId = null;
 
   const titleEl = document.getElementById('addFittingModalTitle');

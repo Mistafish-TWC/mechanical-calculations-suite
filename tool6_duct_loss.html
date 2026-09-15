@@ -544,6 +544,50 @@
     html.light #saveSessionModal .text-emerald-400 {
       color: #059669 !important;
     }
+
+    /* Custom Scrollbar for Modal Dialogs */
+    .custom-modal-scroll {
+      scrollbar-width: thin;
+      scrollbar-color: rgba(148, 163, 184, 0.4) transparent;
+      overscroll-behavior: contain;
+    }
+    .custom-modal-scroll::-webkit-scrollbar {
+      width: 6px;
+    }
+    .custom-modal-scroll::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.6);
+      border-radius: 4px;
+    }
+    .custom-modal-scroll::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.4);
+      border-radius: 4px;
+    }
+    .custom-modal-scroll::-webkit-scrollbar-thumb:hover {
+      background: rgba(244, 63, 94, 0.7);
+    }
+    html.light .custom-modal-scroll {
+      scrollbar-color: #cbd5e1 transparent;
+    }
+    html.light .custom-modal-scroll::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    html.light .custom-modal-scroll::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+    }
+    html.light .custom-modal-scroll::-webkit-scrollbar-thumb:hover {
+      background: #e11d48;
+    }
+
+    /* Modal Pinned Footer */
+    .modal-footer-pinned {
+      box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.2);
+    }
+    html.light .modal-footer-pinned {
+      background-color: #ffffff !important;
+      border-color: #e2e8f0 !important;
+      box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
+    }
+
     html.light .fitting-thumb-btn {
       background-color: #ffffff !important;
       border-color: #cbd5e1 !important;
@@ -2325,9 +2369,9 @@
   </main>
 
   <!-- ADD FITTING MODAL -->
-  <div id="addFittingModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
-    <div class="glass-card bg-slate-900/95 border border-slate-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 animate-fade-in relative">
-      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+  <div id="addFittingModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-3 sm:p-4 overflow-y-auto" onclick="if(event.target === this) closeAddFittingModal()">
+    <div class="glass-card bg-slate-900/95 border border-slate-800 rounded-3xl max-w-lg w-full max-h-[90vh] my-auto shadow-2xl animate-fade-in relative flex flex-col overflow-hidden">
+      <div class="flex items-center justify-between border-b border-slate-800 p-5 sm:p-6 pb-3.5 flex-shrink-0">
         <h3 class="text-base font-bold text-white flex items-center gap-2">
           <i class="fa-solid fa-shapes text-rose-400"></i> <span id="addFittingModalTitle">Add Fitting to Schedule</span>
         </h3>
@@ -2336,7 +2380,8 @@
         </button>
       </div>
 
-      <!-- PROMINENT FITTING DIAGRAM PREVIEW CARD AT TOP -->
+      <div class="overflow-y-auto p-5 sm:p-6 pt-4 space-y-4 flex-1 custom-modal-scroll">
+        <!-- PROMINENT FITTING DIAGRAM PREVIEW CARD AT TOP -->
       <div id="modalFittingPreviewCard" class="flex flex-col sm:flex-row items-center gap-4 p-3 rounded-2xl bg-slate-950 border border-slate-800 transition-all">
         <div class="preview-box relative w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden bg-white/5 border border-slate-800 flex items-center justify-center p-1.5 flex-shrink-0 group cursor-pointer" onclick="openImageLightbox(document.getElementById('modalFittingPreviewImg').src, document.getElementById('modalFittingPreviewName').textContent)" title="Click to expand diagram in full view">
           <img id="modalFittingPreviewImg" src="" alt="Fitting Diagram" class="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-200">
@@ -2679,8 +2724,9 @@
         </div>
 
       </div>
+      </div>
 
-      <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
+      <div class="modal-footer-pinned flex items-center justify-end gap-2 p-4 sm:p-5 pt-3.5 border-t border-slate-800 bg-slate-900/95 flex-shrink-0">
         <button onclick="closeAddFittingModal()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition">Cancel</button>
         <button id="btnAddFittingSubmit" onclick="commitAddFittingFromModal()" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl text-xs transition shadow-lg shadow-rose-600/20 flex items-center gap-1.5">
           <i class="fa-solid fa-plus" id="btnAddFittingSubmitIcon"></i> <span id="btnAddFittingSubmitText">Add to Schedule</span>
@@ -2690,9 +2736,9 @@
   </div>
 
   <!-- FIRST DUCT CONFIGURATION MODAL -->
-  <div id="firstDuctModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
-    <div class="glass-card bg-slate-900/95 border border-slate-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 animate-fade-in relative">
-      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+  <div id="firstDuctModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-3 sm:p-4 overflow-y-auto" onclick="if(event.target === this) closeFirstDuctModal()">
+    <div class="glass-card bg-slate-900/95 border border-slate-800 rounded-3xl max-w-lg w-full max-h-[90vh] my-auto shadow-2xl animate-fade-in relative flex flex-col overflow-hidden">
+      <div class="flex items-center justify-between border-b border-slate-800 p-5 sm:p-6 pb-3.5 flex-shrink-0">
         <h3 class="text-base font-bold text-white flex items-center gap-2">
           <i class="fa-solid fa-arrows-left-right text-sky-400"></i> <span id="firstDuctModalTitle">Configure Initial Duct Section</span>
         </h3>
@@ -2701,74 +2747,76 @@
         </button>
       </div>
 
-      <p id="firstDuctModalSubtitle" class="text-xs text-slate-400 leading-normal">
-        Select whether your starting duct section leaving the equipment is rectangular or round, and enter its initial dimensions. Downstream schedule components will cascade from this section.
-      </p>
+      <div class="overflow-y-auto p-5 sm:p-6 pt-4 space-y-4 flex-1 custom-modal-scroll">
+        <p id="firstDuctModalSubtitle" class="text-xs text-slate-400 leading-normal">
+          Select whether your starting duct section leaving the equipment is rectangular or round, and enter its initial dimensions. Downstream schedule components will cascade from this section.
+        </p>
 
-      <div class="space-y-4 text-xs">
-        <!-- DUCT SHAPE TOGGLE BUTTONS -->
-        <div>
-          <label class="block font-bold text-slate-300 mb-1.5">Duct Geometry / Shape</label>
-          <div class="grid grid-cols-2 gap-3">
-            <button type="button" id="btnFirstDuctRect" onclick="setFirstDuctShape('rect')" class="p-3 rounded-xl border-2 border-sky-500 bg-sky-500/15 text-white font-bold flex items-center justify-center gap-2 transition shadow-sm">
-              <i class="fa-solid fa-square text-sky-400 text-sm"></i>
-              <span>Rectangular Duct</span>
-            </button>
-            <button type="button" id="btnFirstDuctRound" onclick="setFirstDuctShape('round')" class="p-3 rounded-xl border border-slate-700 bg-slate-950 text-slate-400 font-bold flex items-center justify-center gap-2 transition hover:border-slate-600 hover:text-slate-200">
-              <i class="fa-solid fa-circle-notch text-slate-400 text-sm"></i>
-              <span>Round Spiral Duct</span>
-            </button>
+        <div class="space-y-4 text-xs">
+          <!-- DUCT SHAPE TOGGLE BUTTONS -->
+          <div>
+            <label class="block font-bold text-slate-300 mb-1.5">Duct Geometry / Shape</label>
+            <div class="grid grid-cols-2 gap-3">
+              <button type="button" id="btnFirstDuctRect" onclick="setFirstDuctShape('rect')" class="p-3 rounded-xl border-2 border-sky-500 bg-sky-500/15 text-white font-bold flex items-center justify-center gap-2 transition shadow-sm">
+                <i class="fa-solid fa-square text-sky-400 text-sm"></i>
+                <span>Rectangular Duct</span>
+              </button>
+              <button type="button" id="btnFirstDuctRound" onclick="setFirstDuctShape('round')" class="p-3 rounded-xl border border-slate-700 bg-slate-950 text-slate-400 font-bold flex items-center justify-center gap-2 transition hover:border-slate-600 hover:text-slate-200">
+                <i class="fa-solid fa-circle-notch text-slate-400 text-sm"></i>
+                <span>Round Spiral Duct</span>
+              </button>
+            </div>
+            <input type="hidden" id="firstDuctShape" value="rect">
           </div>
-          <input type="hidden" id="firstDuctShape" value="rect">
-        </div>
 
-        <!-- RECTANGULAR INPUTS (Width × Length/Height) -->
-        <div id="firstDuctRectFields" class="space-y-1">
-          <label class="block font-bold text-slate-300 mb-1">Duct Cross-Section Dimensions</label>
+          <!-- RECTANGULAR INPUTS (Width × Length/Height) -->
+          <div id="firstDuctRectFields" class="space-y-1">
+            <label class="block font-bold text-slate-300 mb-1">Duct Cross-Section Dimensions</label>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-400 mb-1">Width W (inches)</label>
+                <input type="number" id="firstDuctWidth" value="18" min="2" max="120" step="0.5" onkeydown="if(event.key==='Enter') commitFirstDuctModal()" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 font-bold text-white mono outline-none focus:border-sky-500 transition">
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-400 mb-1">Length / Height H (inches)</label>
+                <input type="number" id="firstDuctHeight" value="12" min="2" max="120" step="0.5" onkeydown="if(event.key==='Enter') commitFirstDuctModal()" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 font-bold text-white mono outline-none focus:border-sky-500 transition">
+              </div>
+            </div>
+          </div>
+
+          <!-- ROUND INPUTS (Diameter) -->
+          <div id="firstDuctRoundFields" class="hidden space-y-1">
+            <label class="block font-bold text-slate-300 mb-1">Duct Diameter</label>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-400 mb-1">Diameter &Oslash; D (inches)</label>
+              <input type="number" id="firstDuctDia" value="14" min="2" max="120" step="0.5" onkeydown="if(event.key==='Enter') commitFirstDuctModal()" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 font-bold text-sky-300 mono outline-none focus:border-sky-500 transition">
+            </div>
+          </div>
+
+          <!-- SECTION LENGTH & PATH -->
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-[11px] font-semibold text-slate-400 mb-1">Width W (inches)</label>
-              <input type="number" id="firstDuctWidth" value="18" min="2" max="120" step="0.5" onkeydown="if(event.key==='Enter') commitFirstDuctModal()" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 font-bold text-white mono outline-none focus:border-sky-500 transition">
+              <label class="block font-bold text-slate-300 mb-1">Section Run Length (ft)</label>
+              <input type="number" id="firstDuctLength" value="20" min="1" max="500" step="1" onkeydown="if(event.key==='Enter') commitFirstDuctModal()" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 font-bold text-sky-400 mono outline-none focus:border-sky-500 transition">
             </div>
             <div>
-              <label class="block text-[11px] font-semibold text-slate-400 mb-1">Length / Height H (inches)</label>
-              <input type="number" id="firstDuctHeight" value="12" min="2" max="120" step="0.5" onkeydown="if(event.key==='Enter') commitFirstDuctModal()" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 font-bold text-white mono outline-none focus:border-sky-500 transition">
+              <label class="block font-bold text-slate-300 mb-1">Duct Path</label>
+              <select id="firstDuctPath" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 font-bold text-white outline-none focus:border-sky-500 transition">
+                <option value="supply">Supply Path</option>
+                <option value="return">Return Path</option>
+              </select>
             </div>
           </div>
-        </div>
 
-        <!-- ROUND INPUTS (Diameter) -->
-        <div id="firstDuctRoundFields" class="hidden space-y-1">
-          <label class="block font-bold text-slate-300 mb-1">Duct Diameter</label>
+          <!-- OPTIONAL DESCRIPTION -->
           <div>
-            <label class="block text-[11px] font-semibold text-slate-400 mb-1">Diameter &Oslash; D (inches)</label>
-            <input type="number" id="firstDuctDia" value="14" min="2" max="120" step="0.5" onkeydown="if(event.key==='Enter') commitFirstDuctModal()" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 font-bold text-sky-300 mono outline-none focus:border-sky-500 transition">
+            <label class="block font-bold text-slate-400 mb-1">Description / Tag (Optional)</label>
+            <input type="text" id="firstDuctName" placeholder="e.g. RTU Discharge Drop / Main Supply Trunk" onkeydown="if(event.key==='Enter') commitFirstDuctModal()" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs font-semibold text-white outline-none focus:border-sky-500 transition">
           </div>
-        </div>
-
-        <!-- SECTION LENGTH & PATH -->
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block font-bold text-slate-300 mb-1">Section Run Length (ft)</label>
-            <input type="number" id="firstDuctLength" value="20" min="1" max="500" step="1" onkeydown="if(event.key==='Enter') commitFirstDuctModal()" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 font-bold text-sky-400 mono outline-none focus:border-sky-500 transition">
-          </div>
-          <div>
-            <label class="block font-bold text-slate-300 mb-1">Duct Path</label>
-            <select id="firstDuctPath" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 font-bold text-white outline-none focus:border-sky-500 transition">
-              <option value="supply">Supply Path</option>
-              <option value="return">Return Path</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- OPTIONAL DESCRIPTION -->
-        <div>
-          <label class="block font-bold text-slate-400 mb-1">Description / Tag (Optional)</label>
-          <input type="text" id="firstDuctName" placeholder="e.g. RTU Discharge Drop / Main Supply Trunk" onkeydown="if(event.key==='Enter') commitFirstDuctModal()" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs font-semibold text-white outline-none focus:border-sky-500 transition">
         </div>
       </div>
 
-      <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
+      <div class="modal-footer-pinned flex items-center justify-end gap-2 p-4 sm:p-5 pt-3.5 border-t border-slate-800 bg-slate-900/95 flex-shrink-0">
         <button type="button" onclick="closeFirstDuctModal()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition">Cancel</button>
         <button type="button" id="btnFirstDuctSubmit" onclick="commitFirstDuctModal()" class="px-5 py-2.5 bg-sky-600 hover:bg-sky-500 text-white font-bold rounded-xl text-xs transition shadow-lg shadow-sky-600/20 flex items-center gap-1.5">
           <i class="fa-solid fa-plus" id="btnFirstDuctSubmitIcon"></i> <span id="btnFirstDuctSubmitText">Add Initial Duct</span>
@@ -2778,8 +2826,8 @@
   </div>
 
   <!-- SUITE UNIVERSAL SAVE SESSION MODAL -->
-  <div id="saveSessionModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
-    <div class="glass-card bg-slate-900/95 border border-slate-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-5 animate-fade-in relative">
+  <div id="saveSessionModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-3 sm:p-4 overflow-y-auto" onclick="if(event.target === this) closeSaveSessionModal()">
+    <div class="glass-card bg-slate-900/95 border border-slate-800 rounded-3xl max-w-lg w-full p-6 my-auto shadow-2xl space-y-5 animate-fade-in relative">
       <div class="flex items-center justify-between border-b border-slate-800 pb-3">
         <h3 class="text-base font-bold text-white flex items-center gap-2">
           <i class="fa-solid fa-floppy-disk text-emerald-400"></i> Save & Sync Project Session
@@ -2830,8 +2878,8 @@
   </div>
 
   <!-- EDIT SESSION DETAILS MODAL -->
-  <div id="editSessionModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
-    <div class="glass-card bg-slate-900/95 border border-slate-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-5 animate-fade-in relative">
+  <div id="editSessionModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-3 sm:p-4 overflow-y-auto" onclick="if(event.target === this) closeEditSessionModal()">
+    <div class="glass-card bg-slate-900/95 border border-slate-800 rounded-3xl max-w-lg w-full p-6 my-auto shadow-2xl space-y-5 animate-fade-in relative">
       <div class="flex items-center justify-between border-b border-slate-800 pb-3">
         <h3 class="text-base font-bold text-white flex items-center gap-2">
           <i class="fa-solid fa-pen-to-square text-amber-400"></i> Edit Saved Session Details
