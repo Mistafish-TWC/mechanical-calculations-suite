@@ -39,9 +39,7 @@ function isTool6Active(t) {
   if (t.componentRows && t.componentRows.length !== 3) return true;
   return (t.designCFM && t.designCFM !== 1200) ||
          (t.designVelocity && t.designVelocity !== 1000) ||
-         (t.designDFL && t.designDFL !== 0.10) ||
-         (t.tdlSupply && t.tdlSupply !== 55) ||
-         (t.tdlReturn && t.tdlReturn !== 48);
+         (t.designDFL && t.designDFL !== 0.10);
 }
 
 // ===================================================================
@@ -320,8 +318,8 @@ function saveActiveDraftState() {
         designCFM: parseFloat(document.getElementById('ductLossCFM')?.value || 1200),
         designVelocity: velVal,
         designDFL: dflVal,
-        tdlSupply: parseFloat(document.getElementById('tdlSupply')?.value || 55),
-        tdlReturn: parseFloat(document.getElementById('tdlReturn')?.value || 48),
+        tdlSupply: document.getElementById('tdlSupply') ? parseFloat(document.getElementById('tdlSupply').value) : (typeof lastCalculatedSummary !== 'undefined' ? (lastCalculatedSummary.supplyTDL || 0) : (state.tool6?.tdlSupply || 0)),
+        tdlReturn: document.getElementById('tdlReturn') ? parseFloat(document.getElementById('tdlReturn').value) : (typeof lastCalculatedSummary !== 'undefined' ? (lastCalculatedSummary.returnTDL || 0) : (state.tool6?.tdlReturn || 0)),
         activeTool6Tab: typeof activeTool6Tab !== 'undefined' ? activeTool6Tab : 'estimator',
         chainedScheduleRows: typeof chainedScheduleRows !== 'undefined' ? chainedScheduleRows : [],
         fittingsRows: typeof fittingsRows !== 'undefined' ? fittingsRows : [],

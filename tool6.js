@@ -686,37 +686,19 @@ var componentRows = [
 var componentRowIdCounter = 4;
 
 // -------------------------------------------------------------------
-// CONVERSION FACTOR INTERPOLATION HELPER
+// CONVERSION FACTOR INTERPOLATION & ANALYTICAL HELPER
+// Derived from SMACNA Loss Coefficients & Loren Cook Table 68 Baseline:
+// Base reference condition: V_ref = 1350 FPM, DFL_ref = 0.10" w.g. / 100 ft
+// Analytical formula: F = (V / 1350)^2 * (0.10 / DFL)
+// Replaces static table clamping with exact continuous fluid mechanics
 // -------------------------------------------------------------------
 function lookupConversionFactor(v, dfl) {
-  const matrix = DUCT_LOSS_DATA.conversionMatrix;
-  const clampedV = Math.max(900, Math.min(2000, v));
-  const clampedDFL = Math.max(0.08, Math.min(0.10, dfl));
+  const vel = Math.max(0, parseFloat(v) || 0);
+  const friction = Math.max(0.001, parseFloat(dfl) || 0.08);
+  if (vel <= 0) return 0;
 
-  // Find bounding velocity rows
-  let lowerRow = matrix[0];
-  let upperRow = matrix[matrix.length - 1];
-
-  for (let i = 0; i < matrix.length - 1; i++) {
-    if (clampedV >= matrix[i].v && clampedV <= matrix[i + 1].v) {
-      lowerRow = matrix[i];
-      upperRow = matrix[i + 1];
-      break;
-    }
-  }
-
-  // Fraction for velocity
-  const vSpan = upperRow.v - lowerRow.v;
-  const vFrac = vSpan > 0 ? (clampedV - lowerRow.v) / vSpan : 0;
-
-  // Values at 0.08 and 0.10 for the interpolated velocity
-  const factor008 = lowerRow.dfl008 + vFrac * (upperRow.dfl008 - lowerRow.dfl008);
-  const factor010 = lowerRow.dfl010 + vFrac * (upperRow.dfl010 - lowerRow.dfl010);
-
-  // Fraction for DFL between 0.08 and 0.10
-  const dflFrac = (clampedDFL - 0.08) / 0.02;
-  const factor = factor008 + dflFrac * (factor010 - factor008);
-
+  // Exact Loren Cook Table 68 analytical governing formula:
+  const factor = Math.pow(vel / 1350, 2) * (0.10 / friction);
   return Math.round(factor * 100) / 100;
 }
 
@@ -859,9 +841,221 @@ function calcStraightDuctFrictionRate(cfm, de) {
   return (0.10913 * Math.pow(cfm, 1.9)) / Math.pow(de, 5.02);
 }
 
+// Calibration constant linking Loren Cook Base EL to SMACNA Loss Coefficient C:
+// Baseline: V_ref = 1350 FPM, DFL_ref = 0.10" w.g./100 ft
+// K_ref = 100 * (Pv_ref / DFL_ref) = 100 * (1350 / 4005)^2 / 0.10 = 113.62706...
+// C = Base EL / 113.627
+// Fitting Loss ΔP = C * Pv = (Base EL / 113.627) * Pv
+const COOK_SMACNA_REF_CONSTANT = 100 * Math.pow(1350 / 4005, 2) / 0.10; // ~113.627
+
 function calcFittingStaticLoss(baseEL, vel, pv) {
-  if (!baseEL || baseEL <= 0) return 0;
-  return (baseEL / 114.0) * pv;
+  if (!baseEL || baseEL <= 0 || !pv || pv <= 0) return 0;
+  return (baseEL / COOK_SMACNA_REF_CONSTANT) * pv;
+}
+
+function interpolatePiecewise1D(pts, x) {
+  if (!pts || pts.length === 0) return 0;
+  if (x <= pts[0][0]) return pts[0][1];
+  if (x >= pts[pts.length - 1][0]) return pts[pts.length - 1][1];
+  for (let i = 0; i < pts.length - 1; i++) {
+    const [x0, y0] = pts[i];
+    const [x1, y1] = pts[i + 1];
+    if (x >= x0 && x <= x1) {
+      if (Math.abs(x1 - x0) < 1e-6) return y0;
+      const frac = (x - x0) / (x1 - x0);
+      return y0 + frac * (y1 - y0);
+    }
+  }
+  return pts[pts.length - 1][1];
+}
+
+function calcContinuousFittingEL(typeKey, inputs, angle = '90') {
+  const map = getAllFittingsMap();
+  const def = map[typeKey];
+  if (!def && typeKey !== 'custom_fitting') {
+    return { el: 10, exactEL: 10, trueRatio: 1.0, ratioLabel: '—', feedback: 'Standard fitting', lossDP: 0, lossC: 0.1 };
+  }
+
+  const { w = 20, h = 12, dia = 14, r = 14, qt = 1200, qb = 400, vt = 1000, vb = 1000, a1 = 144, a2 = 144, transAngle = '30', isVanes = true } = inputs || {};
+  let exactEL = 20;
+  let ratioVal = 1.0;
+  let ratioLabel = '';
+  let feedback = '';
+
+  // 1. Group 2: Rectangular Mitered Elbows (2a, 2b, 2c)
+  if (typeKey.startsWith('2')) {
+    const dimW = Math.max(1, parseFloat(w) || 20);
+    const dimH = Math.max(1, parseFloat(h) || 12);
+    ratioVal = dimH / dimW;
+    ratioLabel = `H/W: ${ratioVal.toFixed(2)}`;
+
+    const hasVanes = (typeKey === '2a_vanes') || (typeKey === '2c_tee_double' && isVanes);
+    const pts = hasVanes
+      ? [[0.25, 53], [1.00, 45], [4.00, 72]]
+      : [[0.25, 148], [1.00, 136], [4.00, 105]];
+
+    exactEL = interpolatePiecewise1D(pts, ratioVal);
+    if (ratioVal < 0.25) {
+      const slope = (pts[1][1] - pts[0][1]) / (pts[1][0] - pts[0][0]);
+      exactEL = Math.max(10, pts[0][1] + slope * (ratioVal - 0.25));
+    } else if (ratioVal > 4.0) {
+      const slope = (pts[2][1] - pts[1][1]) / (pts[2][0] - pts[1][0]);
+      exactEL = Math.max(10, pts[2][1] + slope * (ratioVal - 4.0));
+    }
+
+    if (DUCT_LOSS_DATA.miteredAngleFactors && DUCT_LOSS_DATA.miteredAngleFactors[angle]) {
+      exactEL *= DUCT_LOSS_DATA.miteredAngleFactors[angle];
+    }
+    feedback = `Aspect Ratio H/W: <strong>${ratioVal.toFixed(2)}</strong> (${hasVanes ? 'With Vanes' : 'No Vanes'}, ${angle}°)`;
+  }
+  // 2. Group 1: Round Elbows (1a-1f)
+  else if (typeKey.startsWith('1')) {
+    const dimD = Math.max(1, parseFloat(dia || w) || 14);
+    const dimR = Math.max(1, parseFloat(r) || (1.5 * dimD));
+    ratioVal = dimR / dimD;
+    ratioLabel = `R/D: ${ratioVal.toFixed(2)}`;
+
+    let pts = [[0.75, 37], [1.00, 25], [1.50, 17]];
+    if (typeKey === '1b_90_5piece') pts = [[0.75, 52], [1.00, 37], [1.50, 27]];
+    else if (typeKey === '1c_90_3piece') pts = [[0.75, 61], [1.00, 48], [1.50, 39]];
+    else if (typeKey === '1d_90_mitered') pts = [[1.00, 136]];
+    else if (typeKey === '1e_45_3piece') pts = [[0.75, 15], [1.00, 15], [1.50, 15]];
+    else if (typeKey === '1f_45_2piece') pts = [[0.75, 20], [1.00, 20], [1.50, 20]];
+
+    exactEL = interpolatePiecewise1D(pts, ratioVal);
+    feedback = `Radius Ratio R/D: <strong>${ratioVal.toFixed(2)}</strong>`;
+  }
+  // 3. Group 3: Rectangular Radius Elbows (3a, 3b, 3c)
+  else if (typeKey.startsWith('3')) {
+    const dimW = Math.max(1, parseFloat(w) || 20);
+    const dimH = Math.max(1, parseFloat(h) || 12);
+    const dimR = Math.max(1, parseFloat(r) || dimW);
+    const rw = dimR / dimW;
+    const hw = dimH / dimW;
+    ratioVal = hw;
+    ratioLabel = `R/W: ${rw.toFixed(2)}, H/W: ${hw.toFixed(2)}`;
+
+    const hasVanes = (typeKey === '3a_vanes') || (typeKey === '3c_wye_double' && isVanes);
+    if (hasVanes) {
+      const elAt025 = interpolatePiecewise1D([[0.25, 9], [1.0, 5], [4.0, 6]], hw);
+      const elAt050 = interpolatePiecewise1D([[0.25, 3], [1.0, 2], [4.0, 1]], hw);
+      exactEL = interpolatePiecewise1D([[0.25, elAt025], [0.50, elAt050]], rw);
+    } else {
+      const elAt05 = interpolatePiecewise1D([[0.25, 170], [1.0, 136], [4.0, 125]], hw);
+      const elAt10 = interpolatePiecewise1D([[0.25, 31], [1.0, 24], [4.0, 22]], hw);
+      const elAt20 = interpolatePiecewise1D([[0.25, 23], [1.0, 17], [4.0, 16]], hw);
+      exactEL = interpolatePiecewise1D([[0.50, elAt05], [1.00, elAt10], [2.00, elAt20]], rw);
+    }
+    feedback = `Radius R/W: <strong>${rw.toFixed(2)}</strong> | Aspect H/W: <strong>${hw.toFixed(2)}</strong>`;
+  }
+  // 4. Group 5: Diverging Tees Rect Trunk (5a - 5f)
+  else if (typeKey.startsWith('5')) {
+    const totQ = Math.max(1, parseFloat(qt) || 1200);
+    const brQ = Math.max(0, parseFloat(qb) || 400);
+    const qRatio = Math.min(1.0, brQ / totQ);
+    const vRatio = (vt > 0 && vb > 0) ? Math.min(2.0, vb / vt) : 1.0;
+
+    if (typeKey === '5d_rect_trunk' || typeKey === '5e_rect_45_trunk' || typeKey === '5f_round_trunk') {
+      ratioVal = qRatio;
+      ratioLabel = `Qb/Qt: ${qRatio.toFixed(3)}`;
+      const pts = [[0.1, 32], [0.2, 25], [0.3, 19], [0.4, 15], [0.5, 10], [0.6, 7], [0.8, 2], [1.0, 0]];
+      exactEL = interpolatePiecewise1D(pts, qRatio);
+      feedback = `Trunk Path &bull; Flow Ratio Q<sub>b</sub>/Q<sub>t</sub>: <strong>${qRatio.toFixed(3)}</strong>`;
+    } else {
+      ratioVal = qRatio;
+      ratioLabel = `Vb/Vt: ${vRatio.toFixed(2)}, Qb/Qt: ${qRatio.toFixed(3)}`;
+      let pts = [[0.1, 157], [0.2, 159], [0.3, 148], [0.4, 155], [0.5, 144]];
+      if (typeKey === '5b_rect_45_entry') pts = [[0.1, 89], [0.2, 111], [0.3, 97], [0.4, 90], [0.5, 84]];
+      else if (typeKey === '5c_round_branch') pts = [[0.1, 148], [0.2, 157], [0.3, 136], [0.4, 140], [0.5, 143]];
+      exactEL = interpolatePiecewise1D(pts, qRatio);
+      feedback = `Branch Path &bull; V<sub>b</sub>/V<sub>t</sub>: <strong>${vRatio.toFixed(2)}</strong> | Q<sub>b</sub>/Q<sub>t</sub>: <strong>${qRatio.toFixed(3)}</strong>`;
+    }
+  }
+  // 5. Group 4: Converging Tees Rect Trunk (4a - 4f)
+  else if (typeKey.startsWith('4')) {
+    const totQ = Math.max(1, parseFloat(qt) || 1200);
+    const brQ = Math.max(0, parseFloat(qb) || 400);
+    const qRatio = Math.min(1.0, brQ / totQ);
+    ratioVal = qRatio;
+
+    if (typeKey === '4d_rect_trunk' || typeKey === '4e_rect_45_trunk' || typeKey === '4f_round_trunk') {
+      ratioLabel = `Qb/Qt: ${qRatio.toFixed(3)}`;
+      const pts = [[0.1, 18], [0.2, 31], [0.3, 43], [0.4, 52], [0.5, 60], [0.6, 65], [0.7, 67], [0.8, 68], [0.9, 67]];
+      exactEL = interpolatePiecewise1D(pts, qRatio);
+      feedback = `Trunk Path &bull; Flow Ratio Q<sub>b</sub>/Q<sub>t</sub>: <strong>${qRatio.toFixed(3)}</strong>`;
+    } else {
+      ratioLabel = `Qb/Qt: ${qRatio.toFixed(3)}`;
+      let pts = [[0.1, 1], [0.2, 8], [0.3, 26], [0.4, 76], [0.5, 133], [0.6, 189], [0.7, 303], [0.8, 382], [0.9, 447]];
+      if (typeKey === '4b_rect_45_entry') pts = [[0.1, 2], [0.2, 10], [0.3, 20], [0.4, 39], [0.5, 86], [0.6, 130], [0.7, 208], [0.8, 228], [0.9, 330]];
+      else if (typeKey === '4c_round_branch') pts = [[0.1, 2], [0.2, 12], [0.3, 26], [0.4, 68], [0.5, 144], [0.6, 234], [0.7, 312], [0.8, 420], [0.9, 560]];
+      exactEL = interpolatePiecewise1D(pts, qRatio);
+      feedback = `Branch Path &bull; Q<sub>b</sub>/Q<sub>t</sub>: <strong>${qRatio.toFixed(3)}</strong>`;
+    }
+  }
+  // 6. Group 6 & 7: Round Tees (6a-6d, 7a-7f)
+  else if (typeKey.startsWith('6') || typeKey.startsWith('7')) {
+    const totQ = Math.max(1, parseFloat(qt) || 1200);
+    const brQ = Math.max(0, parseFloat(qb) || 400);
+    const qRatio = Math.min(1.0, brQ / totQ);
+    ratioVal = qRatio;
+    ratioLabel = `Qb/Qt: ${qRatio.toFixed(3)}`;
+    if (typeKey === '6c_converging_trunk' || typeKey === '6d_diverging_trunk') {
+      const pts = [[0.1, 35], [0.2, 30], [0.3, 25], [0.4, 20], [0.5, 15], [0.7, 8], [1.0, 0]];
+      exactEL = interpolatePiecewise1D(pts, qRatio);
+    } else {
+      const pts = [[0.1, 40], [0.2, 55], [0.3, 70], [0.5, 95], [0.7, 120], [1.0, 150]];
+      exactEL = interpolatePiecewise1D(pts, qRatio);
+    }
+    feedback = `Round Tee &bull; Q<sub>b</sub>/Q<sub>t</sub>: <strong>${qRatio.toFixed(3)}</strong>`;
+  }
+  // 7. Group 8: Wyes (Pair of Pants)
+  else if (typeKey.startsWith('8')) {
+    const totQ = Math.max(1, parseFloat(qt) || 1200);
+    const brQ = Math.max(0, parseFloat(qb) || 400);
+    const qRatio = Math.min(1.0, brQ / totQ);
+    ratioVal = qRatio;
+    ratioLabel = `Qb/Qt: ${qRatio.toFixed(3)}`;
+    const pts = [[0.1, 15], [0.2, 22], [0.3, 30], [0.5, 45], [0.7, 60], [1.0, 80]];
+    exactEL = interpolatePiecewise1D(pts, qRatio);
+    feedback = `Wye Fitting &bull; Q<sub>b</sub>/Q<sub>t</sub>: <strong>${qRatio.toFixed(3)}</strong>`;
+  }
+  // 8. Group 9 & 10: Transitions
+  else if (isTransitionFitting(typeKey)) {
+    const areaUp = Math.max(1, parseFloat(a1) || 144);
+    const areaDn = Math.max(1, parseFloat(a2) || 144);
+    const ar = Math.max(areaUp, areaDn) / Math.min(areaUp, areaDn);
+    ratioVal = ar;
+    ratioLabel = `A1/A2: ${ar.toFixed(2)}`;
+    const pts = [[1.0, 0], [1.5, 4], [2.0, 7], [3.0, 12], [4.0, 18]];
+    exactEL = interpolatePiecewise1D(pts, ar);
+    feedback = `Transition &bull; Area Ratio: <strong>${ar.toFixed(2)}:1</strong> (&theta;=${transAngle}&deg;)`;
+  }
+  // 9. Custom Fitting
+  else if (typeKey === 'custom_fitting') {
+    exactEL = Math.max(0, parseFloat(inputs?.customEL) || 20);
+    ratioVal = 1.0;
+    ratioLabel = 'Custom';
+    feedback = `Custom Fitting: ${exactEL}' EL`;
+  } else {
+    exactEL = 20;
+    ratioVal = 1.0;
+    ratioLabel = '—';
+    feedback = 'Standard Fitting';
+  }
+
+  const lossC = exactEL / COOK_SMACNA_REF_CONSTANT;
+  const pv = calcVelocityPressure(vt || 1000);
+  const lossDP = lossC * pv;
+
+  return {
+    el: Math.round(exactEL * 10) / 10,
+    exactEL: exactEL,
+    trueRatio: ratioVal,
+    ratioLabel: ratioLabel,
+    feedback: feedback,
+    lossDP: lossDP,
+    lossC: lossC
+  };
 }
 
 function getCurrentDownstreamCFM() {
@@ -1769,13 +1963,17 @@ function openFirstDuctModal() {
   const lengthIn = document.getElementById('firstDuctLength');
   const nameIn = document.getElementById('firstDuctName');
   const pathIn = document.getElementById('firstDuctPath');
+  const cfmIn = document.getElementById('firstDuctCFM');
 
+  if (cfmIn) cfmIn.value = document.getElementById('ductLossCFM')?.value || 1200;
   if (widthIn) widthIn.value = 18;
   if (heightIn) heightIn.value = 12;
   if (diaIn) diaIn.value = 14;
   if (lengthIn) lengthIn.value = 20;
   if (nameIn) nameIn.value = '';
   if (pathIn) pathIn.value = 'supply';
+
+  updateFirstDuctModalReadout();
 
   modal.classList.remove('hidden');
   modal.classList.add('flex');
@@ -1813,13 +2011,17 @@ function openEditDuctModal(row) {
   const lengthIn = document.getElementById('firstDuctLength');
   const nameIn = document.getElementById('firstDuctName');
   const pathIn = document.getElementById('firstDuctPath');
+  const cfmIn = document.getElementById('firstDuctCFM');
 
+  if (cfmIn) cfmIn.value = document.getElementById('ductLossCFM')?.value || 1200;
   if (widthIn) widthIn.value = row.width || 18;
   if (heightIn) heightIn.value = row.height || 12;
   if (diaIn) diaIn.value = row.dia || row.width || 14;
   if (lengthIn) lengthIn.value = row.length || 20;
   if (nameIn) nameIn.value = row.hasCustomName ? row.name : '';
   if (pathIn) pathIn.value = row.path || 'supply';
+
+  updateFirstDuctModalReadout();
 
   modal.classList.remove('hidden');
   modal.classList.add('flex');
@@ -1885,6 +2087,27 @@ function setFirstDuctShape(shape) {
     const widthIn = document.getElementById('firstDuctWidth');
     if (widthIn) setTimeout(() => { widthIn.focus(); if (typeof widthIn.select === 'function') widthIn.select(); }, 50);
   }
+  updateFirstDuctModalReadout();
+}
+
+function updateFirstDuctModalReadout() {
+  const velEl = document.getElementById('firstDuctCalcVel');
+  const dflEl = document.getElementById('firstDuctCalcDFL');
+  if (!velEl && !dflEl) return;
+
+  const shape = document.getElementById('firstDuctShape')?.value || 'rect';
+  const w = Math.max(2, parseFloat(document.getElementById('firstDuctWidth')?.value) || 18);
+  const h = Math.max(2, parseFloat(document.getElementById('firstDuctHeight')?.value) || 12);
+  const dia = Math.max(2, parseFloat(document.getElementById('firstDuctDia')?.value) || 14);
+  const cfm = Math.max(10, parseFloat(document.getElementById('firstDuctCFM')?.value) || parseFloat(document.getElementById('ductLossCFM')?.value) || 1200);
+
+  const area = calcDuctArea(w, h, shape, dia);
+  const de = (shape === 'round') ? dia : calcHuebscherDe(w, h);
+  const vel = calcDuctVelocity(cfm, area);
+  const friction = calcStraightDuctFrictionRate(cfm, de);
+
+  if (velEl) velEl.textContent = `${Math.round(vel).toLocaleString()} FPM`;
+  if (dflEl) dflEl.textContent = `${friction.toFixed(3)}" / 100'`;
 }
 
 function syncPrecedingTransitionAndRow0(rowIdx, w, h, shape, dia) {
@@ -1962,6 +2185,14 @@ function commitFirstDuctModal() {
 
       const rowIdx = chainedScheduleRows.findIndex(r => r.id === row.id);
       syncPrecedingTransitionAndRow0(rowIdx, w, h, shape, dia);
+
+      if (rowIdx === 0) {
+        const enteredCFM = Math.max(10, parseFloat(document.getElementById('firstDuctCFM')?.value) || 0);
+        if (enteredCFM > 0) {
+          const mainCFMEl = document.getElementById('ductLossCFM');
+          if (mainCFMEl) mainCFMEl.value = enteredCFM;
+        }
+      }
     }
     closeFirstDuctModal();
     calculateDuctLoss();
@@ -1971,6 +2202,12 @@ function commitFirstDuctModal() {
     }
     if (typeof saveActiveDraftState === 'function') saveActiveDraftState();
     return;
+  }
+
+  const enteredCFM = Math.max(10, parseFloat(document.getElementById('firstDuctCFM')?.value) || 0);
+  if (enteredCFM > 0) {
+    const mainCFMEl = document.getElementById('ductLossCFM');
+    if (mainCFMEl) mainCFMEl.value = enteredCFM;
   }
 
   const newRow = {
@@ -2735,6 +2972,27 @@ function onModalInitialShapeChange() {
     if (rectCol) rectCol.classList.remove('hidden');
     if (roundCol) roundCol.classList.add('hidden');
   }
+  updateModalInitialCriteriaReadout();
+}
+
+function updateModalInitialCriteriaReadout() {
+  const velEl = document.getElementById('modalInitialCalcVel');
+  const dflEl = document.getElementById('modalInitialCalcDFL');
+  if (!velEl && !dflEl) return;
+
+  const shape = document.getElementById('modalInitialShape')?.value || 'rect';
+  const w = Math.max(2, parseFloat(document.getElementById('modalInitialWidth')?.value) || 18);
+  const h = Math.max(2, parseFloat(document.getElementById('modalInitialHeight')?.value) || 12);
+  const dia = Math.max(2, parseFloat(document.getElementById('modalInitialDia')?.value) || 14);
+  const cfm = Math.max(10, parseFloat(document.getElementById('modalInitialCFM')?.value) || parseFloat(document.getElementById('ductLossCFM')?.value) || 1200);
+
+  const area = calcDuctArea(w, h, shape, dia);
+  const de = (shape === 'round') ? dia : calcHuebscherDe(w, h);
+  const vel = calcDuctVelocity(cfm, area);
+  const friction = calcStraightDuctFrictionRate(cfm, de);
+
+  if (velEl) velEl.textContent = `${Math.round(vel).toLocaleString()} FPM`;
+  if (dflEl) dflEl.textContent = `${friction.toFixed(3)}" / 100'`;
 }
 
 function openAddFittingModal(preselectedKey = null, defaultPath = null) {
@@ -2753,12 +3011,57 @@ function openAddFittingModal(preselectedKey = null, defaultPath = null) {
 
     const isScheduleEmpty = (chainedScheduleRows.length === 0);
     const initSection = document.getElementById('modalInitialCriteriaSection');
-    if (initSection) {
-      if (isScheduleEmpty) {
+    const upstreamBanner = document.getElementById('modalUpstreamBanner');
+
+    if (isScheduleEmpty) {
+      if (initSection) {
         initSection.classList.remove('hidden');
+        const initialCFMEl = document.getElementById('modalInitialCFM');
+        if (initialCFMEl) {
+          initialCFMEl.value = document.getElementById('ductLossCFM')?.value || 1200;
+        }
         onModalInitialShapeChange();
-      } else {
-        initSection.classList.add('hidden');
+      }
+      if (upstreamBanner) upstreamBanner.classList.add('hidden');
+    } else {
+      if (initSection) initSection.classList.add('hidden');
+      if (upstreamBanner) {
+        upstreamBanner.classList.remove('hidden');
+        const curDims = getCurrentDownstreamDims();
+        const curCFM = getCurrentDownstreamCFM();
+        const area = calcDuctArea(curDims.w, curDims.h, curDims.shape, curDims.dia);
+        const de = (curDims.shape === 'round') ? curDims.dia : calcHuebscherDe(curDims.w, curDims.h);
+        const vel = calcDuctVelocity(curCFM, area);
+        const dfl = calcStraightDuctFrictionRate(curCFM, de);
+
+        const dimsText = document.getElementById('modalUpstreamDimsText');
+        const velText = document.getElementById('modalUpstreamVelText');
+        const dflText = document.getElementById('modalUpstreamDFLText');
+        if (dimsText) dimsText.textContent = `${curDims.shape === 'round' ? 'Ø ' + curDims.dia + '" Round' : curDims.w + '" × ' + curDims.h + '" Rect'} (${Math.round(curCFM).toLocaleString()} CFM)`;
+        if (velText) velText.textContent = `${Math.round(vel).toLocaleString()} FPM`;
+        if (dflText) dflText.textContent = `${dfl.toFixed(3)}" / 100'`;
+
+        // Pre-populate fitting geometry inputs
+        const elbW = document.getElementById('modalElbowWidth');
+        const elbH = document.getElementById('modalElbowHeight');
+        const rDia = document.getElementById('modalRoundDia');
+        const rRad = document.getElementById('modalRoundRadius');
+        const rrW = document.getElementById('modalRectRadiusW');
+        const rrH = document.getElementById('modalRectRadiusH');
+        const rrR = document.getElementById('modalRectRadiusR');
+
+        if (elbW) elbW.value = curDims.w || 20;
+        if (elbH) elbH.value = curDims.h || 12;
+        if (rDia) rDia.value = (curDims.shape === 'round') ? (curDims.dia || 14) : Math.round(calcHuebscherDe(curDims.w, curDims.h) * 10) / 10;
+        if (rRad) rRad.value = Math.round((parseFloat(rDia?.value) || 14) * 1.5 * 10) / 10;
+        if (rrW) rrW.value = curDims.w || 20;
+        if (rrH) rrH.value = curDims.h || 12;
+        if (rrR) rrR.value = curDims.w || 20;
+
+        const brCFM = document.getElementById('modalBranchCFM');
+        if (brCFM && (!brCFM.value || brCFM.value === '')) {
+          brCFM.value = Math.round(curCFM * 0.3) || 400;
+        }
       }
     }
 
@@ -3151,13 +3454,15 @@ function onModalTeeBranchDimsInput() {
 
 function onModalTypeChange() {
   const typeEl = document.getElementById('modalFittingType');
-  const paramSelect = document.getElementById('modalFittingParam');
   const catEl = document.getElementById('modalFittingCategory');
-  const paramLabel = document.getElementById('modalFittingParamLabel');
-  const angleRow = document.getElementById('modalFittingAngleRow');
   const titleEl = document.getElementById('addFittingModalTitle');
-  const standardFields = document.getElementById('modalStandardFittingFields');
+  const geomControls = document.getElementById('modalGeometryControls');
   const customFields = document.getElementById('modalCustomFittingFields');
+  const rectElbowRow = document.getElementById('modalRectElbowRow');
+  const roundElbowRow = document.getElementById('modalRoundElbowRow');
+  const rectRadiusRow = document.getElementById('modalRectRadiusRow');
+  const angleRow = document.getElementById('modalFittingAngleRow');
+  const vaneRow = document.getElementById('modalFittingVaneRow');
   const teeBranchRow = document.getElementById('modalTeeBranchRow');
   const transitionRow = document.getElementById('modalTransitionRow');
   if (!typeEl) return;
@@ -3171,7 +3476,7 @@ function onModalTypeChange() {
   const isTrans = isTransitionFitting(typeKey);
 
   if (isCustom) {
-    if (standardFields) standardFields.classList.add('hidden');
+    if (geomControls) geomControls.classList.add('hidden');
     if (customFields) customFields.classList.remove('hidden');
     if (titleEl) titleEl.textContent = editingFittingRowId ? 'Edit Custom Fitting' : 'Add Custom Fitting to Schedule';
     const customNameInput = document.getElementById('modalCustomName');
@@ -3185,36 +3490,32 @@ function onModalTypeChange() {
     if (teeBranchRow) teeBranchRow.classList.add('hidden');
     if (transitionRow) transitionRow.classList.add('hidden');
   } else {
-    if (standardFields) standardFields.classList.remove('hidden');
+    if (geomControls) geomControls.classList.remove('hidden');
     if (customFields) customFields.classList.add('hidden');
     if (titleEl && def) {
       titleEl.textContent = editingFittingRowId ? `Edit: ${def.name || 'Fitting'}` : `Add to Schedule: ${def.name || 'Fitting'}`;
     }
 
-    if (paramSelect) {
-      if (def && def.options) {
-        paramSelect.innerHTML = Object.keys(def.options).map(opt => {
-          let label = opt;
-          if (isTrans) {
-            label = opt.replace(/A1\/A2\s*=\s*/i, 'Ratio ');
-          }
-          return `<option value="${opt}">${label} &rarr; ${def.options[opt]}' equivalent length</option>`;
-        }).join('');
-      } else {
-        paramSelect.innerHTML = `<option value="default">Standard</option>`;
-      }
+    // Configure geometry specific rows
+    if (rectElbowRow) {
+      if (typeKey.startsWith('2')) rectElbowRow.classList.remove('hidden');
+      else rectElbowRow.classList.add('hidden');
     }
-
-    if (paramLabel) {
-      paramLabel.textContent = def && def.paramName ? def.paramName : 'Configuration / Aspect / Flow Ratio';
+    if (roundElbowRow) {
+      if (typeKey.startsWith('1')) roundElbowRow.classList.remove('hidden');
+      else roundElbowRow.classList.add('hidden');
     }
-
+    if (rectRadiusRow) {
+      if (typeKey.startsWith('3')) rectRadiusRow.classList.remove('hidden');
+      else rectRadiusRow.classList.add('hidden');
+    }
     if (angleRow) {
-      if (def && def.hasAngleFactor) {
-        angleRow.classList.remove('hidden');
-      } else {
-        angleRow.classList.add('hidden');
-      }
+      if (def && def.hasAngleFactor) angleRow.classList.remove('hidden');
+      else angleRow.classList.add('hidden');
+    }
+    if (vaneRow) {
+      if (typeKey === '2c_tee_double' || typeKey === '3c_wye_double') vaneRow.classList.remove('hidden');
+      else vaneRow.classList.add('hidden');
     }
 
     if (teeBranchRow) {
@@ -3281,10 +3582,155 @@ function onModalTypeChange() {
     }
   }
 
-  // Update Modal Fitting Image Preview Card
+  // Update Modal Fitting Image Preview Card & live aerodynamics
   updateModalFittingImagePreview(def, typeKey);
-  updateModalEquivalentHint();
-  renderModalCalculator(def, typeKey);
+  updateModalFittingAerodynamics();
+}
+
+function updateModalFittingAerodynamics() {
+  const typeEl = document.getElementById('modalFittingType');
+  if (!typeEl) return;
+  const typeKey = typeEl.value;
+  const angle = document.getElementById('modalFittingAngle')?.value || '90';
+  const isVanes = (document.getElementById('modalFittingVanesSelect')?.value !== 'without_vanes');
+
+  const curDims = getCurrentDownstreamDims();
+  const curCFM = getCurrentDownstreamCFM();
+
+  let inputs = {
+    w: parseFloat(document.getElementById('modalElbowWidth')?.value) || curDims.w,
+    h: parseFloat(document.getElementById('modalElbowHeight')?.value) || curDims.h,
+    dia: parseFloat(document.getElementById('modalRoundDia')?.value) || curDims.dia,
+    r: parseFloat(document.getElementById('modalRoundRadius')?.value) || (parseFloat(document.getElementById('modalRoundDia')?.value) * 1.5) || 21,
+    qt: curCFM,
+    qb: parseFloat(document.getElementById('modalBranchCFM')?.value) || 400,
+    vt: 1000,
+    vb: 1000,
+    a1: 144,
+    a2: 144,
+    transAngle: document.getElementById('modalTransitionAngleSelect')?.value || '30',
+    isVanes: isVanes,
+    customEL: parseFloat(document.getElementById('modalCustomEL')?.value) || 20
+  };
+
+  if (typeKey.startsWith('3')) {
+    inputs.w = parseFloat(document.getElementById('modalRectRadiusW')?.value) || curDims.w;
+    inputs.h = parseFloat(document.getElementById('modalRectRadiusH')?.value) || curDims.h;
+    inputs.r = parseFloat(document.getElementById('modalRectRadiusR')?.value) || inputs.w;
+  }
+
+  const upstreamArea = calcDuctArea(curDims.w, curDims.h, curDims.shape, curDims.dia);
+  inputs.vt = upstreamArea > 0 ? (curCFM / upstreamArea) * 144 : 1000;
+
+  if (isTeeFitting(typeKey)) {
+    const bW = parseFloat(document.getElementById('modalTeeBranchWidth')?.value);
+    const bH = parseFloat(document.getElementById('modalTeeBranchHeight')?.value);
+    if (!isNaN(bW) && bW > 0 && !isNaN(bH) && bH > 0 && inputs.qb > 0) {
+      inputs.vb = (inputs.qb / (bW * bH)) * 144;
+    } else {
+      inputs.vb = inputs.vt;
+    }
+  }
+
+  if (isTransitionFitting(typeKey)) {
+    inputs.a1 = upstreamArea * 144;
+    const geom = getTransitionGeometry(typeKey);
+    let dnArea = 144;
+    if (geom.downstream === 'round') {
+      const d = parseFloat(document.getElementById('modalLeavingDia')?.value) || 12;
+      dnArea = Math.PI * Math.pow(d / 2, 2);
+    } else {
+      const lw = parseFloat(document.getElementById('modalLeavingWidth')?.value) || 14;
+      const lh = parseFloat(document.getElementById('modalLeavingHeight')?.value) || 12;
+      dnArea = lw * lh;
+    }
+    inputs.a2 = dnArea;
+  }
+
+  const result = calcContinuousFittingEL(typeKey, inputs, angle);
+
+  const paramInput = document.getElementById('modalFittingParam');
+  if (paramInput) paramInput.value = `${result.ratioLabel} (${result.el}' EL)`;
+
+  const ratioBadge = document.getElementById('modalTrueRatioBadge');
+  const elDisplay = document.getElementById('modalTrueELDisplay');
+  const lossDisplay = document.getElementById('modalTrueLossDisplay');
+  const hintEl = document.getElementById('modalFittingEquivalentHint');
+  const qtyInput = document.getElementById('modalFittingQty');
+  const qty = Math.max(1, parseInt(qtyInput ? qtyInput.value : 1, 10) || 1);
+
+  if (ratioBadge) ratioBadge.textContent = result.ratioLabel || '—';
+  if (elDisplay) elDisplay.textContent = `${result.el}' EL`;
+  if (lossDisplay) lossDisplay.textContent = `${result.lossDP.toFixed(3)}" w.g.`;
+  if (hintEl) hintEl.textContent = `Unit EL: ${result.el}' | Qty: ${qty} | Total: ${(result.el * qty).toFixed(1)}' Equivalent Length`;
+
+  const orientBadge = document.getElementById('modalElbowOrientationBadge');
+  if (orientBadge && typeKey.startsWith('2')) {
+    const dimW = inputs.w;
+    const dimH = inputs.h;
+    const isHard = (dimW >= dimH);
+    orientBadge.innerHTML = `${isHard ? 'Hard Bend (turns across ' + dimW + '" width)' : 'Easy Bend (turns across ' + dimW + '" width)'} &bull; Aspect H/W = ${(dimH / dimW).toFixed(2)}`;
+  }
+
+  const cascadeNote = document.getElementById('modalLeavingCascadeNote');
+  if (cascadeNote) {
+    if (isTeeFitting(typeKey)) {
+      const isBr = (document.getElementById('modalTeePathContinuation')?.value === 'branch');
+      const leavingQ = isBr ? inputs.qb : Math.max(0, curCFM - inputs.qb);
+      const leavingArea = isBr ? (inputs.vb > 0 ? (inputs.qb / inputs.vb) * 144 : upstreamArea) : upstreamArea;
+      const leavingVel = leavingArea > 0 ? (leavingQ / leavingArea) * 144 : 800;
+      cascadeNote.innerHTML = `<i class="fa-solid fa-arrow-right"></i> Leaving ${isBr ? 'Branch' : 'Trunk'}: <strong>${Math.round(leavingQ)} CFM</strong> (${Math.round(leavingVel)} FPM) &bull; Cascades downstream`;
+    } else if (isTransitionFitting(typeKey)) {
+      const geom = getTransitionGeometry(typeKey);
+      let dnArea = 144;
+      let dnDimsStr = '';
+      if (geom.downstream === 'round') {
+        const d = parseFloat(document.getElementById('modalLeavingDia')?.value) || 12;
+        dnArea = Math.PI * Math.pow(d / 2, 2);
+        dnDimsStr = `Ø ${d}" Round`;
+      } else {
+        const lw = parseFloat(document.getElementById('modalLeavingWidth')?.value) || 14;
+        const lh = parseFloat(document.getElementById('modalLeavingHeight')?.value) || 12;
+        dnArea = lw * lh;
+        dnDimsStr = `${lw}" × ${lh}" Rect`;
+      }
+      const leavingVel = dnArea > 0 ? (curCFM / (dnArea / 144)) : 800;
+      cascadeNote.innerHTML = `<i class="fa-solid fa-arrow-right"></i> Exiting: <strong>${Math.round(curCFM)} CFM</strong> &bull; ${dnDimsStr} (${Math.round(leavingVel)} FPM) &bull; Cascades downstream`;
+    } else {
+      cascadeNote.innerHTML = `<i class="fa-solid fa-arrow-right"></i> Continuing: <strong>${Math.round(curCFM)} CFM</strong> &bull; Downstream ductwork inherits these conditions`;
+    }
+  }
+
+  window.activeModalFittingResult = result;
+  return result;
+}
+
+function onFittingGeometryInput() {
+  updateModalFittingAerodynamics();
+}
+
+function swapElbowOrientation() {
+  const typeEl = document.getElementById('modalFittingType');
+  const typeKey = typeEl ? typeEl.value : '';
+
+  if (typeKey.startsWith('3')) {
+    const wEl = document.getElementById('modalRectRadiusW');
+    const hEl = document.getElementById('modalRectRadiusH');
+    if (wEl && hEl) {
+      const tmp = wEl.value;
+      wEl.value = hEl.value;
+      hEl.value = tmp;
+    }
+  } else {
+    const wEl = document.getElementById('modalElbowWidth');
+    const hEl = document.getElementById('modalElbowHeight');
+    if (wEl && hEl) {
+      const tmp = wEl.value;
+      wEl.value = hEl.value;
+      hEl.value = tmp;
+    }
+  }
+  updateModalFittingAerodynamics();
 }
 
 function updateModalTeeFlowReadout() {
@@ -4292,8 +4738,15 @@ function commitAddFittingFromModal() {
     const initW = Math.max(2, parseFloat(document.getElementById('modalInitialWidth')?.value) || 18);
     const initH = Math.max(2, parseFloat(document.getElementById('modalInitialHeight')?.value) || 12);
     const initDia = Math.max(2, parseFloat(document.getElementById('modalInitialDia')?.value) || 14);
-    const initVel = Math.max(200, parseFloat(document.getElementById('modalInitialVelocity')?.value) || 1000);
-    const initDFL = parseFloat(document.getElementById('modalInitialDFL')?.value) || 0.10;
+
+    const initialCFM = Math.max(10, parseFloat(document.getElementById('modalInitialCFM')?.value) || parseFloat(document.getElementById('ductLossCFM')?.value) || 1200);
+    const mainCFMEl = document.getElementById('ductLossCFM');
+    if (mainCFMEl) mainCFMEl.value = initialCFM;
+
+    const area = calcDuctArea(initW, initH, initShape, initDia);
+    const de = (initShape === 'round') ? initDia : calcHuebscherDe(initW, initH);
+    const initVel = calcDuctVelocity(initialCFM, area);
+    const initDFL = calcStraightDuctFrictionRate(initialCFM, de);
 
     initialCriteria = {
       shape: initShape,

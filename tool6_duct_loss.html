@@ -823,84 +823,19 @@
       <div id="view-subtab-estimator" class="space-y-6">
         
 
-        <!-- INPUT PARAMETERS & LIVE RESULT CARDS GRID -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          
-          <!-- DESIGN PARAMETERS CARD (7 COLS) -->
-          <div class="lg:col-span-7 glass-card rounded-2xl p-5 border border-slate-800 space-y-4">
-            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-              <h3 class="text-sm font-bold text-white flex items-center gap-2">
-                <i class="fa-solid fa-sliders text-rose-400"></i> Critical Path Design Criteria
-              </h3>
-              <span class="text-[11px] font-semibold text-slate-400">Velocity &amp; Friction dynamically calculated</span>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
-              <div>
-                <label class="block font-bold text-slate-200 mb-1">Total Airflow (CFM)</label>
-                <input type="number" id="ductLossCFM" value="1200" step="50" min="50" oninput="onTotalCFMChange()"
-                  class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 font-bold text-white mono outline-none focus:border-rose-500 transition">
-                <span class="text-[11px] text-slate-400 mt-1 block">Rooftop Unit / Fan Capacity</span>
-              </div>
-              <div>
-                <label class="block font-bold text-slate-200 mb-1">Calculated Velocity</label>
-                <div class="w-full bg-slate-900/90 border border-slate-700 rounded-xl p-2.5 font-bold text-emerald-400 mono flex items-center justify-between">
-                  <span id="metricCalculatedVelocity">800 FPM</span>
-                  <span class="text-[10px] text-slate-400 font-sans font-normal" id="metricVelocityContext">Trunk</span>
-                </div>
-                <span class="text-[11px] text-slate-400 mt-1 block">Calculated from schedule duct sizes</span>
-              </div>
-              <div>
-                <label class="block font-bold text-slate-200 mb-1">Calculated Friction (DFL)</label>
-                <div class="w-full bg-slate-900/90 border border-slate-700 rounded-xl p-2.5 font-bold text-rose-400 mono flex items-center justify-between">
-                  <span id="metricCalculatedDFL">0.070" / 100'</span>
-                  <span class="text-[10px] text-slate-400 font-sans font-normal">Avg DFL</span>
-                </div>
-                <span class="text-[11px] text-slate-400 mt-1 block">Calculated via ASHRAE friction eq.</span>
-              </div>
-            </div>
-
-            <!-- STRAIGHT DUCT RUN MEASUREMENTS -->
-            <div class="pt-2 border-t border-slate-800">
-              <h4 class="text-xs font-bold text-slate-200 mb-2 flex items-center justify-between">
-                <span>Total Straight Duct Length (TDL) along Critical Path</span>
-                <span class="text-rose-400 font-mono text-xs font-bold" id="metricTDLTotal">44.0'</span>
-              </h4>
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                <div>
-                  <label class="block text-slate-300 font-semibold mb-1">Supply Path Straight Duct (ft)</label>
-                  <div class="relative">
-                    <input type="number" id="tdlSupply" value="44" step="1" min="0" oninput="calculateDuctLoss()"
-                      class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 font-bold text-white mono outline-none focus:border-rose-500 transition pr-12">
-                    <span class="absolute right-3 top-2.5 text-xs text-slate-400 font-bold">ft</span>
-                  </div>
-                  <span class="text-[11px] text-slate-400 mt-1 block">Sum of straight supply duct runs</span>
-                </div>
-                <div>
-                  <label class="block text-slate-300 font-semibold mb-1">Return Path Straight Duct (ft)</label>
-                  <div class="relative">
-                    <input type="number" id="tdlReturn" value="0" step="1" min="0" oninput="calculateDuctLoss()"
-                      class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 font-bold text-white mono outline-none focus:border-rose-500 transition pr-12">
-                    <span class="absolute right-3 top-2.5 text-xs text-slate-400 font-bold">ft</span>
-                  </div>
-                  <span class="text-[11px] text-slate-400 mt-1 block">Sum of straight return duct runs</span>
-                </div>
-              </div>
-            </div>
+        <!-- 1. LOSS CALCULATION SUMMARY CARD (SPANNED FULL WIDTH AT TOP) -->
+        <div class="glass-card rounded-2xl p-5 border border-slate-800 space-y-4">
+          <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+              <i class="fa-solid fa-gauge-high text-rose-400"></i> Loss Calculation Summary
+            </h3>
+            <span class="text-xs font-mono text-slate-300 font-semibold" id="metricVelocityPressure">Pv: 0.0399"</span>
           </div>
 
-          <!-- RESULTS SUMMARY CARD (5 COLS) -->
-          <div class="lg:col-span-5 glass-card rounded-2xl p-5 border border-slate-800 flex flex-col justify-between space-y-4">
-            <div>
-              <div class="flex items-center justify-between pb-2 border-b border-slate-800">
-                <h3 class="text-sm font-bold text-white flex items-center gap-2">
-                  <i class="fa-solid fa-gauge-high text-rose-400"></i> Loss Calculation Summary
-                </h3>
-                <span class="text-xs font-mono text-slate-300 font-semibold" id="metricVelocityPressure">Pv: 0.0399"</span>
-              </div>
-
-              <!-- STAT BREAKDOWN GRID -->
-              <div class="grid grid-cols-2 gap-2.5 mt-3 text-xs">
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
+            <!-- STAT BREAKDOWN GRID -->
+            <div class="lg:col-span-8 flex flex-col justify-between gap-3">
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
                 <div class="summary-stat-box p-3 rounded-xl bg-slate-900/80 border border-slate-700/80">
                   <span class="stat-label text-xs font-semibold text-slate-300 block mb-0.5">Straight Duct (TDL)</span>
                   <span class="text-base font-bold font-mono text-white" id="metricTDLTotalSummary">44.0'</span>
@@ -917,18 +852,18 @@
                   <span class="stat-label text-xs font-semibold text-slate-300 block mb-0.5">Total System Length</span>
                   <span class="text-base font-bold font-mono text-white" id="metricTotalEquivLength">252'</span>
                 </div>
-                <div class="summary-stat-box summary-total-equiv-row p-3.5 rounded-xl col-span-2 flex items-center justify-between">
-                  <span class="total-equiv-label flex items-center gap-2 font-bold text-xs sm:text-sm">
-                    <i class="fa-solid fa-arrows-left-right text-rose-500"></i>
-                    <span>Total Critical Path Duct Loss (&Delta;P)</span>
-                  </span>
-                  <span class="total-equiv-value font-mono font-black text-base sm:text-lg text-rose-400" id="metricDuctLoss">0.117" w.g.</span>
-                </div>
+              </div>
+              <div class="summary-stat-box summary-total-equiv-row p-3.5 rounded-xl flex items-center justify-between">
+                <span class="total-equiv-label flex items-center gap-2 font-bold text-xs sm:text-sm">
+                  <i class="fa-solid fa-arrows-left-right text-rose-500"></i>
+                  <span>Total Critical Path Duct Loss (&Delta;P)</span>
+                </span>
+                <span class="total-equiv-value font-mono font-black text-base sm:text-lg text-rose-400" id="metricDuctLoss">0.117" w.g.</span>
               </div>
             </div>
 
             <!-- TOTAL STATIC PRESSURE HIGHLIGHT -->
-            <div id="card-total-esp" class="p-4 rounded-2xl bg-gradient-to-tr from-rose-950/70 to-slate-900/90 border border-rose-500/50 shadow-lg space-y-2">
+            <div id="card-total-esp" class="lg:col-span-4 p-4 rounded-2xl bg-gradient-to-tr from-rose-950/70 to-slate-900/90 border border-rose-500/50 shadow-lg flex flex-col justify-between space-y-2">
               <div class="flex items-center justify-between">
                 <div>
                   <span class="esp-header-label text-[11px] font-bold uppercase tracking-wider text-rose-400">Total External Static</span>
@@ -942,9 +877,52 @@
               <p class="esp-formula text-xs text-slate-300 border-t border-rose-500/30 pt-2 leading-tight">
                 Formula: <span class="mono text-rose-300 font-semibold">&Sigma;&Delta;P<sub>duct</sub> + &Sigma;&Delta;P<sub>components</sub> = Total ESP</span>
               </p>
+              <div class="pt-2 border-t border-rose-500/30 flex items-center justify-between text-[11px] font-mono">
+                <span class="text-slate-300">LC Handbook TEL Check:</span>
+                <div class="flex items-center gap-1.5">
+                  <strong id="metricCookTELCheck" class="text-rose-300">0.22" w.g.</strong>
+                  <span id="metricCookTELDeltaBadge" class="text-[9.5px] px-1.5 py-0.5 rounded bg-emerald-500/30 text-rose-300 border border-sky-500/30">0% Margin</span>
+                </div>
+              </div>
             </div>
           </div>
+        </div>
 
+        <!-- 2. CRITICAL PATH DESIGN CRITERIA CARD (SPANNED FULL WIDTH BELOW SUMMARY) -->
+        <div class="glass-card rounded-2xl p-5 border border-slate-800 space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+              <i class="fa-solid fa-sliders text-rose-400"></i> Critical Path Design Criteria
+            </h3>
+            <span class="text-[11px] font-semibold text-slate-400">Velocity &amp; Friction dynamically calculated</span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+            <div>
+              <label class="block font-bold text-slate-200 mb-1">Total Airflow (CFM)</label>
+              <input type="number" id="ductLossCFM" value="1200" step="50" min="50" oninput="onTotalCFMChange()"
+                class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 font-bold text-white mono outline-none focus:border-rose-500 transition">
+              <span class="text-[11px] text-slate-400 mt-1 block">Rooftop Unit / Fan Capacity</span>
+            </div>
+            <div>
+              <label class="block font-bold text-slate-200 mb-1">Calculated Velocity</label>
+              <div class="w-full bg-slate-900/90 border border-slate-700 rounded-xl p-2.5 font-bold text-emerald-400 mono flex items-center justify-between">
+                <span id="metricCalculatedVelocity">800 FPM</span>
+                <span class="text-[10px] text-slate-400 font-sans font-normal" id="metricVelocityContext">Trunk</span>
+              </div>
+              <span class="text-[11px] text-slate-400 mt-1 block">Calculated from schedule duct sizes</span>
+            </div>
+            <div>
+              <label class="block font-bold text-slate-200 mb-1">Calculated Friction (DFL)</label>
+              <div class="w-full bg-slate-900/90 border border-slate-700 rounded-xl p-2.5 font-bold text-rose-400 mono flex items-center justify-between">
+                <span id="metricCalculatedDFL">0.070" / 100'</span>
+                <span class="text-[10px] text-slate-400 font-sans font-normal">Avg DFL</span>
+              </div>
+              <span class="text-[11px] text-slate-400 mt-1 block">Calculated via ASHRAE friction eq.</span>
+            </div>
+          </div>
+          <!-- Retain hidden metricTDLTotal for zero-regression backward compatibility -->
+          <span id="metricTDLTotal" class="hidden"></span>
         </div>
 
         <!-- SCHEDULE ACTIONS BAR -->
@@ -2266,6 +2244,20 @@
                 </tbody>
               </table>
             </div>
+            <div class="mt-3 p-3 rounded-xl bg-slate-900/80 border border-slate-800 text-[11px] text-slate-300 space-y-1">
+              <div class="font-bold text-rose-400 flex items-center gap-1.5">
+                <i class="fa-solid fa-calculator"></i> Governing Analytical Formula &amp; SMACNA Derivation:
+              </div>
+              <p class="leading-relaxed text-slate-400">
+                Loren Cook Table 68 represents discrete sample points derived from SMACNA loss coefficient fundamentals (Base EL = 113.63 &times; C). The exact analytical conversion factor used dynamically in Tool 6 is:
+              </p>
+              <div class="font-mono text-xs text-rose-300 bg-slate-950 p-2 rounded-lg border border-slate-800/80 text-center font-bold">
+                Factor = (Velocity / 1,350)&sup2; &times; (0.10 / DFL)
+              </div>
+              <p class="text-[10px] text-slate-500">
+                This continuous formula eliminates table clamping, accurately evaluating any velocity (e.g., 800 FPM @ 0.08" DFL = 0.44) and any friction rate without step interpolation.
+              </p>
+            </div>
           </div>
 
         </div>
@@ -2421,6 +2413,21 @@
           </select>
         </div>
 
+        <!-- UPSTREAM DUCT INHERITANCE BANNER (Shown when schedule has preceding items) -->
+        <div id="modalUpstreamBanner" class="hidden p-3 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-between text-xs">
+          <div>
+            <span class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider block flex items-center gap-1.5">
+              <i class="fa-solid fa-arrow-turn-down text-sky-400"></i> Inherited Upstream Ductwork
+            </span>
+            <span id="modalUpstreamDimsText" class="text-xs font-bold text-white font-mono">20" &times; 12" Rect (1,400 CFM)</span>
+          </div>
+          <div class="text-right font-mono text-[11px]">
+            <span id="modalUpstreamVelText" class="text-emerald-400 font-bold">840 FPM</span>
+            <span class="text-slate-600 mx-1">|</span>
+            <span id="modalUpstreamDFLText" class="text-rose-400 font-semibold">0.082" / 100'</span>
+          </div>
+        </div>
+
         <!-- INITIAL CRITERIA & DUCT GEOMETRY (Shown ONLY when starting schedule with a fitting) -->
         <div id="modalInitialCriteriaSection" class="hidden p-3.5 rounded-2xl bg-sky-950/40 border border-sky-600/40 space-y-3">
           <div class="flex items-center justify-between border-b border-sky-800/60 pb-2">
@@ -2430,9 +2437,13 @@
             <span class="text-[10px] text-sky-400 font-semibold font-mono">Starting with Fitting</span>
           </div>
           <p class="text-[11px] text-slate-300 leading-normal">
-            Define the initial duct shape, dimensions, and target velocity/friction leaving the equipment to establish the fluid mechanics for this starting fitting.
+            Define the initial duct shape and cross-section dimensions leaving the equipment. Velocity and friction are automatically calculated from the equipment CFM.
           </p>
-          <div class="grid grid-cols-2 gap-3">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block font-semibold text-slate-300 text-[11px] mb-1">Total Airflow (CFM)</label>
+              <input type="number" id="modalInitialCFM" value="1200" step="50" min="50" oninput="updateModalInitialCriteriaReadout()" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs font-bold text-white mono outline-none focus:border-sky-500" placeholder="Equipment CFM">
+            </div>
             <div>
               <label class="block font-semibold text-slate-300 text-[11px] mb-1">Duct Geometry</label>
               <select id="modalInitialShape" onchange="onModalInitialShapeChange()" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs font-bold text-white outline-none focus:border-sky-500">
@@ -2440,181 +2451,144 @@
                 <option value="round">Round Spiral Duct</option>
               </select>
             </div>
-            <div id="modalInitialRectDimsCol">
-              <label class="block font-semibold text-slate-300 text-[11px] mb-1">Duct Size (W × H, in)</label>
-              <div class="flex items-center gap-1.5">
-                <input type="number" id="modalInitialWidth" value="18" min="2" max="120" step="0.5" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs font-bold text-white mono text-center outline-none focus:border-sky-500" placeholder="Width">
-                <span class="text-slate-400 text-xs">&times;</span>
-                <input type="number" id="modalInitialHeight" value="12" min="2" max="120" step="0.5" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs font-bold text-white mono text-center outline-none focus:border-sky-500" placeholder="Height">
-              </div>
-            </div>
-            <div id="modalInitialRoundDimsCol" class="hidden">
-              <label class="block font-semibold text-slate-300 text-[11px] mb-1">Diameter &Oslash; D (in)</label>
-              <input type="number" id="modalInitialDia" value="14" min="2" max="120" step="0.5" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs font-bold text-sky-300 mono text-center outline-none focus:border-sky-500" placeholder="Diameter">
+          </div>
+          <div id="modalInitialRectDimsCol">
+            <label class="block font-semibold text-slate-300 text-[11px] mb-1">Duct Size (W &times; H, in)</label>
+            <div class="flex items-center gap-1.5">
+              <input type="number" id="modalInitialWidth" value="18" min="2" max="120" step="0.5" oninput="updateModalInitialCriteriaReadout()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs font-bold text-white mono text-center outline-none focus:border-sky-500" placeholder="Width">
+              <span class="text-slate-400 text-xs">&times;</span>
+              <input type="number" id="modalInitialHeight" value="12" min="2" max="120" step="0.5" oninput="updateModalInitialCriteriaReadout()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs font-bold text-white mono text-center outline-none focus:border-sky-500" placeholder="Height">
             </div>
           </div>
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block font-semibold text-slate-300 text-[11px] mb-1">Target Velocity (FPM)</label>
-              <input type="number" id="modalInitialVelocity" value="1000" step="50" min="200" max="4000" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs font-bold text-emerald-400 mono outline-none focus:border-sky-500">
-            </div>
-            <div>
-              <label class="block font-semibold text-slate-300 text-[11px] mb-1">Design Friction Rate (DFL)</label>
-              <select id="modalInitialDFL" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs font-bold text-sky-300 mono outline-none focus:border-sky-500">
-                <option value="0.08">0.08" w.g. / 100 ft (Quiet)</option>
-                <option value="0.10" selected>0.10" w.g. / 100 ft (Standard)</option>
-              </select>
-            </div>
+          <div id="modalInitialRoundDimsCol" class="hidden">
+            <label class="block font-semibold text-slate-300 text-[11px] mb-1">Diameter &Oslash; D (in)</label>
+            <input type="number" id="modalInitialDia" value="14" min="2" max="120" step="0.5" oninput="updateModalInitialCriteriaReadout()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs font-bold text-sky-300 mono text-center outline-none focus:border-sky-500" placeholder="Diameter">
           </div>
-        </div>
-
-        <!-- SMART VARIABLE CALCULATOR (OPTIONAL RATIO & VALUE FINDER) -->
-        <div id="modalCalculatorSection" class="p-3.5 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-2.5 transition-all">
-          <div class="flex items-center justify-between">
-            <span class="text-[11px] font-bold text-slate-200 flex items-center gap-1.5">
-              <i class="fa-solid fa-calculator text-rose-400"></i> Auto-Calculate from Design Values <span class="text-[10px] font-normal text-slate-400">(Optional)</span>
+          <div class="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800 flex items-center justify-between text-xs">
+            <span class="text-slate-400 text-[11px] font-semibold flex items-center gap-1.5">
+              <i class="fa-solid fa-gauge text-sky-400"></i> Resulting Fluid Mechanics:
             </span>
-            <button type="button" onclick="clearModalCalculator()" class="text-[10px] text-slate-400 hover:text-rose-400 transition flex items-center gap-1 font-semibold" title="Clear calculator inputs">
-              <i class="fa-solid fa-arrow-rotate-left text-[9px]"></i> Reset
-            </button>
-          </div>
-
-          <!-- FLOW INPUTS (Qt, Qb) -->
-          <div id="calcRowFlow" class="hidden grid grid-cols-2 gap-2 text-xs">
-            <div>
-              <label class="block font-semibold text-slate-400 text-[10px] mb-0.5">Total / Trunk Flow (Q<sub>t</sub>, CFM)</label>
-              <input type="number" id="calcInputQt" placeholder="e.g. 1200" min="1" step="10" oninput="onModalCalculatorInput()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs font-bold text-white mono outline-none focus:border-rose-500">
-            </div>
-            <div>
-              <label class="block font-semibold text-slate-400 text-[10px] mb-0.5">Branch Flow (Q<sub>b</sub>, CFM)</label>
-              <input type="number" id="calcInputQb" placeholder="e.g. 400" min="0" step="10" oninput="onModalCalculatorInput()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs font-bold text-white mono outline-none focus:border-rose-500">
-            </div>
-          </div>
-
-          <!-- VELOCITY INPUTS (Vt, Vb) -->
-          <div id="calcRowVelocity" class="hidden grid grid-cols-2 gap-2 text-xs">
-            <div>
-              <label id="calcLabelVt" class="block font-semibold text-slate-400 text-[10px] mb-0.5">Trunk Velocity (V<sub>t</sub>, FPM)</label>
-              <input type="number" id="calcInputVt" placeholder="e.g. 1000" min="100" step="50" oninput="onModalCalculatorInput()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs font-bold text-white mono outline-none focus:border-rose-500">
-            </div>
-            <div id="calcColVb">
-              <label class="block font-semibold text-slate-400 text-[10px] mb-0.5">Branch Velocity (V<sub>b</sub>, FPM)</label>
-              <input type="number" id="calcInputVb" placeholder="e.g. 600" min="100" step="50" oninput="onModalCalculatorInput()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs font-bold text-white mono outline-none focus:border-rose-500">
-            </div>
-          </div>
-
-          <!-- DUCT DIMENSION INPUTS (for elbows R, W, H, or Diameter D) -->
-          <div id="calcRowDimensions" class="hidden grid grid-cols-3 gap-2 text-xs">
-            <div id="calcColDimR">
-              <label class="block font-semibold text-slate-400 text-[10px] mb-0.5">Radius R (in)</label>
-              <input type="number" id="calcInputDimR" placeholder="e.g. 12" min="1" step="0.5" oninput="onModalCalculatorInput()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs font-bold text-white mono outline-none focus:border-rose-500">
-            </div>
-            <div id="calcColDimW">
-              <label id="calcLabelDimW" class="block font-semibold text-slate-400 text-[10px] mb-0.5">Width W (in)</label>
-              <input type="number" id="calcInputDimW" placeholder="e.g. 12" min="1" step="0.5" oninput="onModalCalculatorInput()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs font-bold text-white mono outline-none focus:border-rose-500">
-            </div>
-            <div id="calcColDimH">
-              <label class="block font-semibold text-slate-400 text-[10px] mb-0.5">Height H (in)</label>
-              <input type="number" id="calcInputDimH" placeholder="e.g. 12" min="1" step="0.5" oninput="onModalCalculatorInput()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs font-bold text-white mono outline-none focus:border-rose-500">
-            </div>
-          </div>
-
-          <!-- AREA / AREA RATIO INPUTS (for Round Tee 6a/6b Ab, At) -->
-          <div id="calcRowArea" class="hidden grid grid-cols-2 gap-2 text-xs">
-            <div>
-              <label id="calcLabelArea1" class="block font-semibold text-slate-400 text-[10px] mb-0.5">Trunk Area A<sub>t</sub> (sq in)</label>
-              <input type="number" id="calcInputArea1" placeholder="e.g. 200" min="1" step="5" oninput="onModalCalculatorInput()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs font-bold text-white mono outline-none focus:border-rose-500">
-            </div>
-            <div>
-              <label id="calcLabelArea2" class="block font-semibold text-slate-400 text-[10px] mb-0.5">Branch Area A<sub>b</sub> (sq in)</label>
-              <input type="number" id="calcInputArea2" placeholder="e.g. 100" min="1" step="5" oninput="onModalCalculatorInput()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs font-bold text-white mono outline-none focus:border-rose-500">
-            </div>
-          </div>
-
-          <!-- TRANSITION PHYSICAL DIMENSIONS (Groups 9 & 10: Diameters for Round, Width & Length for Rectangular) -->
-          <div id="calcRowTransitionDims" class="hidden space-y-2 text-xs">
-            <div class="grid grid-cols-2 gap-2">
-              <!-- Upstream Section -->
-              <div class="p-2 rounded-lg bg-slate-900/90 border border-slate-700/60 space-y-1.5">
-                <div class="flex items-center justify-between">
-                  <span class="text-[10px] font-bold text-rose-300 uppercase tracking-wide">Upstream End</span>
-                  <span id="calcTransUpstreamShapeBadge" class="text-[9px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-300 font-mono">Rect</span>
-                </div>
-                <!-- Upstream Round: Diameter D1 -->
-                <div id="calcColTransD1" class="hidden">
-                  <label class="block font-semibold text-slate-400 text-[10px] mb-0.5">Diameter D<sub>1</sub> (in)</label>
-                  <input type="number" id="calcInputTransD1" placeholder="e.g. 14" min="1" step="0.5" oninput="onModalCalculatorInput()" class="w-full bg-slate-950 border border-slate-700 rounded-md p-1.5 text-xs font-bold text-white mono outline-none focus:border-rose-500">
-                </div>
-                <!-- Upstream Rect: Width W1 & Length L1 -->
-                <div id="calcColTransRect1" class="grid grid-cols-2 gap-1.5">
-                  <div>
-                    <label class="block font-semibold text-slate-400 text-[10px] mb-0.5">Width W<sub>1</sub> (in)</label>
-                    <input type="number" id="calcInputTransW1" placeholder="e.g. 18" min="1" step="0.5" oninput="onModalCalculatorInput()" class="w-full bg-slate-950 border border-slate-700 rounded-md p-1.5 text-xs font-bold text-white mono outline-none focus:border-rose-500">
-                  </div>
-                  <div>
-                    <label class="block font-semibold text-slate-400 text-[10px] mb-0.5">Length L<sub>1</sub> (in)</label>
-                    <input type="number" id="calcInputTransL1" placeholder="e.g. 12" min="1" step="0.5" oninput="onModalCalculatorInput()" class="w-full bg-slate-950 border border-slate-700 rounded-md p-1.5 text-xs font-bold text-white mono outline-none focus:border-rose-500">
-                  </div>
-                </div>
-                <div id="calcTransArea1Readout" class="text-[9px] text-slate-400 font-mono">Area A₁: — sq in</div>
-              </div>
-
-              <!-- Downstream Section -->
-              <div class="p-2 rounded-lg bg-slate-900/90 border border-slate-700/60 space-y-1.5">
-                <div class="flex items-center justify-between">
-                  <span class="text-[10px] font-bold text-emerald-300 uppercase tracking-wide">Downstream End</span>
-                  <span id="calcTransDownstreamShapeBadge" class="text-[9px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-300 font-mono">Rect</span>
-                </div>
-                <!-- Downstream Round: Diameter D2 -->
-                <div id="calcColTransD2" class="hidden">
-                  <label class="block font-semibold text-slate-400 text-[10px] mb-0.5">Diameter D<sub>2</sub> (in)</label>
-                  <input type="number" id="calcInputTransD2" placeholder="e.g. 12" min="1" step="0.5" oninput="onModalCalculatorInput()" class="w-full bg-slate-950 border border-slate-700 rounded-md p-1.5 text-xs font-bold text-white mono outline-none focus:border-rose-500">
-                </div>
-                <!-- Downstream Rect: Width W2 & Length L2 -->
-                <div id="calcColTransRect2" class="grid grid-cols-2 gap-1.5">
-                  <div>
-                    <label class="block font-semibold text-slate-400 text-[10px] mb-0.5">Width W<sub>2</sub> (in)</label>
-                    <input type="number" id="calcInputTransW2" placeholder="e.g. 16" min="1" step="0.5" oninput="onModalCalculatorInput()" class="w-full bg-slate-950 border border-slate-700 rounded-md p-1.5 text-xs font-bold text-white mono outline-none focus:border-rose-500">
-                  </div>
-                  <div>
-                    <label class="block font-semibold text-slate-400 text-[10px] mb-0.5">Length L<sub>2</sub> (in)</label>
-                    <input type="number" id="calcInputTransL2" placeholder="e.g. 10" min="1" step="0.5" oninput="onModalCalculatorInput()" class="w-full bg-slate-950 border border-slate-700 rounded-md p-1.5 text-xs font-bold text-white mono outline-none focus:border-rose-500">
-                  </div>
-                </div>
-                <div id="calcTransArea2Readout" class="text-[9px] text-slate-400 font-mono">Area A₂: — sq in</div>
-              </div>
-            </div>
-            <p class="text-[9.5px] text-slate-400 leading-tight">Enter dimensions in inches. Areas (A₁ &amp; A₂) and ratio are calculated automatically to auto-select the closest catalog option.</p>
-          </div>
-
-          <!-- LIVE CALCULATED RATIOS & AUTO-MATCH STATUS BADGE -->
-          <div id="calcFeedbackContainer" class="hidden pt-2 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-1.5 text-[10px]">
-            <div id="calcRatiosReadout" class="font-mono text-slate-300 font-medium"></div>
-            <div id="calcAutoMatchBadge" class="px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-400 font-semibold border border-emerald-500/30 flex items-center gap-1">
-              <i class="fa-solid fa-check"></i> <span id="calcAutoMatchText">Auto-selected closest option</span>
+            <div class="flex items-center gap-3 font-mono text-[11px]">
+              <span>Vel: <strong id="modalInitialCalcVel" class="text-emerald-400">800 FPM</strong></span>
+              <span class="text-slate-600">|</span>
+              <span>DFL: <strong id="modalInitialCalcDFL" class="text-rose-400">0.070" / 100'</strong></span>
             </div>
           </div>
         </div>
 
-        <!-- STANDARD LIBRARY FITTING CONFIGURATION -->
-        <div id="modalStandardFittingFields" class="space-y-3.5">
-          <div>
-            <label id="modalFittingParamLabel" class="block font-bold text-slate-300 mb-1">Configuration / Aspect / Flow Ratio</label>
-            <select id="modalFittingParam" onchange="onModalParamChange()" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 font-semibold text-white outline-none focus:border-rose-500">
-              <!-- Populated dynamically -->
-            </select>
+        <!-- FITTING GEOMETRY & FLOW CONFIGURATION (Auto-calculated, continuous) -->
+        <div id="modalGeometryControls" class="p-3.5 rounded-2xl bg-slate-900 border border-slate-800 space-y-3">
+          <!-- 1. Rectangular Mitered Elbow Controls (2a, 2b) -->
+          <div id="modalRectElbowRow" class="hidden space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] font-bold text-slate-200 flex items-center gap-1.5">
+                <i class="fa-solid fa-ruler-combined text-rose-400"></i> Duct Bend Dimensions
+              </span>
+              <button type="button" onclick="swapElbowOrientation()" class="px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-rose-300 border border-slate-700 text-[10px] font-bold transition flex items-center gap-1" title="Swap Width & Height to change between Hard Bend and Easy Bend">
+                <i class="fa-solid fa-repeat text-[9px]"></i> Swap W &harr; H
+              </button>
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-xs">
+              <div>
+                <label class="block font-semibold text-slate-400 text-[10px] mb-0.5">Width in Bend Plane W (in)</label>
+                <input type="number" id="modalElbowWidth" value="20" min="2" max="120" step="0.5" oninput="onFittingGeometryInput()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs font-bold text-white mono outline-none focus:border-rose-500">
+              </div>
+              <div>
+                <label class="block font-semibold text-slate-400 text-[10px] mb-0.5">Depth / Height H (in)</label>
+                <input type="number" id="modalElbowHeight" value="12" min="2" max="120" step="0.5" oninput="onFittingGeometryInput()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs font-bold text-white mono outline-none focus:border-rose-500">
+              </div>
+            </div>
+            <div id="modalElbowOrientationBadge" class="text-[10px] text-slate-400 font-mono">Hard Bend (Aspect H/W = 0.60)</div>
+          </div>
+
+          <!-- 2. Round Elbow Controls (1a-1f) -->
+          <div id="modalRoundElbowRow" class="hidden space-y-2">
+            <span class="text-[11px] font-bold text-slate-200 flex items-center gap-1.5">
+              <i class="fa-solid fa-circle-notch text-rose-400"></i> Round Elbow Dimensions
+            </span>
+            <div class="grid grid-cols-2 gap-2 text-xs">
+              <div>
+                <label class="block font-semibold text-slate-400 text-[10px] mb-0.5">Diameter D (in)</label>
+                <input type="number" id="modalRoundDia" value="14" min="2" max="120" step="0.5" oninput="onFittingGeometryInput()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs font-bold text-sky-300 mono outline-none focus:border-rose-500">
+              </div>
+              <div>
+                <label class="block font-semibold text-slate-400 text-[10px] mb-0.5">Centerline Radius R (in)</label>
+                <input type="number" id="modalRoundRadius" value="21" min="1" max="150" step="0.5" oninput="onFittingGeometryInput()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs font-bold text-white mono outline-none focus:border-rose-500">
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. Rectangular Radius Elbow Controls (3a-3c) -->
+          <div id="modalRectRadiusRow" class="hidden space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] font-bold text-slate-200 flex items-center gap-1.5">
+                <i class="fa-solid fa-bezier-curve text-rose-400"></i> Radius &amp; Cross Section
+              </span>
+              <button type="button" onclick="swapElbowOrientation()" class="px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-rose-300 border border-slate-700 text-[10px] font-bold transition flex items-center gap-1">
+                <i class="fa-solid fa-repeat text-[9px]"></i> Swap W &harr; H
+              </button>
+            </div>
+            <div class="grid grid-cols-3 gap-2 text-xs">
+              <div>
+                <label class="block font-semibold text-slate-400 text-[10px] mb-0.5">Radius R (in)</label>
+                <input type="number" id="modalRectRadiusR" value="20" min="1" max="150" step="0.5" oninput="onFittingGeometryInput()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs font-bold text-white mono outline-none focus:border-rose-500">
+              </div>
+              <div>
+                <label class="block font-semibold text-slate-400 text-[10px] mb-0.5">Width W (in)</label>
+                <input type="number" id="modalRectRadiusW" value="20" min="2" max="120" step="0.5" oninput="onFittingGeometryInput()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs font-bold text-white mono outline-none focus:border-rose-500">
+              </div>
+              <div>
+                <label class="block font-semibold text-slate-400 text-[10px] mb-0.5">Height H (in)</label>
+                <input type="number" id="modalRectRadiusH" value="12" min="2" max="120" step="0.5" oninput="onFittingGeometryInput()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs font-bold text-white mono outline-none focus:border-rose-500">
+              </div>
+            </div>
           </div>
 
           <!-- MITERED ANGLE ROW (Shown when fitting has angle factor) -->
           <div id="modalFittingAngleRow" class="hidden">
-            <label class="block font-bold text-slate-300 mb-1">Elbow Bend Angle (Correction Factor)</label>
-            <select id="modalFittingAngle" onchange="onModalParamChange()" class="w-slate-950 border border-slate-700 rounded-xl p-2.5 font-semibold text-rose-300 outline-none focus:border-rose-500">
+            <label class="block font-semibold text-slate-300 mb-1 text-[11px]">Elbow Bend Angle (Correction Factor)</label>
+            <select id="modalFittingAngle" onchange="onFittingGeometryInput()" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 font-semibold text-rose-300 outline-none focus:border-rose-500">
               <option value="90">90° Bend (1.00x factor)</option>
               <option value="60">60° Bend (0.78x factor)</option>
               <option value="45">45° Bend (0.60x factor)</option>
               <option value="30">30° Bend (0.45x factor)</option>
             </select>
           </div>
+
+          <!-- DOUBLE ELBOW / WYE VANE TOGGLE (for 2c, 3c) -->
+          <div id="modalFittingVaneRow" class="hidden">
+            <label class="block font-semibold text-slate-300 mb-1 text-[11px]">Turning Vane Configuration</label>
+            <select id="modalFittingVanesSelect" onchange="onFittingGeometryInput()" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 font-semibold text-white outline-none focus:border-rose-500">
+              <option value="with_vanes">With Turning Vanes (Standard Low Loss)</option>
+              <option value="without_vanes">Without Turning Vanes</option>
+            </select>
+          </div>
+
+          <!-- LIVE AERODYNAMIC & TRUE EL CALCULATION CARD -->
+          <div id="modalFittingAerodynamicsCard" class="p-3 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2">
+            <div class="flex items-center justify-between text-xs">
+              <span class="text-slate-400 text-[11px] font-semibold flex items-center gap-1.5">
+                <i class="fa-solid fa-gauge-high text-rose-400"></i> Calculated Aerodynamics:
+              </span>
+              <span id="modalTrueRatioBadge" class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-mono text-[10px] font-bold border border-slate-700">H/W: 0.60</span>
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-xs font-mono">
+              <div class="p-2 rounded-lg bg-slate-950 border border-slate-800 text-center">
+                <span class="text-[10px] text-slate-400 block font-sans">True Equivalent Length</span>
+                <span id="modalTrueELDisplay" class="text-sm font-bold text-rose-400">49.3' EL</span>
+              </div>
+              <div class="p-2 rounded-lg bg-slate-950 border border-slate-800 text-center">
+                <span class="text-[10px] text-slate-400 block font-sans">Fitting Static Loss (&Delta;P)</span>
+                <span id="modalTrueLossDisplay" class="text-sm font-bold text-white">0.019" w.g.</span>
+              </div>
+            </div>
+            <div id="modalLeavingCascadeNote" class="text-[10.5px] text-emerald-400 font-mono leading-tight">
+              Leaving: 1,400 CFM @ 840 FPM &bull; Downstream ductwork inherits these conditions
+            </div>
+          </div>
+        </div>
+
+        <input type="hidden" id="modalFittingParam" value="">
 
           <!-- TEE BRANCH FLOW ROW (Shown when fitting is a diverging or converging tee) -->
           <div id="modalTeeBranchRow" class="hidden p-3 rounded-2xl bg-slate-900 border border-slate-800 space-y-2.5 text-xs">
@@ -2753,6 +2727,13 @@
         </p>
 
         <div class="space-y-4 text-xs">
+          <!-- TOTAL AIRFLOW (CFM) -->
+          <div id="firstDuctCFMContainer">
+            <label class="block font-bold text-slate-300 mb-1">Total Airflow (CFM)</label>
+            <input type="number" id="firstDuctCFM" value="1200" step="50" min="50" oninput="updateFirstDuctModalReadout()" onkeydown="if(event.key==='Enter') commitFirstDuctModal()" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 font-bold text-white mono outline-none focus:border-sky-500 transition" placeholder="Equipment Airflow (CFM)">
+            <span class="text-[10px] text-slate-400 mt-1 block">Rooftop Unit / Fan Capacity &bull; Syncs with Critical Path Criteria</span>
+          </div>
+
           <!-- DUCT SHAPE TOGGLE BUTTONS -->
           <div>
             <label class="block font-bold text-slate-300 mb-1.5">Duct Geometry / Shape</label>
@@ -2775,11 +2756,11 @@
             <div class="grid grid-cols-2 gap-3">
               <div>
                 <label class="block text-[11px] font-semibold text-slate-400 mb-1">Width W (inches)</label>
-                <input type="number" id="firstDuctWidth" value="18" min="2" max="120" step="0.5" onkeydown="if(event.key==='Enter') commitFirstDuctModal()" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 font-bold text-white mono outline-none focus:border-sky-500 transition">
+                <input type="number" id="firstDuctWidth" value="18" min="2" max="120" step="0.5" oninput="updateFirstDuctModalReadout()" onkeydown="if(event.key==='Enter') commitFirstDuctModal()" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 font-bold text-white mono outline-none focus:border-sky-500 transition">
               </div>
               <div>
                 <label class="block text-[11px] font-semibold text-slate-400 mb-1">Length / Height H (inches)</label>
-                <input type="number" id="firstDuctHeight" value="12" min="2" max="120" step="0.5" onkeydown="if(event.key==='Enter') commitFirstDuctModal()" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 font-bold text-white mono outline-none focus:border-sky-500 transition">
+                <input type="number" id="firstDuctHeight" value="12" min="2" max="120" step="0.5" oninput="updateFirstDuctModalReadout()" onkeydown="if(event.key==='Enter') commitFirstDuctModal()" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 font-bold text-white mono outline-none focus:border-sky-500 transition">
               </div>
             </div>
           </div>
@@ -2789,7 +2770,19 @@
             <label class="block font-bold text-slate-300 mb-1">Duct Diameter</label>
             <div>
               <label class="block text-[11px] font-semibold text-slate-400 mb-1">Diameter &Oslash; D (inches)</label>
-              <input type="number" id="firstDuctDia" value="14" min="2" max="120" step="0.5" onkeydown="if(event.key==='Enter') commitFirstDuctModal()" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 font-bold text-sky-300 mono outline-none focus:border-sky-500 transition">
+              <input type="number" id="firstDuctDia" value="14" min="2" max="120" step="0.5" oninput="updateFirstDuctModalReadout()" onkeydown="if(event.key==='Enter') commitFirstDuctModal()" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 font-bold text-sky-300 mono outline-none focus:border-sky-500 transition">
+            </div>
+          </div>
+
+          <!-- RESULTING FLUID MECHANICS READOUT -->
+          <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between text-xs">
+            <span class="text-slate-400 text-[11px] font-semibold flex items-center gap-1.5">
+              <i class="fa-solid fa-gauge text-sky-400"></i> Resulting Fluid Mechanics:
+            </span>
+            <div class="flex items-center gap-3 font-mono text-[11px]">
+              <span>Vel: <strong id="firstDuctCalcVel" class="text-emerald-400">800 FPM</strong></span>
+              <span class="text-slate-600">|</span>
+              <span>DFL: <strong id="firstDuctCalcDFL" class="text-rose-400">0.070" / 100'</strong></span>
             </div>
           </div>
 
