@@ -482,6 +482,10 @@
       color: #9f1239 !important;
       font-weight: 800 !important;
     }
+    html.light #card-total-esp #metricCookTELCheck {
+      color: #881337 !important;
+      font-weight: 900 !important;
+    }
 
     /* Library & Reference Tables in Light Mode */
     html.light #view-subtab-library table th,
@@ -2394,7 +2398,7 @@
   </main>
 
   <!-- ADD FITTING MODAL -->
-  <div id="addFittingModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex flex-col items-center justify-center p-3 sm:p-4 overflow-y-auto" onclick="if(event.target === this) closeAddFittingModal()">
+  <div id="addFittingModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex flex-col items-center justify-center p-3 sm:p-4 overflow-y-auto" ondblclick="if(event.target === this) closeAddFittingModal()">
     <div class="glass-card bg-slate-900/95 border border-slate-800 rounded-3xl max-w-lg w-full max-h-[90vh] my-auto shadow-2xl animate-fade-in relative flex flex-col overflow-hidden">
       <div class="flex items-center justify-between border-b border-slate-800 p-5 sm:p-6 pb-3.5 flex-shrink-0">
         <h3 class="text-base font-bold text-white flex items-center gap-2">

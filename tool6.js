@@ -808,6 +808,11 @@ function switchTool6Tab(tabId) {
     }
   });
 
+  if (tabId === 'estimator') {
+    calculateDuctLoss();
+    renderFittingsTable();
+  }
+
   if (typeof saveActiveDraftState === 'function') {
     saveActiveDraftState();
   }
@@ -1571,6 +1576,51 @@ function calculateDuctLoss() {
     factorBadge.innerText = `Factor: ${conversionFactor.toFixed(2)} @ ${Math.round(summary.systemVel)} FPM`;
   }
 
+  // Update Critical Path Run Totals row in table footer
+  updateFittingsTableFooter(summary);
+
+  // Calculate Loren Cook Handbook TEL Check (Page 68 macro method)
+  // Formula: [ (TDL + BaseTEL * ConversionFactor) / 100 ] * avgDFL + totalComponentLoss
+  const cookAdjustedTEL = summary.totalTEL * conversionFactor;
+  const cookTotalEquivFt = summary.totalTDL + cookAdjustedTEL;
+  const cookDuctLoss = (cookTotalEquivFt / 100.0) * summary.avgDFL;
+  const hasScheduleOrComponents = (summary.totalLength > 0 || summary.totalComponentLoss > 0);
+  const cookTotalESP = hasScheduleOrComponents ? (cookDuctLoss + summary.totalComponentLoss) : 0;
+
+  setDisplayText('metricCookTELCheck', `${cookTotalESP.toFixed(2)}" w.g.`);
+  const cookCheckEl = document.getElementById('metricCookTELCheck');
+  if (cookCheckEl) {
+    cookCheckEl.title = `LC Handbook Estimate: ((${summary.totalTDL.toFixed(1)}' TDL + (${Math.round(summary.totalTEL)}' Base TEL × ${conversionFactor.toFixed(2)} factor)) / 100 × ${summary.avgDFL.toFixed(3)}") + ${summary.totalComponentLoss.toFixed(2)}" comp = ${cookTotalESP.toFixed(3)}" w.g.`;
+  }
+
+  const deltaBadge = document.getElementById('metricCookTELDeltaBadge');
+  if (deltaBadge) {
+    if (summary.totalESP > 0.0001 && cookTotalESP > 0.0001) {
+      const diff = cookTotalESP - summary.totalESP;
+      const pct = (diff / summary.totalESP) * 100;
+      const absPct = Math.abs(pct);
+      if (absPct < 0.5) {
+        deltaBadge.textContent = '0% Margin';
+        deltaBadge.className = 'text-[9.5px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700';
+        deltaBadge.title = 'Loren Cook handbook estimate aligns within 0.5% of chained schedule';
+      } else if (pct > 0) {
+        const pctFormatted = absPct < 10 ? pct.toFixed(1) : Math.round(pct);
+        deltaBadge.textContent = `+${pctFormatted}% Margin`;
+        deltaBadge.className = 'text-[9.5px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
+        deltaBadge.title = `Handbook estimate is +${pctFormatted}% higher than chained schedule (conservative design margin)`;
+      } else {
+        const pctFormatted = absPct < 10 ? pct.toFixed(1) : Math.round(pct);
+        deltaBadge.textContent = `${pctFormatted}% Margin`;
+        deltaBadge.className = 'text-[9.5px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30';
+        deltaBadge.title = `Handbook estimate is ${pctFormatted}% lower than chained schedule`;
+      }
+    } else {
+      deltaBadge.textContent = '0% Margin';
+      deltaBadge.className = 'text-[9.5px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700';
+      deltaBadge.title = 'No active schedule items or external static pressure entered';
+    }
+  }
+
   // Mirror into fittingsRows for backward compatibility
   fittingsRows = chainedScheduleRows.filter(r => r.type !== 'straight_duct').map(r => ({
     id: r.id,
@@ -1588,6 +1638,56 @@ function calculateDuctLoss() {
 function setDisplayText(id, text) {
   const el = document.getElementById(id);
   if (el) el.innerText = text;
+}
+
+// -------------------------------------------------------------------
+// CRITICAL PATH RUN TOTALS TABLE FOOTER
+// -------------------------------------------------------------------
+function updateFittingsTableFooter(summary) {
+  const tfoot = document.getElementById('fittingsTableFooter');
+  if (!tfoot) return;
+  if (!chainedScheduleRows || chainedScheduleRows.length === 0) {
+    tfoot.innerHTML = '';
+    return;
+  }
+  if (!summary) {
+    summary = propagateChainedSchedule();
+  }
+  tfoot.innerHTML = `
+    <tr class="bg-slate-900/95 border-t-2 border-slate-700">
+      <td colspan="3" class="p-3 text-left font-bold text-slate-200">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-calculator text-rose-500"></i>
+          <span>CRITICAL PATH RUN TOTALS</span>
+        </div>
+      </td>
+      <td class="p-3 text-center font-mono font-bold text-white text-xs">
+        ${Math.round(summary.totalCFM)} CFM
+      </td>
+      <td class="p-3 text-center text-[10px] text-slate-400 font-sans">
+        Schedule Run
+      </td>
+      <td class="p-3 text-center font-mono text-emerald-400 text-xs">
+        Avg: ${Math.round(summary.systemVel)} FPM
+      </td>
+      <td class="p-3 text-right font-mono font-bold text-sky-400 text-xs leading-tight">
+        ${summary.totalTDL.toFixed(1)}' TDL<br>
+        <span class="text-rose-400 font-normal text-[10px]">${Math.round(summary.totalTEL)}' TEL</span>
+      </td>
+      <td class="p-3 text-right font-mono font-bold text-rose-300 text-xs">
+        ${summary.totalDuctLoss.toFixed(3)}"
+      </td>
+      <td class="p-3 text-right font-mono font-black text-white text-xs">
+        ${Math.round(summary.totalLength)}'
+      </td>
+      <td class="p-3 text-right font-mono font-black text-rose-400 text-sm">
+        ${summary.totalESP.toFixed(3)}" ESP
+      </td>
+      <td class="p-3 text-center">
+        <button type="button" onclick="clearAllChainedSchedule()" class="btn-clear text-[10px] px-2 py-0.5 rounded" title="Clear all schedule items">Clear</button>
+      </td>
+    </tr>
+  `;
 }
 
 // -------------------------------------------------------------------
@@ -1618,10 +1718,14 @@ function renderFittingsTable(cachedSummary) {
         </td>
       </tr>
     `;
-    if (tfoot) tfoot.innerHTML = '';
+    updateFittingsTableFooter(null);
     calculateDuctLoss();
     return;
   }
+
+  // Ensure fresh propagation so all row fluid mechanics and cumulative totals are current
+  const summary = cachedSummary || propagateChainedSchedule();
+  lastCalculatedSummary = summary;
 
   chainedScheduleRows.forEach((row, idx) => {
     const fittingDef = (row.fittingKey && map[row.fittingKey]) ? map[row.fittingKey] : null;
@@ -1897,44 +2001,7 @@ function renderFittingsTable(cachedSummary) {
   });
 
   // Render Table Footer (Totals Summary Row)
-  const summary = cachedSummary || lastCalculatedSummary || propagateChainedSchedule();
-  if (tfoot) {
-    tfoot.innerHTML = `
-      <tr class="bg-slate-900/95 border-t-2 border-slate-700">
-        <td colspan="3" class="p-3 text-left font-bold text-slate-200">
-          <div class="flex items-center gap-2">
-            <i class="fa-solid fa-calculator text-rose-500"></i>
-            <span>CRITICAL PATH RUN TOTALS</span>
-          </div>
-        </td>
-        <td class="p-3 text-center font-mono font-bold text-white text-xs">
-          ${Math.round(summary.totalCFM)} CFM
-        </td>
-        <td class="p-3 text-center text-[10px] text-slate-400 font-sans">
-          Schedule Run
-        </td>
-        <td class="p-3 text-center font-mono text-emerald-400 text-xs">
-          Avg: ${Math.round(summary.systemVel)} FPM
-        </td>
-        <td class="p-3 text-right font-mono font-bold text-sky-400 text-xs leading-tight">
-          ${summary.totalTDL.toFixed(1)}' TDL<br>
-          <span class="text-rose-400 font-normal text-[10px]">${Math.round(summary.totalTEL)}' TEL</span>
-        </td>
-        <td class="p-3 text-right font-mono font-bold text-rose-300 text-xs">
-          ${summary.totalDuctLoss.toFixed(3)}"
-        </td>
-        <td class="p-3 text-right font-mono font-black text-white text-xs">
-          ${Math.round(summary.totalLength)}'
-        </td>
-        <td class="p-3 text-right font-mono font-black text-rose-400 text-sm">
-          ${summary.totalESP.toFixed(3)}" ESP
-        </td>
-        <td class="p-3 text-center">
-          <button type="button" onclick="clearAllChainedSchedule()" class="btn-clear text-[10px] px-2 py-0.5 rounded" title="Clear all schedule items">Clear</button>
-        </td>
-      </tr>
-    `;
-  }
+  updateFittingsTableFooter(summary);
 }
 
 // -------------------------------------------------------------------
