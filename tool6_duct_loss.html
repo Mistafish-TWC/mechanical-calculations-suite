@@ -866,7 +866,7 @@
             <h3 class="text-sm font-bold text-white flex items-center gap-2">
               <i class="fa-solid fa-gauge-high text-rose-400"></i> Loss Calculation Summary
             </h3>
-            <span class="text-xs font-mono text-slate-300 font-semibold" id="metricVelocityPressure">Pv: 0.0399"</span>
+            <span class="text-xs font-mono text-slate-300 font-semibold" id="metricVelocityPressure">Pv: 0.0000"</span>
           </div>
 
           <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
@@ -875,19 +875,19 @@
               <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
                 <div class="summary-stat-box p-3 rounded-xl bg-slate-900/80 border border-slate-700/80">
                   <span class="stat-label text-xs font-semibold text-slate-300 block mb-0.5">Straight Duct (TDL)</span>
-                  <span class="text-base font-bold font-mono text-white" id="metricTDLTotalSummary">44.0'</span>
+                  <span class="text-base font-bold font-mono text-white" id="metricTDLTotalSummary">0.0'</span>
                 </div>
                 <div class="summary-stat-box p-3 rounded-xl bg-slate-900/80 border border-slate-700/80">
                   <span class="stat-label text-xs font-semibold text-slate-300 block mb-0.5">Fitting TEL (Base)</span>
-                  <span class="text-base font-bold font-mono text-white" id="metricTELBase">208'</span>
+                  <span class="text-base font-bold font-mono text-white" id="metricTELBase">0'</span>
                 </div>
                 <div class="summary-stat-box p-3 rounded-xl bg-slate-900/80 border border-slate-700/80">
                   <span class="stat-label text-xs font-semibold text-slate-300 block mb-0.5">System Velocity</span>
-                  <span class="text-base font-bold font-mono text-emerald-400" id="metricSummaryVelocity">800 FPM</span>
+                  <span class="text-base font-bold font-mono text-emerald-400" id="metricSummaryVelocity">0 FPM</span>
                 </div>
                 <div class="summary-stat-box p-3 rounded-xl bg-slate-900/80 border border-slate-700/80">
                   <span class="stat-label text-xs font-semibold text-slate-300 block mb-0.5">Total System Length</span>
-                  <span class="text-base font-bold font-mono text-white" id="metricTotalEquivLength">252'</span>
+                  <span class="text-base font-bold font-mono text-white" id="metricTotalEquivLength">0'</span>
                 </div>
               </div>
               <div class="summary-stat-box summary-total-equiv-row p-3.5 rounded-xl flex items-center justify-between">
@@ -895,7 +895,7 @@
                   <i class="fa-solid fa-arrows-left-right text-rose-500"></i>
                   <span>Total Critical Path Duct Loss (&Delta;P)</span>
                 </span>
-                <span class="total-equiv-value font-mono font-black text-base sm:text-lg text-rose-400" id="metricDuctLoss">0.117" w.g.</span>
+                <span class="total-equiv-value font-mono font-black text-base sm:text-lg text-rose-400" id="metricDuctLoss">0.000" w.g.</span>
               </div>
             </div>
 
@@ -904,11 +904,11 @@
               <div class="flex items-center justify-between">
                 <div>
                   <span class="esp-header-label text-[11px] font-bold uppercase tracking-wider text-rose-400">Total External Static</span>
-                  <h4 class="text-2xl font-black text-white font-mono" id="metricTotalESP">0.22" w.g.</h4>
+                  <h4 class="text-2xl font-black text-white font-mono" id="metricTotalESP">0.00" w.g.</h4>
                 </div>
                 <div class="esp-breakdown text-right text-xs font-mono text-slate-200">
-                  <div>Duct Friction: <strong id="metricDuctLossApprox" class="text-rose-300">0.117"</strong></div>
-                  <div>Components: <strong id="metricComponentLoss" class="text-slate-100">0.10"</strong></div>
+                  <div>Duct Friction: <strong id="metricDuctLossApprox" class="text-rose-300">0.000"</strong></div>
+                  <div>Components: <strong id="metricComponentLoss" class="text-slate-100">0.00"</strong></div>
                 </div>
               </div>
               <p class="esp-formula text-xs text-slate-300 border-t border-rose-500/30 pt-2 leading-tight">
@@ -917,8 +917,8 @@
               <div class="pt-2 border-t border-rose-500/30 flex items-center justify-between text-[11px] font-mono">
                 <span class="text-slate-300">LC Handbook TEL Check:</span>
                 <div class="flex items-center gap-1.5">
-                  <strong id="metricCookTELCheck" class="text-rose-300">0.22" w.g.</strong>
-                  <span id="metricCookTELDeltaBadge" class="text-[9.5px] px-1.5 py-0.5 rounded bg-emerald-500/30 text-rose-300 border border-sky-500/30">0% Margin</span>
+                  <strong id="metricCookTELCheck" class="text-rose-300">0.00" w.g.</strong>
+                  <span id="metricCookTELDeltaBadge" class="text-[9.5px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">0% Margin</span>
                 </div>
               </div>
             </div>
@@ -1029,11 +1029,11 @@
               </p>
             </div>
             <div class="flex items-center gap-3 text-xs">
-              <span class="text-slate-400">Straight: <strong class="text-white font-mono" id="tableHeaderTDL">44.0'</strong></span>
+              <span class="text-slate-400">Straight: <strong class="text-white font-mono" id="tableHeaderTDL">0.0'</strong></span>
               <span class="text-slate-600">|</span>
-              <span class="text-slate-400">Fittings: <strong class="text-rose-400 font-mono" id="tableHeaderTEL">208'</strong></span>
+              <span class="text-slate-400">Fittings: <strong class="text-rose-400 font-mono" id="tableHeaderTEL">0'</strong></span>
               <span class="text-slate-600">|</span>
-              <span class="text-slate-400">Duct Loss: <strong class="text-emerald-400 font-mono" id="tableHeaderDuctLoss">0.117"</strong></span>
+              <span class="text-slate-400">Duct Loss: <strong class="text-emerald-400 font-mono" id="tableHeaderDuctLoss">0.000"</strong></span>
             </div>
           </div>
 

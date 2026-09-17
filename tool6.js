@@ -678,12 +678,8 @@ var editingDuctRowId = null;
 var editingFittingRowId = null;
 var fittingsRows = []; // Maintained in sync for legacy compatibility
 var fittingRowIdCounter = 1;
-var componentRows = [
-  { id: 1, name: 'Supply Diffusers / Outlets', qty: 1, dp: 0.10 },
-  { id: 2, name: 'Return Grilles / Inlets', qty: 1, dp: 0.10 },
-  { id: 3, name: 'Throwaway Air Filter', qty: 1, dp: 0.10 }
-];
-var componentRowIdCounter = 4;
+var componentRows = [];
+var componentRowIdCounter = 1;
 
 // -------------------------------------------------------------------
 // CONVERSION FACTOR INTERPOLATION & ANALYTICAL HELPER
@@ -1552,10 +1548,11 @@ function calculateDuctLoss() {
   setDisplayText('metricCalculatedDFL', `${summary.avgDFL.toFixed(3)}" / 100'`);
 
   // Update Summary Metrics
+  const hasDucts = chainedScheduleRows.length > 0;
   setDisplayText('metricTDLTotal', `${summary.totalTDL.toFixed(1)}'`);
   setDisplayText('metricTDLTotalSummary', `${summary.totalTDL.toFixed(1)}'`);
   setDisplayText('metricTELBase', `${Math.round(summary.totalTEL)}'`);
-  setDisplayText('metricSummaryVelocity', `${Math.round(summary.systemVel)} FPM`);
+  setDisplayText('metricSummaryVelocity', hasDucts ? `${Math.round(summary.systemVel)} FPM` : `0 FPM`);
   setDisplayText('metricConversionFactor', `${conversionFactor.toFixed(2)}x`);
   setDisplayText('metricTotalEquivLength', `${Math.round(summary.totalLength)}'`);
 
@@ -1563,7 +1560,7 @@ function calculateDuctLoss() {
   setDisplayText('metricDuctLossApprox', `${summary.totalDuctLoss.toFixed(3)}"`);
   setDisplayText('metricComponentLoss', `${summary.totalComponentLoss.toFixed(2)}"`);
   setDisplayText('metricTotalESP', `${summary.totalESP.toFixed(2)}" w.g.`);
-  setDisplayText('metricVelocityPressure', `Pv: ${trunkVp.toFixed(4)}"`);
+  setDisplayText('metricVelocityPressure', hasDucts ? `Pv: ${trunkVp.toFixed(4)}"` : `Pv: 0.0000"`);
 
   // Update Table Header Indicators
   setDisplayText('tableHeaderTDL', `${summary.totalTDL.toFixed(1)}'`);
@@ -2642,9 +2639,8 @@ function clearAllChainedSchedule() {
     chainedScheduleRows = [];
     chainedScheduleRowIdCounter = 1;
     if (Array.isArray(componentRows)) {
-      componentRows.forEach(c => {
-        c.qty = 0;
-      });
+      componentRows = [];
+      componentRowIdCounter = 1;
     }
     window.tool6_modified = true;
     renderComponentsTable();

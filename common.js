@@ -36,7 +36,7 @@ function isTool6Active(t) {
   if (t.userModified) return true;
   if (t.chainedScheduleRows && t.chainedScheduleRows.length > 0) return true;
   if (t.fittingsRows && t.fittingsRows.length > 0) return true;
-  if (t.componentRows && t.componentRows.length !== 3) return true;
+  if (t.componentRows && t.componentRows.length > 0) return true;
   return (t.designCFM && t.designCFM !== 1200) ||
          (t.designVelocity && t.designVelocity !== 1000) ||
          (t.designDFL && t.designDFL !== 0.10) ||
@@ -1223,8 +1223,18 @@ function importProjectState(data) {
       }
       if (typeof renderFittingsTable === 'function') renderFittingsTable();
       if (Array.isArray(data.tool6.componentRows)) {
-        componentRows = data.tool6.componentRows;
-        componentRowIdCounter = componentRows.reduce((max, r) => Math.max(max, r.id || 0), 0) + 1;
+        const isLegacyDefaultComponents = !data.tool6.userModified &&
+          (!data.tool6.chainedScheduleRows || data.tool6.chainedScheduleRows.length === 0) &&
+          data.tool6.componentRows.length === 3 &&
+          data.tool6.componentRows.every(c => c.dp === 0.1 && c.qty === 1 && (c.name.includes('Diffuser') || c.name.includes('Grille') || c.name.includes('Filter')));
+
+        if (isLegacyDefaultComponents) {
+          componentRows = [];
+          componentRowIdCounter = 1;
+        } else {
+          componentRows = data.tool6.componentRows;
+          componentRowIdCounter = componentRows.reduce((max, r) => Math.max(max, r.id || 0), 0) + 1;
+        }
         if (typeof renderComponentsTable === 'function') renderComponentsTable();
       }
       if (data.tool6.activeTool6Tab && typeof switchTool6Tab === 'function') {
