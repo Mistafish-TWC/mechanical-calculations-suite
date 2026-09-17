@@ -39,7 +39,9 @@ function isTool6Active(t) {
   if (t.componentRows && t.componentRows.length !== 3) return true;
   return (t.designCFM && t.designCFM !== 1200) ||
          (t.designVelocity && t.designVelocity !== 1000) ||
-         (t.designDFL && t.designDFL !== 0.10);
+         (t.designDFL && t.designDFL !== 0.10) ||
+         (t.tdlSupply && t.tdlSupply !== 55) ||
+         (t.tdlReturn && t.tdlReturn !== 48);
 }
 
 // ===================================================================

@@ -628,10 +628,10 @@ const DUCT_LOSS_DATA = {
       }
     },
     '10c_round_contracting': {
-      name: '10c: Contracting Flow (Round Conical)',
+      name: '10c: Contracting Flow (Rectangular Straight Sides)',
       category: 'Transitions (Contracting)',
-      image: '10c - Trans Round.jpeg',
-      paramName: 'Dimension Ratio (D₁/D₂) & Angle',
+      image: '10b - Trans Rect.jpeg',
+      paramName: 'Dimension Ratio (Width & Length) & Angle',
       options: {
         'A1/A2=2, 10°': 6, 'A1/A2=2, 15-40°': 6, 'A1/A2=2, 50-60°': 7, 'A1/A2=2, 90°': 14, 'A1/A2=2, 120°': 20, 'A1/A2=2, 150°': 27, 'A1/A2=2, 180°': 30,
         'A1/A2=4, 10°': 6, 'A1/A2=4, 15-40°': 5, 'A1/A2=4, 50-60°': 8, 'A1/A2=4, 90°': 19, 'A1/A2=4, 120°': 31, 'A1/A2=4, 150°': 40, 'A1/A2=4, 180°': 47,
@@ -727,9 +727,17 @@ function getAllFittingsMap() {
     });
   });
 
-  // Backwards compatibility alias for older saved drafts
-  if (!map['10b_10c_contracting'] && DUCT_LOSS_DATA.transitionsContracting['10b_rect_contracting']) {
+  // Backwards compatibility and shorthand aliases for 10a, 10b, 10c
+  if (DUCT_LOSS_DATA.transitionsExpanding['10a_rect_straight_sides']) {
+    map['10a'] = DUCT_LOSS_DATA.transitionsExpanding['10a_rect_straight_sides'];
+  }
+  if (DUCT_LOSS_DATA.transitionsContracting['10b_rect_contracting']) {
+    map['10b'] = DUCT_LOSS_DATA.transitionsContracting['10b_rect_contracting'];
     map['10b_10c_contracting'] = DUCT_LOSS_DATA.transitionsContracting['10b_rect_contracting'];
+  }
+  if (DUCT_LOSS_DATA.transitionsContracting['10c_round_contracting']) {
+    map['10c'] = DUCT_LOSS_DATA.transitionsContracting['10c_round_contracting'];
+    map['10c_rect_straight_sides'] = DUCT_LOSS_DATA.transitionsContracting['10c_round_contracting'];
   }
 
   return map;
@@ -739,8 +747,8 @@ function getAllFittingsMap() {
 // FITTING IMAGE & LIGHTBOX HELPERS
 // -------------------------------------------------------------------
 function getFittingImagePath(imageName) {
-  if (!imageName) return null;
-  return encodeURI('Duct Fittings/' + imageName);
+  if (!imageName) return '';
+  return 'Duct Fittings/' + imageName;
 }
 
 function lockBodyScroll() {
@@ -909,7 +917,7 @@ function calcContinuousFittingEL(typeKey, inputs, angle = '90') {
     feedback = `Aspect Ratio H/W: <strong>${ratioVal.toFixed(2)}</strong> (${hasVanes ? 'With Vanes' : 'No Vanes'}, ${angle}°)`;
   }
   // 2. Group 1: Round Elbows (1a-1f)
-  else if (typeKey.startsWith('1')) {
+  else if (/^1[a-f]/i.test(typeKey) && !typeKey.startsWith('10')) {
     const dimD = Math.max(1, parseFloat(dia || w) || 14);
     const dimR = Math.max(1, parseFloat(r) || (1.5 * dimD));
     ratioVal = dimR / dimD;
@@ -1068,17 +1076,19 @@ function getCurrentDownstreamCFM() {
 
 function getTransitionGeometry(typeKey) {
   if (!typeKey) return { upstream: 'rect', downstream: 'rect', isExpand: true };
-  if (typeKey === '9a_round_conical' || typeKey === '10c_round_contracting') {
-    return { upstream: 'round', downstream: 'round', isExpand: typeKey.startsWith('9') };
+  const k = String(typeKey).toLowerCase();
+  if (k === '9a_round_conical' || k === '9a') {
+    return { upstream: 'round', downstream: 'round', isExpand: true };
   }
-  if (typeKey === '9b_rect_to_rect' || typeKey === '10a_rect_straight_sides' || typeKey === '10b_rect_contracting') {
-    return { upstream: 'rect', downstream: 'rect', isExpand: !typeKey.startsWith('10b') };
-  }
-  if (typeKey === '9c_round_to_rect') {
+  if (k === '9c_round_to_rect' || k === '9c') {
     return { upstream: 'round', downstream: 'rect', isExpand: true };
   }
-  if (typeKey === '9d_rect_to_round') {
+  if (k === '9d_rect_to_round' || k === '9d') {
     return { upstream: 'rect', downstream: 'round', isExpand: true };
+  }
+  // 10a, 10b, 10c, 9b are strictly Rectangular-to-Rectangular
+  if (k.startsWith('10') || k.startsWith('9b')) {
+    return { upstream: 'rect', downstream: 'rect', isExpand: k.startsWith('9') || k.startsWith('10a') };
   }
   return { upstream: 'rect', downstream: 'rect', isExpand: true };
 }
@@ -1099,12 +1109,15 @@ function isTransitionFitting(key) {
 
 function isRoundFitting(key) {
   if (!key) return false;
-  return key.startsWith('1') || key.startsWith('6') || key.startsWith('7') || key === '9a_round_conical' || key === '10c_round_contracting' || key.includes('flex');
+  const k = String(key).toLowerCase();
+  if (k.startsWith('10')) return false; // 10a, 10b, 10c are rectangular transitions
+  return (/^1[a-f]/i.test(k)) || k.startsWith('6') || k.startsWith('7') || k === '9a_round_conical' || k.includes('flex');
 }
 
 function isRectFitting(key) {
   if (!key) return false;
-  return key.startsWith('2') || key.startsWith('3') || key.startsWith('4') || key.startsWith('5') || key === '9b_rect_to_rect' || key === '10a_rect_straight_sides' || key === '10b_rect_contracting';
+  const k = String(key).toLowerCase();
+  return k.startsWith('2') || k.startsWith('3') || k.startsWith('4') || k.startsWith('5') || k.startsWith('10') || k === '9b_rect_to_rect';
 }
 
 function getCurrentDownstreamDims() {
@@ -2329,7 +2342,20 @@ function addFittingRow(fittingKey, path = 'supply', defaultParam = null, qty = 1
   let fittingH = currentDims.h;
   let fittingDia = currentDims.dia || 14;
 
-  if (isRoundFitting(fittingKey)) {
+  if (isTrans) {
+    const geom = getTransitionGeometry(fittingKey);
+    if (geom.upstream === 'rect') {
+      fittingShape = 'rect';
+      fittingW = (currentDims.shape === 'rect' && currentDims.w) ? currentDims.w : 18;
+      fittingH = (currentDims.shape === 'rect' && currentDims.h) ? currentDims.h : 12;
+      fittingDia = Math.round(calcHuebscherDe(fittingW, fittingH) * 10) / 10 || 14;
+    } else {
+      fittingShape = 'round';
+      fittingDia = (currentDims.shape === 'round' && currentDims.dia) ? currentDims.dia : 14;
+      fittingW = fittingDia;
+      fittingH = fittingDia;
+    }
+  } else if (isRoundFitting(fittingKey)) {
     fittingShape = 'round';
     if (currentDims.shape === 'rect') {
       const de = Math.round(calcHuebscherDe(currentDims.w, currentDims.h) * 10) / 10;
@@ -2822,6 +2848,12 @@ function loadLorenCookRTUExample() {
 // QUICK ADD MODAL / PICKER FOR FITTINGS
 // -------------------------------------------------------------------
 function findCategoryForFittingKey(fittingKey) {
+  if (!fittingKey) return 'roundElbows';
+  const k = String(fittingKey).toLowerCase();
+  if (k === '10a' || k.startsWith('10a')) return 'transitionsExpanding';
+  if (k === '10b' || k.startsWith('10b') || k === '10c' || k.startsWith('10c')) return 'transitionsContracting';
+  if (k.startsWith('9')) return 'transitionsExpanding';
+
   const categoryKeys = [
     'roundElbows',
     'rectMitered',
@@ -3065,7 +3097,17 @@ function openAddFittingModal(preselectedKey = null, defaultPath = null) {
       }
     }
 
-    const effectiveKey = preselectedKey || '1a_90_smooth';
+    let effectiveKey = preselectedKey || '1a_90_smooth';
+    if (effectiveKey === '10a') effectiveKey = '10a_rect_straight_sides';
+    if (effectiveKey === '10b') effectiveKey = '10b_rect_contracting';
+    if (effectiveKey === '10c' || effectiveKey === '10c_rect_straight_sides') effectiveKey = '10c_round_contracting';
+
+    if (effectiveKey.startsWith('10') && isScheduleEmpty) {
+      const initShapeEl = document.getElementById('modalInitialShape');
+      if (initShapeEl) initShapeEl.value = 'rect';
+      onModalInitialShapeChange();
+    }
+
     const catKey = (effectiveKey === 'custom_fitting') ? 'presetsSpecial' : findCategoryForFittingKey(effectiveKey);
 
     const catEl = document.getElementById('modalFittingCategory');
@@ -3502,7 +3544,7 @@ function onModalTypeChange() {
       else rectElbowRow.classList.add('hidden');
     }
     if (roundElbowRow) {
-      if (typeKey.startsWith('1')) roundElbowRow.classList.remove('hidden');
+      if (/^1[a-f]/i.test(typeKey) && !typeKey.startsWith('10')) roundElbowRow.classList.remove('hidden');
       else roundElbowRow.classList.add('hidden');
     }
     if (rectRadiusRow) {
@@ -3536,6 +3578,10 @@ function onModalTypeChange() {
     if (transitionRow) {
       if (isTrans) {
         transitionRow.classList.remove('hidden');
+        if (roundElbowRow) roundElbowRow.classList.add('hidden');
+        if (rectElbowRow) rectElbowRow.classList.add('hidden');
+        if (rectRadiusRow) rectRadiusRow.classList.add('hidden');
+
         const currentDims = getCurrentDownstreamDims();
         const currentCFM = getCurrentDownstreamCFM();
         const geom = getTransitionGeometry(typeKey);
@@ -3546,7 +3592,9 @@ function onModalTypeChange() {
             const d = (currentDims.shape === 'round') ? (currentDims.dia || currentDims.w) : 14;
             readout.textContent = `Entering: ${Math.round(currentCFM)} CFM | Ø ${d}" (Round)`;
           } else {
-            readout.textContent = `Entering: ${Math.round(currentCFM)} CFM | ${currentDims.w}" × ${currentDims.h}" (Rect)`;
+            const w = (currentDims.shape === 'rect' && currentDims.w) ? currentDims.w : 18;
+            const h = (currentDims.shape === 'rect' && currentDims.h) ? currentDims.h : 12;
+            readout.textContent = `Entering: ${Math.round(currentCFM)} CFM | ${w}" × ${h}" (Rect)`;
           }
         }
 
@@ -3838,7 +3886,7 @@ function renderModalCalculator(def, typeKey) {
   if (labelArea2) labelArea2.innerHTML = 'Branch Area A<sub>b</sub> (sq in)';
 
   // Configure visible inputs based on fitting category & key
-  if (typeKey.startsWith('1')) {
+  if (/^1[a-f]/i.test(typeKey) && !typeKey.startsWith('10')) {
     // 1a-1f Round Elbows: Radius R and Diameter D
     if (rowDimensions) rowDimensions.classList.remove('hidden');
     if (colDimH) colDimH.classList.add('hidden');
@@ -4313,7 +4361,7 @@ function findClosestFittingOption(def, typeKey, inputs) {
   }
 
   // 9. Group 1: Round Elbows (R/D)
-  if (typeKey.startsWith('1')) {
+  if (/^1[a-f]/i.test(typeKey) && !typeKey.startsWith('10')) {
     const hasR = (!isNaN(dimR) && dimR > 0);
     const hasD = (!isNaN(dimW) && dimW > 0); // dimW is used as Diameter D
     if (!hasR || !hasD) return null;
@@ -4553,8 +4601,20 @@ function updateModalFittingImagePreview(def, typeKey = null) {
   if (previewImg) previewImg.classList.remove('hidden');
 
   if (def && def.image) {
-    const imgSrc = getFittingImagePath(def.image);
-    previewImg.src = imgSrc;
+    const rawPath = getFittingImagePath(def.image);
+    previewImg.onerror = function() {
+      if (typeof handleFittingImgError === 'function') {
+        handleFittingImgError(this);
+      } else if (!this.dataset.retried) {
+        this.dataset.retried = '1';
+        try {
+          const enc = encodeURI(rawPath);
+          if (enc !== rawPath) { this.src = enc; return; }
+        } catch(e) {}
+      }
+    };
+    previewImg.dataset.retryCount = '0';
+    previewImg.src = rawPath;
     previewImg.alt = def.name || 'Fitting Diagram';
     if (previewName) previewName.textContent = def.name || '';
     if (previewCat) previewCat.textContent = def.category || '';

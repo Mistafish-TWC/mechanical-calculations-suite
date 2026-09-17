@@ -40,6 +40,37 @@
     } else {
       document.documentElement.classList.add('light');
     }
+
+    function handleFittingImgError(img) {
+      if (!img) return;
+      const count = parseInt(img.dataset.retryCount || '0', 10);
+      const rawSrc = img.getAttribute('src') || '';
+      img.dataset.retryCount = (count + 1).toString();
+
+      if (count === 0) {
+        try {
+          const decoded = decodeURIComponent(rawSrc);
+          if (decoded !== rawSrc) { img.src = decoded; return; }
+        } catch(e) {}
+        try {
+          const encoded = encodeURI(rawSrc);
+          if (encoded !== rawSrc) { img.src = encoded; return; }
+        } catch(e) {}
+      } else if (count === 1) {
+        if (rawSrc.includes('%C2%B0')) {
+          img.src = rawSrc.replace(/%C2%B0/g, '°');
+          return;
+        } else if (rawSrc.includes('°')) {
+          img.src = rawSrc.replace(/°/g, '%C2%B0');
+          return;
+        }
+      } else if (count === 2) {
+        if (!rawSrc.startsWith('./') && !rawSrc.startsWith('http') && !rawSrc.startsWith('/')) {
+          img.src = './' + rawSrc;
+          return;
+        }
+      }
+    }
   </script>
 
   <style>
@@ -579,10 +610,12 @@
     }
 
     /* Modal Pinned Footer */
-    .modal-footer-pinned {
+    .modal-footer-pinned,
+    .modal-footer {
       box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.2);
     }
-    html.light .modal-footer-pinned {
+    html.light .modal-footer-pinned,
+    html.light .modal-footer {
       background-color: #ffffff !important;
       border-color: #e2e8f0 !important;
       box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
@@ -1105,7 +1138,7 @@
             <div class="grid grid-cols-3 sm:grid-cols-6 gap-2">
               <div class="fitting-gallery-card flex flex-col items-center bg-slate-900/90 rounded-xl p-2 border border-slate-800 hover:border-rose-500 hover:shadow-md hover:shadow-rose-500/10 transition group cursor-pointer relative" onclick="openAddFittingModal('1a_90_smooth', 'supply')" title="Click to configure and add 1a Smooth 90° Elbow to schedule">
                 <div class="img-container w-12 h-12 bg-white/5 rounded-lg flex items-center justify-center p-1 overflow-hidden border border-slate-800 relative">
-                  <img src="Duct%20Fittings/1a%20-%2090%C2%B0%20Smooth.jpeg" alt="1a" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
+                  <img src="Duct Fittings/1a - 90° Smooth.jpeg" onerror="handleFittingImgError(this)" alt="1a" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
                   <div class="absolute inset-0 bg-rose-600/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
                     <i class="fa-solid fa-plus text-white text-xs drop-shadow"></i>
                   </div>
@@ -1114,7 +1147,7 @@
               </div>
               <div class="fitting-gallery-card flex flex-col items-center bg-slate-900/90 rounded-xl p-2 border border-slate-800 hover:border-rose-500 hover:shadow-md hover:shadow-rose-500/10 transition group cursor-pointer relative" onclick="openAddFittingModal('1b_90_5piece', 'supply')" title="Click to configure and add 1b 5-Piece 90° Elbow to schedule">
                 <div class="img-container w-12 h-12 bg-white/5 rounded-lg flex items-center justify-center p-1 overflow-hidden border border-slate-800 relative">
-                  <img src="Duct%20Fittings/1b%20-%2090%C2%B0%205-Piece.jpeg" alt="1b" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
+                  <img src="Duct Fittings/1b - 90° 5-Piece.jpeg" onerror="handleFittingImgError(this)" alt="1b" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
                   <div class="absolute inset-0 bg-rose-600/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
                     <i class="fa-solid fa-plus text-white text-xs drop-shadow"></i>
                   </div>
@@ -1123,7 +1156,7 @@
               </div>
               <div class="fitting-gallery-card flex flex-col items-center bg-slate-900/90 rounded-xl p-2 border border-slate-800 hover:border-rose-500 hover:shadow-md hover:shadow-rose-500/10 transition group cursor-pointer relative" onclick="openAddFittingModal('1c_90_3piece', 'supply')" title="Click to configure and add 1c 3-Piece 90° Elbow to schedule">
                 <div class="img-container w-12 h-12 bg-white/5 rounded-lg flex items-center justify-center p-1 overflow-hidden border border-slate-800 relative">
-                  <img src="Duct%20Fittings/-%2090%C2%B0%203-Piece.jpeg" alt="1c" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
+                  <img src="Duct Fittings/- 90° 3-Piece.jpeg" onerror="handleFittingImgError(this)" alt="1c" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
                   <div class="absolute inset-0 bg-rose-600/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
                     <i class="fa-solid fa-plus text-white text-xs drop-shadow"></i>
                   </div>
@@ -1132,7 +1165,7 @@
               </div>
               <div class="fitting-gallery-card flex flex-col items-center bg-slate-900/90 rounded-xl p-2 border border-slate-800 hover:border-rose-500 hover:shadow-md hover:shadow-rose-500/10 transition group cursor-pointer relative" onclick="openAddFittingModal('1d_90_mitered', 'supply')" title="Click to configure and add 1d Mitered 90° Elbow to schedule">
                 <div class="img-container w-12 h-12 bg-white/5 rounded-lg flex items-center justify-center p-1 overflow-hidden border border-slate-800 relative">
-                  <img src="Duct%20Fittings/-%2090%C2%B0%20Mitered.jpeg" alt="1d" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
+                  <img src="Duct Fittings/- 90° Mitered.jpeg" onerror="handleFittingImgError(this)" alt="1d" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
                   <div class="absolute inset-0 bg-rose-600/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
                     <i class="fa-solid fa-plus text-white text-xs drop-shadow"></i>
                   </div>
@@ -1141,7 +1174,7 @@
               </div>
               <div class="fitting-gallery-card flex flex-col items-center bg-slate-900/90 rounded-xl p-2 border border-slate-800 hover:border-rose-500 hover:shadow-md hover:shadow-rose-500/10 transition group cursor-pointer relative" onclick="openAddFittingModal('1e_45_3piece', 'supply')" title="Click to configure and add 1e 3-Piece 45° Elbow to schedule">
                 <div class="img-container w-12 h-12 bg-white/5 rounded-lg flex items-center justify-center p-1 overflow-hidden border border-slate-800 relative">
-                  <img src="Duct%20Fittings/-%2045%C2%B0%203-Piece.jpeg" alt="1e" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
+                  <img src="Duct Fittings/- 45° 3-Piece.jpeg" onerror="handleFittingImgError(this)" alt="1e" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
                   <div class="absolute inset-0 bg-rose-600/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
                     <i class="fa-solid fa-plus text-white text-xs drop-shadow"></i>
                   </div>
@@ -1150,7 +1183,7 @@
               </div>
               <div class="fitting-gallery-card flex flex-col items-center bg-slate-900/90 rounded-xl p-2 border border-slate-800 hover:border-rose-500 hover:shadow-md hover:shadow-rose-500/10 transition group cursor-pointer relative" onclick="openAddFittingModal('1f_45_2piece', 'supply')" title="Click to configure and add 1f 2-Piece 45° Elbow to schedule">
                 <div class="img-container w-12 h-12 bg-white/5 rounded-lg flex items-center justify-center p-1 overflow-hidden border border-slate-800 relative">
-                  <img src="Duct%20Fittings/1f%20-%2045%C2%B0%202-Piece.jpeg" alt="1f" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
+                  <img src="Duct Fittings/1f - 45° 2-Piece.jpeg" onerror="handleFittingImgError(this)" alt="1f" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
                   <div class="absolute inset-0 bg-rose-600/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
                     <i class="fa-solid fa-plus text-white text-xs drop-shadow"></i>
                   </div>
@@ -1197,7 +1230,7 @@
             <div class="grid grid-cols-3 gap-2">
               <div class="fitting-gallery-card flex flex-col items-center bg-slate-900/90 rounded-xl p-2 border border-slate-800 hover:border-rose-500 hover:shadow-md hover:shadow-rose-500/10 transition group cursor-pointer relative" onclick="openAddFittingModal('2a_vanes', 'supply')" title="Click to configure and add 2a Mitered Elbow with Vanes to schedule">
                 <div class="img-container w-14 h-14 bg-white/5 rounded-lg flex items-center justify-center p-1 overflow-hidden border border-slate-800 relative">
-                  <img src="Duct%20Fittings/2a%20-%20Rec%20miter%20Elb%20with%20Vanes.jpeg" alt="2a" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
+                  <img src="Duct Fittings/2a - Rec miter Elb with Vanes.jpeg" onerror="handleFittingImgError(this)" alt="2a" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
                   <div class="absolute inset-0 bg-rose-600/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
                     <i class="fa-solid fa-plus text-white text-xs drop-shadow"></i>
                   </div>
@@ -1206,7 +1239,7 @@
               </div>
               <div class="fitting-gallery-card flex flex-col items-center bg-slate-900/90 rounded-xl p-2 border border-slate-800 hover:border-rose-500 hover:shadow-md hover:shadow-rose-500/10 transition group cursor-pointer relative" onclick="openAddFittingModal('2b_no_vanes', 'supply')" title="Click to configure and add 2b Mitered Elbow without Vanes to schedule">
                 <div class="img-container w-14 h-14 bg-white/5 rounded-lg flex items-center justify-center p-1 overflow-hidden border border-slate-800 relative">
-                  <img src="Duct%20Fittings/2b%20-%20Rec%20miter%20Elb%20without%20Vanes.jpeg" alt="2b" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
+                  <img src="Duct Fittings/2b - Rec miter Elb without Vanes.jpeg" onerror="handleFittingImgError(this)" alt="2b" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
                   <div class="absolute inset-0 bg-rose-600/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
                     <i class="fa-solid fa-plus text-white text-xs drop-shadow"></i>
                   </div>
@@ -1215,7 +1248,7 @@
               </div>
               <div class="fitting-gallery-card flex flex-col items-center bg-slate-900/90 rounded-xl p-2 border border-slate-800 hover:border-rose-500 hover:shadow-md hover:shadow-rose-500/10 transition group cursor-pointer relative" onclick="openAddFittingModal('2c_tee_double', 'supply')" title="Click to configure and add 2c Tee Double Elbow Equivalent to schedule">
                 <div class="img-container w-14 h-14 bg-white/5 rounded-lg flex items-center justify-center p-1 overflow-hidden border border-slate-800 relative">
-                  <img src="Duct%20Fittings/2c%20-%20Tee%20dbl%20elbow%20equiv.jpeg" alt="2c" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
+                  <img src="Duct Fittings/2c - Tee dbl elbow equiv.jpeg" onerror="handleFittingImgError(this)" alt="2c" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
                   <div class="absolute inset-0 bg-rose-600/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
                     <i class="fa-solid fa-plus text-white text-xs drop-shadow"></i>
                   </div>
@@ -1260,7 +1293,7 @@
             <div class="grid grid-cols-3 sm:grid-cols-3 gap-3 max-w-xl mx-auto">
               <div class="fitting-gallery-card flex flex-col items-center bg-slate-900/90 rounded-xl p-2.5 border border-slate-800 hover:border-rose-500 hover:shadow-md hover:shadow-rose-500/10 transition group cursor-pointer relative" onclick="openAddFittingModal('3a_vanes', 'supply')" title="Click to configure and add 3a Radius Elbow with Vanes to schedule">
                 <div class="img-container w-16 h-16 bg-white/5 rounded-lg flex items-center justify-center p-1 overflow-hidden border border-slate-800 relative">
-                  <img src="Duct%20Fittings/3a%20-%20Rect%20Rad%20Elbow%20with%20Vanes.jpeg" alt="3a" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
+                  <img src="Duct Fittings/3a - Rect Rad Elbow with Vanes.jpeg" onerror="handleFittingImgError(this)" alt="3a" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
                   <div class="absolute inset-0 bg-rose-600/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
                     <i class="fa-solid fa-plus text-white text-xs drop-shadow"></i>
                   </div>
@@ -1269,7 +1302,7 @@
               </div>
               <div class="fitting-gallery-card flex flex-col items-center bg-slate-900/90 rounded-xl p-2.5 border border-slate-800 hover:border-rose-500 hover:shadow-md hover:shadow-rose-500/10 transition group cursor-pointer relative" onclick="openAddFittingModal('3b_no_vanes', 'supply')" title="Click to configure and add 3b Radius Elbow without Vanes to schedule">
                 <div class="img-container w-16 h-16 bg-white/5 rounded-lg flex items-center justify-center p-1 overflow-hidden border border-slate-800 relative">
-                  <img src="Duct%20Fittings/3b%20-%20Rect%20Rad%20Elbow%20without%20Vanes.jpeg" alt="3b" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
+                  <img src="Duct Fittings/3b - Rect Rad Elbow without Vanes.jpeg" onerror="handleFittingImgError(this)" alt="3b" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
                   <div class="absolute inset-0 bg-rose-600/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
                     <i class="fa-solid fa-plus text-white text-xs drop-shadow"></i>
                   </div>
@@ -1278,7 +1311,7 @@
               </div>
               <div class="fitting-gallery-card flex flex-col items-center bg-slate-900/90 rounded-xl p-2.5 border border-slate-800 hover:border-rose-500 hover:shadow-md hover:shadow-rose-500/10 transition group cursor-pointer relative" onclick="openAddFittingModal('3c_wye_double', 'supply')" title="Click to configure and add 3c Wye Double Elbow Equivalent to schedule">
                 <div class="img-container w-16 h-16 bg-white/5 rounded-lg flex items-center justify-center p-1 overflow-hidden border border-slate-800 relative">
-                  <img src="Duct%20Fittings/3c%20-%20Wye%20dbl%20Elb%20Equiv.jpeg" alt="3c" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
+                  <img src="Duct Fittings/3c - Wye dbl Elb Equiv.jpeg" onerror="handleFittingImgError(this)" alt="3c" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
                   <div class="absolute inset-0 bg-rose-600/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
                     <i class="fa-solid fa-plus text-white text-xs drop-shadow"></i>
                   </div>
@@ -1364,7 +1397,7 @@
               <div class="grid grid-cols-3 sm:grid-cols-6 gap-2">
                 <div class="fitting-gallery-card flex flex-col items-center bg-slate-900/90 rounded-xl p-2 border border-slate-800 hover:border-rose-500 hover:shadow-md hover:shadow-rose-500/10 transition group cursor-pointer relative" onclick="openAddFittingModal('4a_rect_branch', 'return')" title="Click to configure and add 4a Converging Tee Rect Branch to schedule">
                   <div class="img-container w-12 h-12 bg-white/5 rounded-lg flex items-center justify-center p-1 overflow-hidden border border-slate-800 relative">
-                    <img src="Duct%20Fittings/4a%20-%20Tee%20Rect%20Branch.jpeg" alt="4a" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
+                    <img src="Duct Fittings/4a - Tee Rect Branch.jpeg" onerror="handleFittingImgError(this)" alt="4a" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
                     <div class="absolute inset-0 bg-rose-600/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
                       <i class="fa-solid fa-plus text-white text-xs drop-shadow"></i>
                     </div>
@@ -1373,7 +1406,7 @@
                 </div>
                 <div class="fitting-gallery-card flex flex-col items-center bg-slate-900/90 rounded-xl p-2 border border-slate-800 hover:border-rose-500 hover:shadow-md hover:shadow-rose-500/10 transition group cursor-pointer relative" onclick="openAddFittingModal('4b_rect_45_entry', 'return')" title="Click to configure and add 4b Converging Tee Rect 45° Branch to schedule">
                   <div class="img-container w-12 h-12 bg-white/5 rounded-lg flex items-center justify-center p-1 overflow-hidden border border-slate-800 relative">
-                    <img src="Duct%20Fittings/4b%20-%20Tee%20Rect%20Branch%2045%C2%B0.jpeg" alt="4b" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
+                    <img src="Duct Fittings/4b - Tee Rect Branch 45°.jpeg" onerror="handleFittingImgError(this)" alt="4b" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
                     <div class="absolute inset-0 bg-rose-600/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
                       <i class="fa-solid fa-plus text-white text-xs drop-shadow"></i>
                     </div>
@@ -1382,7 +1415,7 @@
                 </div>
                 <div class="fitting-gallery-card flex flex-col items-center bg-slate-900/90 rounded-xl p-2 border border-slate-800 hover:border-rose-500 hover:shadow-md hover:shadow-rose-500/10 transition group cursor-pointer relative" onclick="openAddFittingModal('4c_round_branch', 'return')" title="Click to configure and add 4c Converging Tee Round Branch to schedule">
                   <div class="img-container w-12 h-12 bg-white/5 rounded-lg flex items-center justify-center p-1 overflow-hidden border border-slate-800 relative">
-                    <img src="Duct%20Fittings/4c%20-%20Tee%20Round%20Branch.jpeg" alt="4c" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
+                    <img src="Duct Fittings/4c - Tee Round Branch.jpeg" onerror="handleFittingImgError(this)" alt="4c" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
                     <div class="absolute inset-0 bg-rose-600/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
                       <i class="fa-solid fa-plus text-white text-xs drop-shadow"></i>
                     </div>
@@ -1391,7 +1424,7 @@
                 </div>
                 <div class="fitting-gallery-card flex flex-col items-center bg-slate-900/90 rounded-xl p-2 border border-slate-800 hover:border-rose-500 hover:shadow-md hover:shadow-rose-500/10 transition group cursor-pointer relative" onclick="openAddFittingModal('4d_rect_trunk', 'return')" title="Click to configure and add 4d Converging Tee Rect Trunk Path to schedule">
                   <div class="img-container w-12 h-12 bg-white/5 rounded-lg flex items-center justify-center p-1 overflow-hidden border border-slate-800 relative">
-                    <img src="Duct%20Fittings/4d%20-%20Tee%20Rect%20Branch.jpeg" alt="4d" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
+                    <img src="Duct Fittings/4d - Tee Rect Branch.jpeg" onerror="handleFittingImgError(this)" alt="4d" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
                     <div class="absolute inset-0 bg-rose-600/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
                       <i class="fa-solid fa-plus text-white text-xs drop-shadow"></i>
                     </div>
@@ -1400,7 +1433,7 @@
                 </div>
                 <div class="fitting-gallery-card flex flex-col items-center bg-slate-900/90 rounded-xl p-2 border border-slate-800 hover:border-rose-500 hover:shadow-md hover:shadow-rose-500/10 transition group cursor-pointer relative" onclick="openAddFittingModal('4e_rect_45_trunk', 'return')" title="Click to configure and add 4e Converging Tee Rect 45° Trunk Path to schedule">
                   <div class="img-container w-12 h-12 bg-white/5 rounded-lg flex items-center justify-center p-1 overflow-hidden border border-slate-800 relative">
-                    <img src="Duct%20Fittings/4e%20-%20Tee%20Rect%20Branch%2045%C2%B0.jpeg" alt="4e" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
+                    <img src="Duct Fittings/4e - Tee Rect Branch 45°.jpeg" onerror="handleFittingImgError(this)" alt="4e" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
                     <div class="absolute inset-0 bg-rose-600/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
                       <i class="fa-solid fa-plus text-white text-xs drop-shadow"></i>
                     </div>
@@ -1409,7 +1442,7 @@
                 </div>
                 <div class="fitting-gallery-card flex flex-col items-center bg-slate-900/90 rounded-xl p-2 border border-slate-800 hover:border-rose-500 hover:shadow-md hover:shadow-rose-500/10 transition group cursor-pointer relative" onclick="openAddFittingModal('4f_round_trunk', 'return')" title="Click to configure and add 4f Converging Tee Round Trunk Path to schedule">
                   <div class="img-container w-12 h-12 bg-white/5 rounded-lg flex items-center justify-center p-1 overflow-hidden border border-slate-800 relative">
-                    <img src="Duct%20Fittings/4f%20-%20Tee%20Round%20Branch.jpeg" alt="4f" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
+                    <img src="Duct Fittings/4f - Tee Round Branch.jpeg" onerror="handleFittingImgError(this)" alt="4f" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
                     <div class="absolute inset-0 bg-rose-600/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
                       <i class="fa-solid fa-plus text-white text-xs drop-shadow"></i>
                     </div>
@@ -1526,7 +1559,7 @@
               <div class="grid grid-cols-3 sm:grid-cols-6 gap-2">
                 <div class="fitting-gallery-card flex flex-col items-center bg-slate-900/90 rounded-xl p-2 border border-slate-800 hover:border-rose-500 hover:shadow-md hover:shadow-rose-500/10 transition group cursor-pointer relative" onclick="openAddFittingModal('5a_rect_branch', 'supply')" title="Click to configure and add 5a Diverging Tee Rect Branch to schedule">
                   <div class="img-container w-12 h-12 bg-white/5 rounded-lg flex items-center justify-center p-1 overflow-hidden border border-slate-800 relative">
-                    <img src="Duct%20Fittings/5a%20-%20Tee%20Rect%20Branch.jpeg" alt="5a" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
+                    <img src="Duct Fittings/5a - Tee Rect Branch.jpeg" onerror="handleFittingImgError(this)" alt="5a" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
                     <div class="absolute inset-0 bg-rose-600/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
                       <i class="fa-solid fa-plus text-white text-xs drop-shadow"></i>
                     </div>
@@ -1535,7 +1568,7 @@
                 </div>
                 <div class="fitting-gallery-card flex flex-col items-center bg-slate-900/90 rounded-xl p-2 border border-slate-800 hover:border-rose-500 hover:shadow-md hover:shadow-rose-500/10 transition group cursor-pointer relative" onclick="openAddFittingModal('5b_rect_45_entry', 'supply')" title="Click to configure and add 5b Diverging Tee Rect 45° Branch to schedule">
                   <div class="img-container w-12 h-12 bg-white/5 rounded-lg flex items-center justify-center p-1 overflow-hidden border border-slate-800 relative">
-                    <img src="Duct%20Fittings/5b%20-%20Tee%20Rect%20Branch%2045%C2%B0.jpeg" alt="5b" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
+                    <img src="Duct Fittings/5b - Tee Rect Branch 45°.jpeg" onerror="handleFittingImgError(this)" alt="5b" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
                     <div class="absolute inset-0 bg-rose-600/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
                       <i class="fa-solid fa-plus text-white text-xs drop-shadow"></i>
                     </div>
@@ -1544,7 +1577,7 @@
                 </div>
                 <div class="fitting-gallery-card flex flex-col items-center bg-slate-900/90 rounded-xl p-2 border border-slate-800 hover:border-rose-500 hover:shadow-md hover:shadow-rose-500/10 transition group cursor-pointer relative" onclick="openAddFittingModal('5c_round_branch', 'supply')" title="Click to configure and add 5c Diverging Tee Round Branch to schedule">
                   <div class="img-container w-12 h-12 bg-white/5 rounded-lg flex items-center justify-center p-1 overflow-hidden border border-slate-800 relative">
-                    <img src="Duct%20Fittings/5c%20-%20Tee%20Round%20Branch.jpeg" alt="5c" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
+                    <img src="Duct Fittings/5c - Tee Round Branch.jpeg" onerror="handleFittingImgError(this)" alt="5c" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
                     <div class="absolute inset-0 bg-rose-600/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
                       <i class="fa-solid fa-plus text-white text-xs drop-shadow"></i>
                     </div>
@@ -1553,7 +1586,7 @@
                 </div>
                 <div class="fitting-gallery-card flex flex-col items-center bg-slate-900/90 rounded-xl p-2 border border-slate-800 hover:border-rose-500 hover:shadow-md hover:shadow-rose-500/10 transition group cursor-pointer relative" onclick="openAddFittingModal('5d_rect_trunk', 'supply')" title="Click to configure and add 5d Diverging Tee Rect Trunk Path to schedule">
                   <div class="img-container w-12 h-12 bg-white/5 rounded-lg flex items-center justify-center p-1 overflow-hidden border border-slate-800 relative">
-                    <img src="Duct%20Fittings/5d%20-%20Tee%20Rect%20Branch.jpeg" alt="5d" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
+                    <img src="Duct Fittings/5d - Tee Rect Branch.jpeg" onerror="handleFittingImgError(this)" alt="5d" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
                     <div class="absolute inset-0 bg-rose-600/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
                       <i class="fa-solid fa-plus text-white text-xs drop-shadow"></i>
                     </div>
@@ -1562,7 +1595,7 @@
                 </div>
                 <div class="fitting-gallery-card flex flex-col items-center bg-slate-900/90 rounded-xl p-2 border border-slate-800 hover:border-rose-500 hover:shadow-md hover:shadow-rose-500/10 transition group cursor-pointer relative" onclick="openAddFittingModal('5e_rect_45_trunk', 'supply')" title="Click to configure and add 5e Diverging Tee Rect 45° Trunk Path to schedule">
                   <div class="img-container w-12 h-12 bg-white/5 rounded-lg flex items-center justify-center p-1 overflow-hidden border border-slate-800 relative">
-                    <img src="Duct%20Fittings/5e%20-%20Tee%20Rect%20Branch%2045%C2%B0.jpeg" alt="5e" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
+                    <img src="Duct Fittings/5e - Tee Rect Branch 45°.jpeg" onerror="handleFittingImgError(this)" alt="5e" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
                     <div class="absolute inset-0 bg-rose-600/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
                       <i class="fa-solid fa-plus text-white text-xs drop-shadow"></i>
                     </div>
@@ -1571,7 +1604,7 @@
                 </div>
                 <div class="fitting-gallery-card flex flex-col items-center bg-slate-900/90 rounded-xl p-2 border border-slate-800 hover:border-rose-500 hover:shadow-md hover:shadow-rose-500/10 transition group cursor-pointer relative" onclick="openAddFittingModal('5f_round_trunk', 'supply')" title="Click to configure and add 5f Diverging Tee Round Trunk Path to schedule">
                   <div class="img-container w-12 h-12 bg-white/5 rounded-lg flex items-center justify-center p-1 overflow-hidden border border-slate-800 relative">
-                    <img src="Duct%20Fittings/5f%20-%20Tee%20Round%20Branch.jpeg" alt="5f" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
+                    <img src="Duct Fittings/5f - Tee Round Branch.jpeg" onerror="handleFittingImgError(this)" alt="5f" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
                     <div class="absolute inset-0 bg-rose-600/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
                       <i class="fa-solid fa-plus text-white text-xs drop-shadow"></i>
                     </div>
@@ -1693,7 +1726,7 @@
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-2xl mx-auto">
               <div class="fitting-gallery-card flex flex-col items-center bg-slate-900/90 rounded-xl p-2.5 border border-slate-800 hover:border-rose-500 hover:shadow-md hover:shadow-rose-500/10 transition group cursor-pointer relative" onclick="openAddFittingModal('6a_converging_branch', 'return')" title="Click to configure and add 6a Round Tee 90° Converging Branch to schedule">
                 <div class="img-container w-14 h-14 bg-white/5 rounded-lg flex items-center justify-center p-1 overflow-hidden border border-slate-800 relative">
-                  <img src="Duct%20Fittings/6a%20-%20Tee%20Round%2090%C2%B0.jpeg" alt="6a" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
+                  <img src="Duct Fittings/6a - Tee Round 90°.jpeg" onerror="handleFittingImgError(this)" alt="6a" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
                   <div class="absolute inset-0 bg-rose-600/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
                     <i class="fa-solid fa-plus text-white text-xs drop-shadow"></i>
                   </div>
@@ -1702,7 +1735,7 @@
               </div>
               <div class="fitting-gallery-card flex flex-col items-center bg-slate-900/90 rounded-xl p-2.5 border border-slate-800 hover:border-rose-500 hover:shadow-md hover:shadow-rose-500/10 transition group cursor-pointer relative" onclick="openAddFittingModal('6b_diverging_branch', 'supply')" title="Click to configure and add 6b Round Tee 90° Diverging Branch to schedule">
                 <div class="img-container w-14 h-14 bg-white/5 rounded-lg flex items-center justify-center p-1 overflow-hidden border border-slate-800 relative">
-                  <img src="Duct%20Fittings/6b%20-%20Tee%20Round%2090%C2%B0.jpeg" alt="6b" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
+                  <img src="Duct Fittings/6b - Tee Round 90°.jpeg" onerror="handleFittingImgError(this)" alt="6b" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
                   <div class="absolute inset-0 bg-rose-600/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
                     <i class="fa-solid fa-plus text-white text-xs drop-shadow"></i>
                   </div>
@@ -1711,7 +1744,7 @@
               </div>
               <div class="fitting-gallery-card flex flex-col items-center bg-slate-900/90 rounded-xl p-2.5 border border-slate-800 hover:border-rose-500 hover:shadow-md hover:shadow-rose-500/10 transition group cursor-pointer relative" onclick="openAddFittingModal('6c_converging_trunk', 'return')" title="Click to configure and add 6c Round Tee 90° Converging Trunk to schedule">
                 <div class="img-container w-14 h-14 bg-white/5 rounded-lg flex items-center justify-center p-1 overflow-hidden border border-slate-800 relative">
-                  <img src="Duct%20Fittings/6c%20-%20Tee%20Round%2090%C2%B0.jpeg" alt="6c" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
+                  <img src="Duct Fittings/6c - Tee Round 90°.jpeg" onerror="handleFittingImgError(this)" alt="6c" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
                   <div class="absolute inset-0 bg-rose-600/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
                     <i class="fa-solid fa-plus text-white text-xs drop-shadow"></i>
                   </div>
@@ -1720,7 +1753,7 @@
               </div>
               <div class="fitting-gallery-card flex flex-col items-center bg-slate-900/90 rounded-xl p-2.5 border border-slate-800 hover:border-rose-500 hover:shadow-md hover:shadow-rose-500/10 transition group cursor-pointer relative" onclick="openAddFittingModal('6d_diverging_trunk', 'supply')" title="Click to configure and add 6d Round Tee 90° Diverging Trunk to schedule">
                 <div class="img-container w-14 h-14 bg-white/5 rounded-lg flex items-center justify-center p-1 overflow-hidden border border-slate-800 relative">
-                  <img src="Duct%20Fittings/6d%20-%20Tee%20Round%2090%C2%B0.jpeg" alt="6d" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
+                  <img src="Duct Fittings/6d - Tee Round 90°.jpeg" onerror="handleFittingImgError(this)" alt="6d" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
                   <div class="absolute inset-0 bg-rose-600/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
                     <i class="fa-solid fa-plus text-white text-xs drop-shadow"></i>
                   </div>
@@ -1844,7 +1877,7 @@
             <div class="grid grid-cols-3 sm:grid-cols-6 gap-2">
               <div class="fitting-gallery-card flex flex-col items-center bg-slate-900/90 rounded-xl p-2 border border-slate-800 hover:border-rose-500 hover:shadow-md hover:shadow-rose-500/10 transition group cursor-pointer relative" onclick="openAddFittingModal('7a_45_elbow', 'supply')" title="Click to configure and add 7a Round Trunk w/ 45° Branch Elbow to schedule">
                 <div class="img-container w-12 h-12 bg-white/5 rounded-lg flex items-center justify-center p-1 overflow-hidden border border-slate-800 relative">
-                  <img src="Duct%20Fittings/7a%20-%20Tee%20Round%20Trunk%2045%C2%B0.jpeg" alt="7a" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
+                  <img src="Duct Fittings/7a - Tee Round Trunk 45°.jpeg" onerror="handleFittingImgError(this)" alt="7a" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
                   <div class="absolute inset-0 bg-rose-600/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
                     <i class="fa-solid fa-plus text-white text-xs drop-shadow"></i>
                   </div>
@@ -1853,7 +1886,7 @@
               </div>
               <div class="fitting-gallery-card flex flex-col items-center bg-slate-900/90 rounded-xl p-2 border border-slate-800 hover:border-rose-500 hover:shadow-md hover:shadow-rose-500/10 transition group cursor-pointer relative" onclick="openAddFittingModal('7b_conical', 'supply')" title="Click to configure and add 7b Round Trunk w/ Conical Branch to schedule">
                 <div class="img-container w-12 h-12 bg-white/5 rounded-lg flex items-center justify-center p-1 overflow-hidden border border-slate-800 relative">
-                  <img src="Duct%20Fittings/7b%20-%20Tee%20Round%20Trunk%20Conical.jpeg" alt="7b" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
+                  <img src="Duct Fittings/7b - Tee Round Trunk Conical.jpeg" onerror="handleFittingImgError(this)" alt="7b" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
                   <div class="absolute inset-0 bg-rose-600/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
                     <i class="fa-solid fa-plus text-white text-xs drop-shadow"></i>
                   </div>
@@ -1862,7 +1895,7 @@
               </div>
               <div class="fitting-gallery-card flex flex-col items-center bg-slate-900/90 rounded-xl p-2 border border-slate-800 hover:border-rose-500 hover:shadow-md hover:shadow-rose-500/10 transition group cursor-pointer relative" onclick="openAddFittingModal('7c_90_elbow', 'supply')" title="Click to configure and add 7c Round Trunk w/ 90° Branch Elbow to schedule">
                 <div class="img-container w-12 h-12 bg-white/5 rounded-lg flex items-center justify-center p-1 overflow-hidden border border-slate-800 relative">
-                  <img src="Duct%20Fittings/7c%20-%20Tee%20Round%20Trunk%2090%C2%B0.jpeg" alt="7c" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
+                  <img src="Duct Fittings/7c - Tee Round Trunk 90°.jpeg" onerror="handleFittingImgError(this)" alt="7c" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
                   <div class="absolute inset-0 bg-rose-600/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
                     <i class="fa-solid fa-plus text-white text-xs drop-shadow"></i>
                   </div>
@@ -1871,7 +1904,7 @@
               </div>
               <div class="fitting-gallery-card flex flex-col items-center bg-slate-900/90 rounded-xl p-2 border border-slate-800 hover:border-rose-500 hover:shadow-md hover:shadow-rose-500/10 transition group cursor-pointer relative" onclick="openAddFittingModal('7d_rolled_45_trunk', 'supply')" title="Click to configure and add 7d Rolled 45° Branch Round Trunk to schedule">
                 <div class="img-container w-12 h-12 bg-white/5 rounded-lg flex items-center justify-center p-1 overflow-hidden border border-slate-800 relative">
-                  <img src="Duct%20Fittings/7d%20-%20Tee%20Round%20Trunk%2045%C2%B0.jpeg" alt="7d" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
+                  <img src="Duct Fittings/7d - Tee Round Trunk 45°.jpeg" onerror="handleFittingImgError(this)" alt="7d" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
                   <div class="absolute inset-0 bg-rose-600/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
                     <i class="fa-solid fa-plus text-white text-xs drop-shadow"></i>
                   </div>
@@ -1880,7 +1913,7 @@
               </div>
               <div class="fitting-gallery-card flex flex-col items-center bg-slate-900/90 rounded-xl p-2 border border-slate-800 hover:border-rose-500 hover:shadow-md hover:shadow-rose-500/10 transition group cursor-pointer relative" onclick="openAddFittingModal('7e_conical_trunk', 'supply')" title="Click to configure and add 7e Conical Branch Round Trunk to schedule">
                 <div class="img-container w-12 h-12 bg-white/5 rounded-lg flex items-center justify-center p-1 overflow-hidden border border-slate-800 relative">
-                  <img src="Duct%20Fittings/7e%20-%20Tee%20Round%20Trunk%20Conical.jpeg" alt="7e" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
+                  <img src="Duct Fittings/7e - Tee Round Trunk Conical.jpeg" onerror="handleFittingImgError(this)" alt="7e" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
                   <div class="absolute inset-0 bg-rose-600/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
                     <i class="fa-solid fa-plus text-white text-xs drop-shadow"></i>
                   </div>
@@ -1889,7 +1922,7 @@
               </div>
               <div class="fitting-gallery-card flex flex-col items-center bg-slate-900/90 rounded-xl p-2 border border-slate-800 hover:border-rose-500 hover:shadow-md hover:shadow-rose-500/10 transition group cursor-pointer relative" onclick="openAddFittingModal('7f_90_trunk', 'supply')" title="Click to configure and add 7f 90° Branch Round Trunk to schedule">
                 <div class="img-container w-12 h-12 bg-white/5 rounded-lg flex items-center justify-center p-1 overflow-hidden border border-slate-800 relative">
-                  <img src="Duct%20Fittings/7f%20-%20Tee%20Round%20Trunk%2090%C2%B0.jpeg" alt="7f" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
+                  <img src="Duct Fittings/7f - Tee Round Trunk 90°.jpeg" onerror="handleFittingImgError(this)" alt="7f" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
                   <div class="absolute inset-0 bg-rose-600/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
                     <i class="fa-solid fa-plus text-white text-xs drop-shadow"></i>
                   </div>
@@ -1961,7 +1994,7 @@
             <div class="grid grid-cols-2 gap-3 max-w-md mx-auto">
               <div class="fitting-gallery-card flex flex-col items-center bg-slate-900/90 rounded-xl p-2.5 border border-slate-800 hover:border-rose-500 hover:shadow-md hover:shadow-rose-500/10 transition group cursor-pointer relative" onclick="openAddFittingModal('8a_diverging', 'supply')" title="Click to configure and add 8a Wye Diverging to schedule">
                 <div class="img-container w-16 h-16 bg-white/5 rounded-lg flex items-center justify-center p-1 overflow-hidden border border-slate-800 relative">
-                  <img src="Duct%20Fittings/8a%20-%20Wye%20Pants.jpeg" alt="8a" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
+                  <img src="Duct Fittings/8a - Wye Pants.jpeg" onerror="handleFittingImgError(this)" alt="8a" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
                   <div class="absolute inset-0 bg-rose-600/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
                     <i class="fa-solid fa-plus text-white text-xs drop-shadow"></i>
                   </div>
@@ -1970,7 +2003,7 @@
               </div>
               <div class="fitting-gallery-card flex flex-col items-center bg-slate-900/90 rounded-xl p-2.5 border border-slate-800 hover:border-rose-500 hover:shadow-md hover:shadow-rose-500/10 transition group cursor-pointer relative" onclick="openAddFittingModal('8b_converging', 'return')" title="Click to configure and add 8b Wye Converging to schedule">
                 <div class="img-container w-16 h-16 bg-white/5 rounded-lg flex items-center justify-center p-1 overflow-hidden border border-slate-800 relative">
-                  <img src="Duct%20Fittings/8b%20-%20Wye%20Pants.jpeg" alt="8b" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
+                  <img src="Duct Fittings/8b - Wye Pants.jpeg" onerror="handleFittingImgError(this)" alt="8b" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
                   <div class="absolute inset-0 bg-rose-600/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
                     <i class="fa-solid fa-plus text-white text-xs drop-shadow"></i>
                   </div>
@@ -2042,7 +2075,7 @@
             <div class="grid grid-cols-3 sm:grid-cols-7 gap-2">
               <div class="fitting-gallery-card flex flex-col items-center bg-slate-900/90 rounded-xl p-2 border border-slate-800 hover:border-rose-500 hover:shadow-md hover:shadow-rose-500/10 transition group cursor-pointer relative" onclick="openAddFittingModal('9a_round_conical', 'supply')" title="Click to configure and add 9a Round Conical Transition (Expanding) to schedule">
                 <div class="img-container w-12 h-12 bg-white/5 rounded-lg flex items-center justify-center p-1 overflow-hidden border border-slate-800 relative">
-                  <img src="Duct%20Fittings/9a%20-%20Trans%20Round.jpeg" alt="9a" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
+                  <img src="Duct Fittings/9a - Trans Round.jpeg" onerror="handleFittingImgError(this)" alt="9a" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
                   <div class="absolute inset-0 bg-rose-600/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
                     <i class="fa-solid fa-plus text-white text-xs drop-shadow"></i>
                   </div>
@@ -2051,7 +2084,7 @@
               </div>
               <div class="fitting-gallery-card flex flex-col items-center bg-slate-900/90 rounded-xl p-2 border border-slate-800 hover:border-rose-500 hover:shadow-md hover:shadow-rose-500/10 transition group cursor-pointer relative" onclick="openAddFittingModal('9b_rect_to_rect', 'supply')" title="Click to configure and add 9b Rectangular to Rectangular (Expanding) to schedule">
                 <div class="img-container w-12 h-12 bg-white/5 rounded-lg flex items-center justify-center p-1 overflow-hidden border border-slate-800 relative">
-                  <img src="Duct%20Fittings/9b%20-%20Trans%20Rect.jpeg" alt="9b" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
+                  <img src="Duct Fittings/9b - Trans Rect.jpeg" onerror="handleFittingImgError(this)" alt="9b" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
                   <div class="absolute inset-0 bg-rose-600/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
                     <i class="fa-solid fa-plus text-white text-xs drop-shadow"></i>
                   </div>
@@ -2060,7 +2093,7 @@
               </div>
               <div class="fitting-gallery-card flex flex-col items-center bg-slate-900/90 rounded-xl p-2 border border-slate-800 hover:border-rose-500 hover:shadow-md hover:shadow-rose-500/10 transition group cursor-pointer relative" onclick="openAddFittingModal('9c_round_to_rect', 'return')" title="Click to configure and add 9c Round to Rectangular (Expanding) to schedule">
                 <div class="img-container w-12 h-12 bg-white/5 rounded-lg flex items-center justify-center p-1 overflow-hidden border border-slate-800 relative">
-                  <img src="Duct%20Fittings/9c%20-%20Trans%20Round%20Rect.jpeg" alt="9c" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
+                  <img src="Duct Fittings/9c - Trans Round Rect.jpeg" onerror="handleFittingImgError(this)" alt="9c" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
                   <div class="absolute inset-0 bg-rose-600/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
                     <i class="fa-solid fa-plus text-white text-xs drop-shadow"></i>
                   </div>
@@ -2069,7 +2102,7 @@
               </div>
               <div class="fitting-gallery-card flex flex-col items-center bg-slate-900/90 rounded-xl p-2 border border-slate-800 hover:border-rose-500 hover:shadow-md hover:shadow-rose-500/10 transition group cursor-pointer relative" onclick="openAddFittingModal('9d_rect_to_round', 'supply')" title="Click to configure and add 9d Rectangular to Round (Expanding) to schedule">
                 <div class="img-container w-12 h-12 bg-white/5 rounded-lg flex items-center justify-center p-1 overflow-hidden border border-slate-800 relative">
-                  <img src="Duct%20Fittings/9d%20-%20Trans%20Rect%20Round.jpeg" alt="9d" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
+                  <img src="Duct Fittings/9d - Trans Rect Round.jpeg" onerror="handleFittingImgError(this)" alt="9d" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
                   <div class="absolute inset-0 bg-rose-600/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
                     <i class="fa-solid fa-plus text-white text-xs drop-shadow"></i>
                   </div>
@@ -2078,7 +2111,7 @@
               </div>
               <div class="fitting-gallery-card flex flex-col items-center bg-slate-900/90 rounded-xl p-2 border border-slate-800 hover:border-rose-500 hover:shadow-md hover:shadow-rose-500/10 transition group cursor-pointer relative" onclick="openAddFittingModal('10a_rect_straight_sides', 'supply')" title="Click to configure and add 10a Expanding Rect Straight Sides to schedule">
                 <div class="img-container w-12 h-12 bg-white/5 rounded-lg flex items-center justify-center p-1 overflow-hidden border border-slate-800 relative">
-                  <img src="Duct%20Fittings/10a%20-%20Trans%20Rect%20Expand%20Straight.jpeg" alt="10a" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
+                  <img src="Duct Fittings/10a - Trans Rect Expand Straight.jpeg" onerror="handleFittingImgError(this)" alt="10a" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
                   <div class="absolute inset-0 bg-rose-600/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
                     <i class="fa-solid fa-plus text-white text-xs drop-shadow"></i>
                   </div>
@@ -2087,21 +2120,21 @@
               </div>
               <div class="fitting-gallery-card flex flex-col items-center bg-slate-900/90 rounded-xl p-2 border border-slate-800 hover:border-rose-500 hover:shadow-md hover:shadow-rose-500/10 transition group cursor-pointer relative" onclick="openAddFittingModal('10b_rect_contracting', 'return')" title="Click to configure and add 10b Contracting Flow (Rectangular) to schedule">
                 <div class="img-container w-12 h-12 bg-white/5 rounded-lg flex items-center justify-center p-1 overflow-hidden border border-slate-800 relative">
-                  <img src="Duct%20Fittings/10b%20-%20Trans%20Rect.jpeg" alt="10b" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
+                  <img src="Duct Fittings/10b - Trans Rect.jpeg" onerror="handleFittingImgError(this)" alt="10b" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
                   <div class="absolute inset-0 bg-rose-600/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
                     <i class="fa-solid fa-plus text-white text-xs drop-shadow"></i>
                   </div>
                 </div>
                 <span class="text-[10px] font-bold text-slate-300 mt-1 text-center truncate w-full group-hover:text-rose-400 transition-colors">10b Cont Rect</span>
               </div>
-              <div class="fitting-gallery-card flex flex-col items-center bg-slate-900/90 rounded-xl p-2 border border-slate-800 hover:border-rose-500 hover:shadow-md hover:shadow-rose-500/10 transition group cursor-pointer relative" onclick="openAddFittingModal('10c_round_contracting', 'return')" title="Click to configure and add 10c Contracting Flow (Round Conical) to schedule">
+              <div class="fitting-gallery-card flex flex-col items-center bg-slate-900/90 rounded-xl p-2 border border-slate-800 hover:border-rose-500 hover:shadow-md hover:shadow-rose-500/10 transition group cursor-pointer relative" onclick="openAddFittingModal('10c_round_contracting', 'return')" title="Click to configure and add 10c Contracting Flow (Rectangular Straight Sides) to schedule">
                 <div class="img-container w-12 h-12 bg-white/5 rounded-lg flex items-center justify-center p-1 overflow-hidden border border-slate-800 relative">
-                  <img src="Duct%20Fittings/10c%20-%20Trans%20Round.jpeg" alt="10c" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
+                  <img src="Duct Fittings/10b - Trans Rect.jpeg" onerror="handleFittingImgError(this)" alt="10c" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
                   <div class="absolute inset-0 bg-rose-600/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
                     <i class="fa-solid fa-plus text-white text-xs drop-shadow"></i>
                   </div>
                 </div>
-                <span class="text-[10px] font-bold text-slate-300 mt-1 text-center truncate w-full group-hover:text-rose-400 transition-colors">10c Cont Rnd</span>
+                <span class="text-[10px] font-bold text-slate-300 mt-1 text-center truncate w-full group-hover:text-rose-400 transition-colors">10c Cont Rect</span>
               </div>
             </div>
 
@@ -2183,7 +2216,7 @@
               <!-- 10b, 10c TABLE -->
               <div class="rounded-xl border border-slate-800 bg-slate-900/60 p-3 space-y-2">
                 <span class="text-[11px] font-bold text-rose-400 flex items-center gap-1.5">
-                  <i class="fa-solid fa-table"></i> 10b, 10c: Contracting Flow (Rectangular &amp; Round, Page 67)
+                  <i class="fa-solid fa-table"></i> 10b, 10c: Contracting Flow (Rectangular, Page 67)
                 </span>
                 <div class="overflow-x-auto text-[10px]">
                   <table class="w-full text-center border-collapse">
@@ -2201,7 +2234,7 @@
                     </tbody>
                   </table>
                 </div>
-                <p class="text-[9px] text-slate-400">Contracting: 10b Rect (Width &amp; Length in), 10c Round (Diameter in). Ratio = Area₁ / Area₂.</p>
+                <p class="text-[9px] text-slate-400">Contracting: 10b &amp; 10c Rectangular (Width &amp; Length in). Ratio = Area₁ / Area₂.</p>
               </div>
 
             </div>
@@ -2361,7 +2394,7 @@
   </main>
 
   <!-- ADD FITTING MODAL -->
-  <div id="addFittingModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-3 sm:p-4 overflow-y-auto" onclick="if(event.target === this) closeAddFittingModal()">
+  <div id="addFittingModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex flex-col items-center justify-center p-3 sm:p-4 overflow-y-auto" onclick="if(event.target === this) closeAddFittingModal()">
     <div class="glass-card bg-slate-900/95 border border-slate-800 rounded-3xl max-w-lg w-full max-h-[90vh] my-auto shadow-2xl animate-fade-in relative flex flex-col overflow-hidden">
       <div class="flex items-center justify-between border-b border-slate-800 p-5 sm:p-6 pb-3.5 flex-shrink-0">
         <h3 class="text-base font-bold text-white flex items-center gap-2">
@@ -2659,7 +2692,6 @@
             </div>
             <span class="text-[10px] text-slate-400 block">Downstream ductwork in schedule will inherit these dimensions</span>
           </div>
-        </div>
 
         <!-- CUSTOM FITTING BUILDER FIELDS -->
         <div id="modalCustomFittingFields" class="hidden space-y-3 p-3.5 rounded-2xl bg-slate-950/80 border border-amber-500/30">
@@ -2700,11 +2732,17 @@
       </div>
       </div>
 
-      <div class="modal-footer-pinned flex items-center justify-end gap-2 p-4 sm:p-5 pt-3.5 border-t border-slate-800 bg-slate-900/95 flex-shrink-0">
-        <button onclick="closeAddFittingModal()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition">Cancel</button>
-        <button id="btnAddFittingSubmit" onclick="commitAddFittingFromModal()" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl text-xs transition shadow-lg shadow-rose-600/20 flex items-center gap-1.5">
-          <i class="fa-solid fa-plus" id="btnAddFittingSubmitIcon"></i> <span id="btnAddFittingSubmitText">Add to Schedule</span>
-        </button>
+      <div class="modal-footer-pinned border-t border-slate-800 bg-slate-900/95 p-4 sm:p-5 pt-3.5 flex-shrink-0">
+        <div class="grid grid-cols-2 gap-3 w-full">
+          <button type="button" onclick="closeAddFittingModal()" class="w-full py-3 px-4 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold transition text-center border border-slate-700 shadow-sm flex items-center justify-center gap-2">
+            <i class="fa-solid fa-xmark"></i>
+            <span>Cancel</span>
+          </button>
+          <button type="button" id="btnAddFittingSubmit" onclick="commitAddFittingFromModal()" class="w-full py-3 px-4 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl text-xs transition shadow-lg shadow-rose-600/25 flex items-center justify-center gap-2">
+            <i class="fa-solid fa-plus" id="btnAddFittingSubmitIcon"></i>
+            <span id="btnAddFittingSubmitText">Add to Schedule</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -2928,7 +2966,7 @@
         </button>
       </div>
       <div class="w-full rounded-2xl bg-white p-4 flex items-center justify-center border border-slate-700/60 shadow-inner overflow-hidden min-h-[260px] max-h-[65vh]">
-        <img id="lightboxModalImg" src="" alt="Fitting Diagram" class="max-h-[58vh] max-w-full object-contain select-none">
+        <img id="lightboxModalImg" src="" onerror="handleFittingImgError(this)" alt="Fitting Diagram" class="max-h-[58vh] max-w-full object-contain select-none">
       </div>
       <div class="w-full flex items-center justify-between text-[11px] text-slate-400 pt-1">
         <span>Source: Loren Cook Cookbook Pocket Guide (Pages 54–67)</span>
