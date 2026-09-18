@@ -45,7 +45,7 @@ function isTool6Active(t) {
 }
 
 // ===================================================================
-// MECHANICAL SYSTEM CALCULATIONS SUITE - SHARED CORE UTILITIES (v4.46)
+// MECHANICAL SYSTEM CALCULATIONS SUITE - SHARED CORE UTILITIES (v5.00)
 // ===================================================================
 
 const ACTIVE_SESSION_KEY = 'mech_suite_active_draft_v446';

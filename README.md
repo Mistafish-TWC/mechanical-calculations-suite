@@ -1,5 +1,5 @@
 # Mechanical System Calculations Suite (Commercial Engineering Edition)
-[![Version](https://img.shields.io/badge/Version-v4.46-0284c7.svg)](Mechanical_Suite_Dashboard.html)
+[![Version](https://img.shields.io/badge/Version-v5.00-0284c7.svg)](Mechanical_Suite_Dashboard.html)
 [![Platform](https://img.shields.io/badge/Platform-GitHub%20Pages%20%7C%20Local-10b981.svg)](https://pages.github.com/)
 [![License](https://img.shields.io/badge/License-Internal%20Commercial%20Use-64748b.svg)](#)
 

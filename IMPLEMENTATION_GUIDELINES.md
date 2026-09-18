@@ -1,6 +1,6 @@
 # Implementation Guidelines & Architecture Standard
 ## Mechanical System Calculations Suite (Commercial Engineering Edition)
-**Current Version:** `v4.46` | **Target Users:** Estimators & Mechanical Engineers | **Scope:** Commercial Mechanical & Plumbing Design
+**Current Version:** `v5.00` | **Target Users:** Estimators & Mechanical Engineers | **Scope:** Commercial Mechanical & Plumbing Design
 
 ---
 
@@ -355,7 +355,7 @@ When developing a completely new tool module:
 
 ## 7. Versioning & Migration Management
 
-The suite uses a version keying mechanism (`v4.46`).
+The suite uses a version keying mechanism (`v5.00`).
 
 ### Session Storage Keys
 - Active Working Draft: `mech_suite_active_draft_v446`
