@@ -628,10 +628,10 @@ const DUCT_LOSS_DATA = {
       }
     },
     '10c_round_contracting': {
-      name: '10c: Contracting Flow (Rectangular Straight Sides)',
+      name: '10c: Contracting Flow (Round)',
       category: 'Transitions (Contracting)',
-      image: '10b - Trans Rect.jpeg',
-      paramName: 'Dimension Ratio (Width & Length) & Angle',
+      image: '10c - Trans Round.jpeg',
+      paramName: 'Area Ratio (A1/A2) & Angle',
       options: {
         'A1/A2=2, 10°': 6, 'A1/A2=2, 15-40°': 6, 'A1/A2=2, 50-60°': 7, 'A1/A2=2, 90°': 14, 'A1/A2=2, 120°': 20, 'A1/A2=2, 150°': 27, 'A1/A2=2, 180°': 30,
         'A1/A2=4, 10°': 6, 'A1/A2=4, 15-40°': 5, 'A1/A2=4, 50-60°': 8, 'A1/A2=4, 90°': 19, 'A1/A2=4, 120°': 31, 'A1/A2=4, 150°': 40, 'A1/A2=4, 180°': 47,
@@ -733,6 +733,7 @@ function getAllFittingsMap() {
   }
   if (DUCT_LOSS_DATA.transitionsContracting['10c_round_contracting']) {
     map['10c'] = DUCT_LOSS_DATA.transitionsContracting['10c_round_contracting'];
+    map['10c_round'] = DUCT_LOSS_DATA.transitionsContracting['10c_round_contracting'];
     map['10c_rect_straight_sides'] = DUCT_LOSS_DATA.transitionsContracting['10c_round_contracting'];
   }
 
@@ -759,16 +760,984 @@ function unlockBodyScroll() {
   }
 }
 
-function openImageLightbox(src, title) {
+// ===================================================================
+// FITTING AIRFLOW PATH & VECTOR OVERLAY SYSTEM
+// Comprehensive definitions for All Fitting Types (Groups 1–11):
+// - Red Block Arrows: Critical path TDL airflow
+// - Grey Block Arrows: Tributary merge / continuing trunk flow
+// - Engineering Port Subscripts: Qt, Vt, Qb, Vb, At, Ab, A1, A2
+// - Red Fitting Badges: 4a, 4d, 5a, 6d, etc. matching Loren Cook Handbook
+// ===================================================================
+
+const FITTING_AIRFLOW_DEFINITIONS = {
+  // 1. ROUND ELBOWS (1a-1f)
+  '1a_90_smooth': {
+    code: '1a', flowType: 'elbow',
+    name: '1a: Smooth Radius 90° Elbow',
+    description: '90° Smooth Radius Elbow: Bottom Inlet (Qt) → Upper Outlet (Vt)',
+    arrows: [
+      { tipX: 36, tipY: 82, angleDeg: 270, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' },
+      { tipX: 88, tipY: 26, angleDeg: 345, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' }
+    ],
+    curve: 'M 36,80 A 38 38 0 0 1 76,28',
+    labels: [
+      { x: 20, y: 92, text: 'Qt', sub: 't' },
+      { x: 48, y: 92, text: 'D' },
+      { x: 92, y: 40, text: 'Vt', sub: 't' }
+    ]
+  },
+  '1b_90_5piece': {
+    code: '1b', flowType: 'elbow',
+    name: '1b: 5-Piece 90° Elbow',
+    description: '90° 5-Piece Elbow: Bottom Inlet (Qt) → Upper Outlet (Vt)',
+    arrows: [
+      { tipX: 36, tipY: 82, angleDeg: 270, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' },
+      { tipX: 88, tipY: 26, angleDeg: 345, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' }
+    ],
+    curve: 'M 36,80 A 38 38 0 0 1 76,28',
+    labels: [
+      { x: 20, y: 92, text: 'Qt', sub: 't' },
+      { x: 48, y: 92, text: 'D' },
+      { x: 92, y: 40, text: 'Vt', sub: 't' }
+    ]
+  },
+  '1c_90_3piece': {
+    code: '1c', flowType: 'elbow',
+    name: '1c: 3-Piece 90° Elbow',
+    description: '90° 3-Piece Elbow: Bottom Inlet (Qt) → Upper Outlet (Vt)',
+    arrows: [
+      { tipX: 36, tipY: 82, angleDeg: 270, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' },
+      { tipX: 88, tipY: 26, angleDeg: 345, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' }
+    ],
+    curve: 'M 36,80 A 38 38 0 0 1 76,28',
+    labels: [
+      { x: 20, y: 92, text: 'Qt', sub: 't' },
+      { x: 48, y: 92, text: 'D' },
+      { x: 92, y: 40, text: 'Vt', sub: 't' }
+    ]
+  },
+  '1d_90_mitered': {
+    code: '1d', flowType: 'elbow',
+    name: '1d: Mitered 90° Elbow',
+    description: '90° Mitered Elbow: Bottom Inlet (Qt) → Upper Outlet (Vt)',
+    arrows: [
+      { tipX: 36, tipY: 82, angleDeg: 270, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' },
+      { tipX: 88, tipY: 26, angleDeg: 345, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' }
+    ],
+    curve: 'M 36,80 L 36,36 L 76,28',
+    labels: [
+      { x: 20, y: 92, text: 'Qt', sub: 't' },
+      { x: 48, y: 92, text: 'D' },
+      { x: 92, y: 40, text: 'Vt', sub: 't' }
+    ]
+  },
+  '1e_45_3piece': {
+    code: '1e', flowType: 'elbow',
+    name: '1e: 3-Piece 45° Elbow',
+    description: '45° 3-Piece Elbow: Bottom Inlet (Qt) → 45° Outlet (Vt)',
+    arrows: [
+      { tipX: 36, tipY: 82, angleDeg: 270, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' },
+      { tipX: 76, tipY: 22, angleDeg: 315, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' }
+    ],
+    curve: 'M 36,80 Q 36,52 68,26',
+    labels: [
+      { x: 20, y: 92, text: 'Qt', sub: 't' },
+      { x: 86, y: 36, text: 'Vt', sub: 't' }
+    ]
+  },
+  '1f_45_2piece': {
+    code: '1f', flowType: 'elbow',
+    name: '1f: 2-Piece 45° Elbow',
+    description: '45° 2-Piece Elbow: Bottom Inlet (Qt) → 45° Outlet (Vt)',
+    arrows: [
+      { tipX: 36, tipY: 82, angleDeg: 270, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' },
+      { tipX: 76, tipY: 22, angleDeg: 315, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' }
+    ],
+    curve: 'M 36,80 Q 36,52 68,26',
+    labels: [
+      { x: 20, y: 92, text: 'Qt', sub: 't' },
+      { x: 86, y: 36, text: 'Vt', sub: 't' }
+    ]
+  },
+
+  // 2. RECTANGULAR MITERED ELBOWS (2a-2c)
+  '2a_vanes': {
+    code: '2a', flowType: 'elbow',
+    name: '2a: Rect Mitered with Vanes',
+    description: '90° Rect Mitered (With Vanes): Bottom Inlet (Qt) → Right Outlet (Vt)',
+    arrows: [
+      { tipX: 30, tipY: 76, angleDeg: 270, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' },
+      { tipX: 90, tipY: 48, angleDeg: 350, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' }
+    ],
+    labels: [
+      { x: 16, y: 86, text: 'Qt', sub: 't' },
+      { x: 42, y: 86, text: 'W×H' },
+      { x: 94, y: 64, text: 'Vt', sub: 't' }
+    ]
+  },
+  '2b_no_vanes': {
+    code: '2b', flowType: 'elbow',
+    name: '2b: Rect Mitered without Vanes',
+    description: '90° Rect Mitered (Without Vanes): Bottom Inlet (Qt) → Right Outlet (Vt)',
+    arrows: [
+      { tipX: 30, tipY: 76, angleDeg: 270, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' },
+      { tipX: 90, tipY: 48, angleDeg: 350, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' }
+    ],
+    labels: [
+      { x: 16, y: 86, text: 'Qt', sub: 't' },
+      { x: 42, y: 86, text: 'W×H' },
+      { x: 94, y: 64, text: 'Vt', sub: 't' }
+    ]
+  },
+  '2c_tee_double': {
+    code: '2c', flowType: 'split',
+    name: '2c: Tee Double Elbow Equivalent',
+    description: 'Double Miter Split: Bottom Trunk Inlet (Qt) → Dual Opposing Elbows',
+    arrows: [
+      { tipX: 48, tipY: 78, angleDeg: 270, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' },
+      { tipX: 12, tipY: 38, angleDeg: 200, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' },
+      { tipX: 88, tipY: 38, angleDeg: 340, length: 18, headWidth: 14, shaftWidth: 7, type: 'secondary' }
+    ],
+    labels: [
+      { x: 58, y: 86, text: 'Qt', sub: 't' },
+      { x: 12, y: 54, text: 'Qb1', sub: 'b1' },
+      { x: 88, y: 54, text: 'Qb2', sub: 'b2' }
+    ]
+  },
+
+  // 3. RECTANGULAR RADIUS ELBOWS (3a-3c)
+  '3a_vanes': {
+    code: '3a', flowType: 'elbow',
+    name: '3a: Rect Radius with Vanes',
+    description: '90° Rect Radius (With Vanes): Right Inlet (Qt) → Bottom-Left Outlet (Vt)',
+    arrows: [
+      { tipX: 74, tipY: 46, angleDeg: 205, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' },
+      { tipX: 24, tipY: 84, angleDeg: 215, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' }
+    ],
+    curve: 'M 74,46 Q 38,48 24,84',
+    labels: [
+      { x: 88, y: 38, text: 'Qt', sub: 't' },
+      { x: 14, y: 88, text: 'Vt', sub: 't' }
+    ]
+  },
+  '3b_no_vanes': {
+    code: '3b', flowType: 'elbow',
+    name: '3b: Rect Radius without Vanes',
+    description: '90° Rect Radius (Without Vanes): Right Inlet (Qt) → Bottom-Left Outlet (Vt)',
+    arrows: [
+      { tipX: 74, tipY: 46, angleDeg: 205, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' },
+      { tipX: 24, tipY: 84, angleDeg: 215, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' }
+    ],
+    curve: 'M 74,46 Q 38,48 24,84',
+    labels: [
+      { x: 88, y: 38, text: 'Qt', sub: 't' },
+      { x: 14, y: 88, text: 'Vt', sub: 't' }
+    ]
+  },
+  '3c_wye_double': {
+    code: '3c', flowType: 'split',
+    name: '3c: Wye Double Elbow Equivalent',
+    description: 'Double Radius Split: Trunk Inlet (Qt) → Dual Radius Branches',
+    arrows: [
+      { tipX: 50, tipY: 80, angleDeg: 270, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' },
+      { tipX: 14, tipY: 35, angleDeg: 210, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' },
+      { tipX: 86, tipY: 35, angleDeg: 330, length: 18, headWidth: 14, shaftWidth: 7, type: 'secondary' }
+    ],
+    labels: [
+      { x: 60, y: 88, text: 'Qt', sub: 't' },
+      { x: 14, y: 50, text: 'Qb1', sub: 'b1' },
+      { x: 86, y: 50, text: 'Qb2', sub: 'b2' }
+    ]
+  },
+
+  // 4. CONVERGING RECTANGULAR TEES (4a-4f) - RETURN FLOWS
+  '4a_rect_branch': {
+    code: '4a', flowType: 'return',
+    name: '4a: Converging Tee Rect Branch',
+    description: 'Return Flow: Branch Inlet (Qb) → Merged Trunk Outlet (Qt)',
+    arrows: [
+      { tipX: 30.5, tipY: 60.5, angleDeg: 325, length: 17, headWidth: 13, shaftWidth: 6.5, type: 'critical' },
+      { tipX: 7.5, tipY: 22, angleDeg: 200, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' },
+      { tipX: 84, tipY: 73, angleDeg: 195, length: 18, headWidth: 14, shaftWidth: 7, type: 'secondary' }
+    ],
+    labels: [
+      { x: 23, y: 78, text: 'Qb', sub: 'b' },
+      { x: 24, y: 15, text: 'Qt', sub: 't' },
+      { x: 14, y: 35, text: 'Vt', sub: 't' }
+    ]
+  },
+  '4b_rect_45_entry': {
+    code: '4b', flowType: 'return',
+    name: '4b: Converging Tee Rect 45° Branch',
+    description: 'Return Flow: 45° Branch Inlet (Qb) → Merged Trunk Outlet (Qt)',
+    arrows: [
+      { tipX: 30.5, tipY: 60.5, angleDeg: 325, length: 17, headWidth: 13, shaftWidth: 6.5, type: 'critical' },
+      { tipX: 7.5, tipY: 22, angleDeg: 200, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' },
+      { tipX: 84, tipY: 73, angleDeg: 195, length: 18, headWidth: 14, shaftWidth: 7, type: 'secondary' }
+    ],
+    labels: [
+      { x: 23, y: 78, text: 'Qb', sub: 'b' },
+      { x: 24, y: 15, text: 'Qt', sub: 't' },
+      { x: 14, y: 35, text: 'Vt', sub: 't' }
+    ]
+  },
+  '4c_round_branch': {
+    code: '4c', flowType: 'return',
+    name: '4c: Converging Tee Round Branch',
+    description: 'Return Flow: Round Branch Inlet (Qb) → Merged Trunk Outlet (Qt)',
+    arrows: [
+      { tipX: 30.5, tipY: 60.5, angleDeg: 325, length: 17, headWidth: 13, shaftWidth: 6.5, type: 'critical' },
+      { tipX: 7.5, tipY: 22, angleDeg: 200, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' },
+      { tipX: 84, tipY: 73, angleDeg: 195, length: 18, headWidth: 14, shaftWidth: 7, type: 'secondary' }
+    ],
+    labels: [
+      { x: 23, y: 78, text: 'Qb', sub: 'b' },
+      { x: 24, y: 15, text: 'Qt', sub: 't' },
+      { x: 14, y: 35, text: 'Vt', sub: 't' }
+    ]
+  },
+  '4d_rect_trunk': {
+    code: '4d', flowType: 'return',
+    name: '4d: Converging Tee Rect Trunk',
+    description: 'Return Flow: Trunk Through-Flow (Qt) with Merging Branch (Qb)',
+    arrows: [
+      { tipX: 84, tipY: 73, angleDeg: 195, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' },
+      { tipX: 7.5, tipY: 22, angleDeg: 200, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' },
+      { tipX: 30.5, tipY: 60.5, angleDeg: 325, length: 17, headWidth: 13, shaftWidth: 6.5, type: 'secondary' }
+    ],
+    labels: [
+      { x: 23, y: 78, text: 'Qb', sub: 'b' },
+      { x: 24, y: 15, text: 'Qt', sub: 't' },
+      { x: 14, y: 35, text: 'Vt', sub: 't' }
+    ]
+  },
+  '4e_rect_45_trunk': {
+    code: '4e', flowType: 'return',
+    name: '4e: Converging Tee Rect 45° Trunk',
+    description: 'Return Flow: Trunk Through-Flow (Qt) with Merging 45° Branch (Qb)',
+    arrows: [
+      { tipX: 84, tipY: 73, angleDeg: 195, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' },
+      { tipX: 7.5, tipY: 22, angleDeg: 200, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' },
+      { tipX: 30.5, tipY: 60.5, angleDeg: 325, length: 17, headWidth: 13, shaftWidth: 6.5, type: 'secondary' }
+    ],
+    labels: [
+      { x: 23, y: 78, text: 'Qb', sub: 'b' },
+      { x: 24, y: 15, text: 'Qt', sub: 't' },
+      { x: 14, y: 35, text: 'Vt', sub: 't' }
+    ]
+  },
+  '4f_round_trunk': {
+    code: '4f', flowType: 'return',
+    name: '4f: Converging Tee Round Trunk',
+    description: 'Return Flow: Trunk Through-Flow (Qt) with Merging Round Branch (Qb)',
+    arrows: [
+      { tipX: 84, tipY: 73, angleDeg: 195, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' },
+      { tipX: 7.5, tipY: 22, angleDeg: 200, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' },
+      { tipX: 30.5, tipY: 60.5, angleDeg: 325, length: 17, headWidth: 13, shaftWidth: 6.5, type: 'secondary' }
+    ],
+    labels: [
+      { x: 23, y: 78, text: 'Qb', sub: 'b' },
+      { x: 24, y: 15, text: 'Qt', sub: 't' },
+      { x: 14, y: 35, text: 'Vt', sub: 't' }
+    ]
+  },
+
+  // 5. DIVERGING RECTANGULAR TEES (5a-5f) - SUPPLY FLOWS
+  '5a_rect_branch': {
+    code: '5a', flowType: 'supply',
+    name: '5a: Diverging Tee Rect Branch',
+    description: 'Supply Flow: Trunk Supply (Qt) → Branch Takeoff (Qb)',
+    arrows: [
+      { tipX: 24, tipY: 28, angleDeg: 25, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' },
+      { tipX: 16.5, tipY: 70.5, angleDeg: 145, length: 17, headWidth: 13, shaftWidth: 6.5, type: 'critical' },
+      { tipX: 96, tipY: 76, angleDeg: 25, length: 18, headWidth: 14, shaftWidth: 7, type: 'secondary' }
+    ],
+    labels: [
+      { x: 26, y: 14, text: 'Qt', sub: 't' },
+      { x: 14, y: 34, text: 'Vt', sub: 't' },
+      { x: 28, y: 76, text: 'Vb', sub: 'b' },
+      { x: 18, y: 85, text: 'Qb', sub: 'b' }
+    ]
+  },
+  '5b_rect_45_entry': {
+    code: '5b', flowType: 'supply',
+    name: '5b: Diverging Tee Rect 45° Branch',
+    description: 'Supply Flow: Trunk Supply (Qt) → 45° Branch Takeoff (Qb)',
+    arrows: [
+      { tipX: 24, tipY: 28, angleDeg: 25, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' },
+      { tipX: 16.5, tipY: 70.5, angleDeg: 145, length: 17, headWidth: 13, shaftWidth: 6.5, type: 'critical' },
+      { tipX: 96, tipY: 76, angleDeg: 25, length: 18, headWidth: 14, shaftWidth: 7, type: 'secondary' }
+    ],
+    labels: [
+      { x: 26, y: 14, text: 'Qt', sub: 't' },
+      { x: 14, y: 34, text: 'Vt', sub: 't' },
+      { x: 28, y: 76, text: 'Vb', sub: 'b' },
+      { x: 18, y: 85, text: 'Qb', sub: 'b' }
+    ]
+  },
+  '5c_round_branch': {
+    code: '5c', flowType: 'supply',
+    name: '5c: Diverging Tee Round Branch',
+    description: 'Supply Flow: Trunk Supply (Qt) → Round Branch Takeoff (Qb)',
+    arrows: [
+      { tipX: 24, tipY: 28, angleDeg: 25, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' },
+      { tipX: 16.5, tipY: 70.5, angleDeg: 145, length: 17, headWidth: 13, shaftWidth: 6.5, type: 'critical' },
+      { tipX: 96, tipY: 76, angleDeg: 25, length: 18, headWidth: 14, shaftWidth: 7, type: 'secondary' }
+    ],
+    labels: [
+      { x: 26, y: 14, text: 'Qt', sub: 't' },
+      { x: 14, y: 34, text: 'Vt', sub: 't' },
+      { x: 28, y: 76, text: 'Vb', sub: 'b' },
+      { x: 18, y: 85, text: 'Qb', sub: 'b' }
+    ]
+  },
+  '5d_rect_trunk': {
+    code: '5d', flowType: 'supply',
+    name: '5d: Diverging Tee Rect Trunk',
+    description: 'Supply Flow: Trunk Through-Flow (Qt) continuing past Branch (Qb)',
+    arrows: [
+      { tipX: 24, tipY: 28, angleDeg: 25, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' },
+      { tipX: 96, tipY: 76, angleDeg: 25, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' },
+      { tipX: 16.5, tipY: 70.5, angleDeg: 145, length: 17, headWidth: 13, shaftWidth: 6.5, type: 'secondary' }
+    ],
+    labels: [
+      { x: 26, y: 14, text: 'Qt', sub: 't' },
+      { x: 14, y: 34, text: 'Vt', sub: 't' },
+      { x: 28, y: 76, text: 'Vb', sub: 'b' },
+      { x: 18, y: 85, text: 'Qb', sub: 'b' }
+    ]
+  },
+  '5e_rect_45_trunk': {
+    code: '5e', flowType: 'supply',
+    name: '5e: Diverging Tee Rect 45° Trunk',
+    description: 'Supply Flow: Trunk Through-Flow (Qt) continuing past 45° Branch (Qb)',
+    arrows: [
+      { tipX: 24, tipY: 28, angleDeg: 25, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' },
+      { tipX: 96, tipY: 76, angleDeg: 25, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' },
+      { tipX: 16.5, tipY: 70.5, angleDeg: 145, length: 17, headWidth: 13, shaftWidth: 6.5, type: 'secondary' }
+    ],
+    labels: [
+      { x: 26, y: 14, text: 'Qt', sub: 't' },
+      { x: 14, y: 34, text: 'Vt', sub: 't' },
+      { x: 28, y: 76, text: 'Vb', sub: 'b' },
+      { x: 18, y: 85, text: 'Qb', sub: 'b' }
+    ]
+  },
+  '5f_round_trunk': {
+    code: '5f', flowType: 'supply',
+    name: '5f: Diverging Tee Round Trunk',
+    description: 'Supply Flow: Trunk Through-Flow (Qt) continuing past Round Branch (Qb)',
+    arrows: [
+      { tipX: 24, tipY: 28, angleDeg: 25, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' },
+      { tipX: 96, tipY: 76, angleDeg: 25, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' },
+      { tipX: 16.5, tipY: 70.5, angleDeg: 145, length: 17, headWidth: 13, shaftWidth: 6.5, type: 'secondary' }
+    ],
+    labels: [
+      { x: 26, y: 14, text: 'Qt', sub: 't' },
+      { x: 14, y: 34, text: 'Vt', sub: 't' },
+      { x: 28, y: 76, text: 'Vb', sub: 'b' },
+      { x: 18, y: 85, text: 'Qb', sub: 'b' }
+    ]
+  },
+
+  // 6. ROUND TEES 90° (6a-6d)
+  '6a_converging_branch': {
+    code: '6a', flowType: 'return',
+    name: '6a: Round Tee 90° Converging Branch',
+    description: 'Return Flow: Top Branch Inlet (Qb) → Left Trunk Outlet (Qt)',
+    arrows: [
+      { tipX: 52, tipY: 26, angleDeg: 90, length: 16, headWidth: 13, shaftWidth: 6.5, type: 'critical' },
+      { tipX: 8, tipY: 56, angleDeg: 200, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' },
+      { tipX: 78, tipY: 72, angleDeg: 200, length: 18, headWidth: 14, shaftWidth: 7, type: 'secondary' }
+    ],
+    labels: [
+      { x: 36, y: 18, text: 'Ab', sub: 'b' },
+      { x: 68, y: 18, text: 'Qb', sub: 'b' },
+      { x: 20, y: 44, text: 'At', sub: 't' },
+      { x: 18, y: 72, text: 'Qt', sub: 't' }
+    ]
+  },
+  '6b_diverging_branch': {
+    code: '6b', flowType: 'supply',
+    name: '6b: Round Tee 90° Diverging Branch',
+    description: 'Supply Flow: Right Trunk Inlet (Qt) → Top Branch Outlet (Qb)',
+    arrows: [
+      { tipX: 78, tipY: 72, angleDeg: 200, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' },
+      { tipX: 52, tipY: 8, angleDeg: 270, length: 16, headWidth: 13, shaftWidth: 6.5, type: 'critical' },
+      { tipX: 8, tipY: 56, angleDeg: 200, length: 18, headWidth: 14, shaftWidth: 7, type: 'secondary' }
+    ],
+    labels: [
+      { x: 88, y: 62, text: 'At', sub: 't' },
+      { x: 86, y: 88, text: 'Qt', sub: 't' },
+      { x: 36, y: 18, text: 'Ab', sub: 'b' },
+      { x: 68, y: 18, text: 'Qb', sub: 'b' }
+    ]
+  },
+  '6c_converging_trunk': {
+    code: '6c', flowType: 'return',
+    name: '6c: Round Tee 90° Converging Trunk',
+    description: 'Return Flow: Trunk Through-Flow (Qt) with Merging Top Branch (Qb)',
+    arrows: [
+      { tipX: 78, tipY: 72, angleDeg: 200, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' },
+      { tipX: 8, tipY: 56, angleDeg: 200, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' },
+      { tipX: 52, tipY: 26, angleDeg: 90, length: 16, headWidth: 13, shaftWidth: 6.5, type: 'secondary' }
+    ],
+    labels: [
+      { x: 88, y: 62, text: 'At', sub: 't' },
+      { x: 86, y: 88, text: 'Qt', sub: 't' },
+      { x: 36, y: 18, text: 'Ab', sub: 'b' },
+      { x: 68, y: 18, text: 'Qb', sub: 'b' }
+    ]
+  },
+  '6d_diverging_trunk': {
+    code: '6d', flowType: 'supply',
+    name: '6d: Round Tee 90° Diverging Trunk',
+    description: 'Supply Flow: Trunk Through-Flow (Qt) continuing past Branch (Qb)',
+    arrows: [
+      { tipX: 78, tipY: 72, angleDeg: 200, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' },
+      { tipX: 8, tipY: 56, angleDeg: 200, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' },
+      { tipX: 52, tipY: 8, angleDeg: 270, length: 16, headWidth: 13, shaftWidth: 6.5, type: 'secondary' }
+    ],
+    labels: [
+      { x: 88, y: 62, text: 'At', sub: 't' },
+      { x: 86, y: 88, text: 'Qt', sub: 't' },
+      { x: 36, y: 18, text: 'Ab', sub: 'b' },
+      { x: 68, y: 18, text: 'Qb', sub: 'b' }
+    ]
+  },
+
+  // 7. DIVERGING TEE ROUND TRUNK (7a-7f)
+  '7a_45_elbow': {
+    code: '7a', flowType: 'supply',
+    name: '7a: Round Trunk w/ 45° Branch Elbow',
+    description: 'Supply Flow: Trunk Supply (Qt) → 45° Branch Elbow Takeoff (Qb)',
+    arrows: [
+      { tipX: 78, tipY: 72, angleDeg: 200, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' },
+      { tipX: 66, tipY: 10, angleDeg: 305, length: 16, headWidth: 13, shaftWidth: 6.5, type: 'critical' },
+      { tipX: 8, tipY: 56, angleDeg: 200, length: 18, headWidth: 14, shaftWidth: 7, type: 'secondary' }
+    ],
+    labels: [
+      { x: 88, y: 62, text: 'Qt', sub: 't' },
+      { x: 86, y: 88, text: 'Vt', sub: 't' },
+      { x: 68, y: 22, text: 'Qb', sub: 'b' },
+      { x: 36, y: 22, text: 'Vb', sub: 'b' }
+    ]
+  },
+  '7b_conical': {
+    code: '7b', flowType: 'supply',
+    name: '7b: Round Trunk w/ Conical Branch',
+    description: 'Supply Flow: Trunk Supply (Qt) → Conical Branch Takeoff (Qb)',
+    arrows: [
+      { tipX: 78, tipY: 72, angleDeg: 200, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' },
+      { tipX: 52, tipY: 8, angleDeg: 270, length: 16, headWidth: 13, shaftWidth: 6.5, type: 'critical' },
+      { tipX: 8, tipY: 56, angleDeg: 200, length: 18, headWidth: 14, shaftWidth: 7, type: 'secondary' }
+    ],
+    labels: [
+      { x: 88, y: 62, text: 'Qt', sub: 't' },
+      { x: 86, y: 88, text: 'Vt', sub: 't' },
+      { x: 68, y: 18, text: 'Qb', sub: 'b' },
+      { x: 36, y: 18, text: 'Vb', sub: 'b' }
+    ]
+  },
+  '7c_90_elbow': {
+    code: '7c', flowType: 'supply',
+    name: '7c: Round Trunk w/ 90° Branch Elbow',
+    description: 'Supply Flow: Trunk Supply (Qt) → 90° Branch Elbow Takeoff (Qb)',
+    arrows: [
+      { tipX: 78, tipY: 72, angleDeg: 200, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' },
+      { tipX: 52, tipY: 8, angleDeg: 270, length: 16, headWidth: 13, shaftWidth: 6.5, type: 'critical' },
+      { tipX: 8, tipY: 56, angleDeg: 200, length: 18, headWidth: 14, shaftWidth: 7, type: 'secondary' }
+    ],
+    labels: [
+      { x: 88, y: 62, text: 'Qt', sub: 't' },
+      { x: 86, y: 88, text: 'Vt', sub: 't' },
+      { x: 68, y: 18, text: 'Qb', sub: 'b' },
+      { x: 36, y: 18, text: 'Vb', sub: 'b' }
+    ]
+  },
+  '7d_rolled_45_trunk': {
+    code: '7d', flowType: 'supply',
+    name: '7d: Rolled 45° Branch Round Trunk',
+    description: 'Supply Flow: Trunk Through-Flow (Qt) continuing past 45° Takeoff (Qb)',
+    arrows: [
+      { tipX: 78, tipY: 72, angleDeg: 200, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' },
+      { tipX: 8, tipY: 56, angleDeg: 200, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' },
+      { tipX: 66, tipY: 10, angleDeg: 305, length: 16, headWidth: 13, shaftWidth: 6.5, type: 'secondary' }
+    ],
+    labels: [
+      { x: 88, y: 62, text: 'Qt', sub: 't' },
+      { x: 86, y: 88, text: 'Vt', sub: 't' },
+      { x: 68, y: 22, text: 'Qb', sub: 'b' },
+      { x: 36, y: 22, text: 'Vb', sub: 'b' }
+    ]
+  },
+  '7e_conical_trunk': {
+    code: '7e', flowType: 'supply',
+    name: '7e: Conical Branch Round Trunk',
+    description: 'Supply Flow: Trunk Through-Flow (Qt) continuing past Conical Takeoff (Qb)',
+    arrows: [
+      { tipX: 78, tipY: 72, angleDeg: 200, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' },
+      { tipX: 8, tipY: 56, angleDeg: 200, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' },
+      { tipX: 52, tipY: 8, angleDeg: 270, length: 16, headWidth: 13, shaftWidth: 6.5, type: 'secondary' }
+    ],
+    labels: [
+      { x: 88, y: 62, text: 'Qt', sub: 't' },
+      { x: 86, y: 88, text: 'Vt', sub: 't' },
+      { x: 68, y: 18, text: 'Qb', sub: 'b' },
+      { x: 36, y: 18, text: 'Vb', sub: 'b' }
+    ]
+  },
+  '7f_90_trunk': {
+    code: '7f', flowType: 'supply',
+    name: '7f: 90° Branch Round Trunk',
+    description: 'Supply Flow: Trunk Through-Flow (Qt) continuing past 90° Takeoff (Qb)',
+    arrows: [
+      { tipX: 78, tipY: 72, angleDeg: 200, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' },
+      { tipX: 8, tipY: 56, angleDeg: 200, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' },
+      { tipX: 52, tipY: 8, angleDeg: 270, length: 16, headWidth: 13, shaftWidth: 6.5, type: 'secondary' }
+    ],
+    labels: [
+      { x: 88, y: 62, text: 'Qt', sub: 't' },
+      { x: 86, y: 88, text: 'Vt', sub: 't' },
+      { x: 68, y: 18, text: 'Qb', sub: 'b' },
+      { x: 36, y: 18, text: 'Vb', sub: 'b' }
+    ]
+  },
+
+  // 8. WYE PAIR OF PANTS (8a-8b)
+  '8a_diverging': {
+    code: '8a', flowType: 'supply',
+    name: '8a: Wye Diverging',
+    description: 'Supply Flow: Trunk Supply (Qt) → Critical Branch Leg (Qb1)',
+    arrows: [
+      { tipX: 74, tipY: 58, angleDeg: 215, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' },
+      { tipX: 12, tipY: 46, angleDeg: 215, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' },
+      { tipX: 38, tipY: 18, angleDeg: 215, length: 16, headWidth: 13, shaftWidth: 6.5, type: 'secondary' }
+    ],
+    labels: [
+      { x: 88, y: 70, text: 'Qt', sub: 't' },
+      { x: 86, y: 50, text: 'Vt', sub: 't' },
+      { x: 14, y: 62, text: 'Qb1', sub: 'b1' },
+      { x: 14, y: 34, text: 'Vb1', sub: 'b1' },
+      { x: 42, y: 10, text: 'Qb2', sub: 'b2' }
+    ]
+  },
+  '8b_converging': {
+    code: '8b', flowType: 'return',
+    name: '8b: Wye Converging',
+    description: 'Return Flow: Critical Branch Leg (Qb1) → Merged Trunk Outlet (Qt)',
+    arrows: [
+      { tipX: 26, tipY: 56, angleDeg: 35, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' },
+      { tipX: 94, tipY: 68, angleDeg: 35, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' },
+      { tipX: 52, tipY: 28, angleDeg: 35, length: 16, headWidth: 13, shaftWidth: 6.5, type: 'secondary' }
+    ],
+    labels: [
+      { x: 14, y: 62, text: 'Qb1', sub: 'b1' },
+      { x: 14, y: 34, text: 'Vb1', sub: 'b1' },
+      { x: 88, y: 76, text: 'Qt', sub: 't' },
+      { x: 86, y: 54, text: 'Vt', sub: 't' },
+      { x: 42, y: 10, text: 'Qb2', sub: 'b2' }
+    ]
+  },
+
+  // 9. TRANSITIONS EXPANDING (9a-9d, 10a)
+  '9a_round_conical': {
+    code: '9a', flowType: 'expanding',
+    name: '9a: Round Conical Transition (Expanding)',
+    description: 'Expanding Flow: Small Inlet (A₁, D₁) → Expanded Outlet (A₂, D₂)',
+    arrows: [
+      { tipX: 74, tipY: 62, angleDeg: 215, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' },
+      { tipX: 12, tipY: 28, angleDeg: 215, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' }
+    ],
+    labels: [
+      { x: 86, y: 74, text: 'A1', sub: '1' },
+      { x: 84, y: 52, text: 'V1', sub: '1' },
+      { x: 22, y: 18, text: 'A2', sub: '2' },
+      { x: 10, y: 40, text: 'V2', sub: '2' }
+    ]
+  },
+  '9b_rect_to_rect': {
+    code: '9b', flowType: 'expanding',
+    name: '9b: Rectangular to Rectangular (Expanding)',
+    description: 'Expanding Flow: Small Inlet (A₁, W₁×H₁) → Expanded Outlet (A₂, W₂×H₂)',
+    arrows: [
+      { tipX: 74, tipY: 62, angleDeg: 215, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' },
+      { tipX: 12, tipY: 28, angleDeg: 215, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' }
+    ],
+    labels: [
+      { x: 86, y: 74, text: 'A1', sub: '1' },
+      { x: 84, y: 52, text: 'V1', sub: '1' },
+      { x: 22, y: 18, text: 'A2', sub: '2' },
+      { x: 10, y: 40, text: 'V2', sub: '2' }
+    ]
+  },
+  '9c_round_to_rect': {
+    code: '9c', flowType: 'expanding',
+    name: '9c: Round to Rectangular (Expanding)',
+    description: 'Expanding Flow: Round Inlet (A₁, D₁) → Expanded Rect Outlet (A₂, W₂×H₂)',
+    arrows: [
+      { tipX: 74, tipY: 62, angleDeg: 215, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' },
+      { tipX: 12, tipY: 28, angleDeg: 215, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' }
+    ],
+    labels: [
+      { x: 86, y: 74, text: 'A1', sub: '1' },
+      { x: 84, y: 52, text: 'V1', sub: '1' },
+      { x: 22, y: 18, text: 'A2', sub: '2' },
+      { x: 10, y: 40, text: 'V2', sub: '2' }
+    ]
+  },
+  '9d_rect_to_round': {
+    code: '9d', flowType: 'expanding',
+    name: '9d: Rectangular to Round (Expanding)',
+    description: 'Expanding Flow: Rect Inlet (A₁, W₁×H₁) → Expanded Round Outlet (A₂, D₂)',
+    arrows: [
+      { tipX: 74, tipY: 62, angleDeg: 215, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' },
+      { tipX: 12, tipY: 28, angleDeg: 215, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' }
+    ],
+    labels: [
+      { x: 86, y: 74, text: 'A1', sub: '1' },
+      { x: 84, y: 52, text: 'V1', sub: '1' },
+      { x: 22, y: 18, text: 'A2', sub: '2' },
+      { x: 10, y: 40, text: 'V2', sub: '2' }
+    ]
+  },
+  '10a_rect_straight_sides': {
+    code: '10a', flowType: 'expanding',
+    name: '10a: Expanding Rect Straight Sides',
+    description: 'Expanding Flow: Small Inlet (A₁) → Straight-Sided Expanded Outlet (A₂)',
+    arrows: [
+      { tipX: 74, tipY: 62, angleDeg: 215, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' },
+      { tipX: 12, tipY: 28, angleDeg: 215, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' }
+    ],
+    labels: [
+      { x: 86, y: 74, text: 'A1', sub: '1' },
+      { x: 84, y: 52, text: 'V1', sub: '1' },
+      { x: 22, y: 18, text: 'A2', sub: '2' },
+      { x: 10, y: 40, text: 'V2', sub: '2' }
+    ]
+  },
+
+  // 10. TRANSITIONS CONTRACTING (10b-10c)
+  '10b_rect_contracting': {
+    code: '10b', flowType: 'contracting',
+    name: '10b: Contracting Flow (Rectangular)',
+    description: 'Contracting Flow: Large Upstream Duct (A₁) → Reduced Downstream Duct (A₂)',
+    arrows: [
+      { tipX: 28, tipY: 38, angleDeg: 35, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' },
+      { tipX: 92, tipY: 76, angleDeg: 35, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' }
+    ],
+    labels: [
+      { x: 22, y: 18, text: 'A1', sub: '1' },
+      { x: 10, y: 40, text: 'V1', sub: '1' },
+      { x: 86, y: 74, text: 'A2', sub: '2' },
+      { x: 84, y: 52, text: 'V2', sub: '2' }
+    ]
+  },
+  '10c_round_contracting': {
+    code: '10c', flowType: 'contracting',
+    name: '10c: Contracting Flow (Round)',
+    description: 'Contracting Flow: Large Upstream Duct (A₁) → Reduced Downstream Duct (A₂)',
+    arrows: [
+      { tipX: 28, tipY: 38, angleDeg: 35, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' },
+      { tipX: 92, tipY: 76, angleDeg: 35, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' }
+    ],
+    labels: [
+      { x: 22, y: 18, text: 'A1', sub: '1' },
+      { x: 10, y: 40, text: 'V1', sub: '1' },
+      { x: 86, y: 74, text: 'A2', sub: '2' },
+      { x: 84, y: 52, text: 'V2', sub: '2' }
+    ]
+  },
+
+  // 11. PRESETS / FLEX DUCT
+  'flex_elbow': {
+    code: 'Flex', flowType: 'elbow',
+    name: 'Flex Duct (5\' Radius Elbow)',
+    description: 'Flexible Duct Drop: Inlet → 90° Radius Sweep Outlet',
+    arrows: [
+      { tipX: 35, tipY: 78, angleDeg: 270, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' },
+      { tipX: 88, tipY: 32, angleDeg: 350, length: 18, headWidth: 14, shaftWidth: 7, type: 'critical' }
+    ],
+    curve: 'M 35,78 Q 35,32 88,32',
+    labels: [
+      { x: 24, y: 90, text: 'Inlet' },
+      { x: 92, y: 48, text: 'Outlet' }
+    ]
+  }
+};
+
+// Aliases for transitions and backwards compatibility
+FITTING_AIRFLOW_DEFINITIONS['10a'] = FITTING_AIRFLOW_DEFINITIONS['10a_rect_straight_sides'];
+FITTING_AIRFLOW_DEFINITIONS['10b'] = FITTING_AIRFLOW_DEFINITIONS['10b_rect_contracting'];
+FITTING_AIRFLOW_DEFINITIONS['10c'] = FITTING_AIRFLOW_DEFINITIONS['10c_round_contracting'];
+FITTING_AIRFLOW_DEFINITIONS['10c_round'] = FITTING_AIRFLOW_DEFINITIONS['10c_round_contracting'];
+FITTING_AIRFLOW_DEFINITIONS['10c_rect_straight_sides'] = FITTING_AIRFLOW_DEFINITIONS['10c_round_contracting'];
+
+function normalizeFittingKey(key) {
+  if (!key) return '';
+  let k = String(key).trim();
+  if (k === '10a') return '10a_rect_straight_sides';
+  if (k === '10b' || k === '10b_10c_contracting') return '10b_rect_contracting';
+  if (k === '10c' || k === '10c_round' || k === '10c_rect_straight_sides') return '10c_round_contracting';
+  return k;
+}
+
+function getFittingAirflowDef(key) {
+  const normKey = normalizeFittingKey(key);
+  return FITTING_AIRFLOW_DEFINITIONS[normKey] || null;
+}
+
+function findFittingKeyByImageSrc(src) {
+  if (!src) return null;
+  const decoded = decodeURI(src);
+  const map = getAllFittingsMap();
+  for (const k in map) {
+    if (map[k] && map[k].image && (decoded.includes(map[k].image) || src.includes(map[k].image))) {
+      return k;
+    }
+  }
+  return null;
+}
+
+// Drawing mathematical SVG primitives
+function drawBlockArrow(tipX, tipY, angleDeg, length = 18, headWidth = 14, shaftWidth = 7, color = '#DC2626') {
+  const rad = (angleDeg * Math.PI) / 180.0;
+  const cos = Math.cos(rad);
+  const sin = Math.sin(rad);
+  const headLen = length * 0.52;
+  const hw2 = headWidth / 2.0;
+  const sw2 = shaftWidth / 2.0;
+
+  const tip = `${tipX.toFixed(1)},${tipY.toFixed(1)}`;
+  const barb1 = `${(tipX - headLen * cos - hw2 * sin).toFixed(1)},${(tipY - headLen * sin + hw2 * cos).toFixed(1)}`;
+  const neck1 = `${(tipX - headLen * cos - sw2 * sin).toFixed(1)},${(tipY - headLen * sin + sw2 * cos).toFixed(1)}`;
+  const base1 = `${(tipX - length * cos - sw2 * sin).toFixed(1)},${(tipY - length * sin + sw2 * cos).toFixed(1)}`;
+  const base2 = `${(tipX - length * cos + sw2 * sin).toFixed(1)},${(tipY - length * sin - sw2 * cos).toFixed(1)}`;
+  const neck2 = `${(tipX - headLen * cos + sw2 * sin).toFixed(1)},${(tipY - headLen * sin - sw2 * cos).toFixed(1)}`;
+  const barb2 = `${(tipX - headLen * cos + hw2 * sin).toFixed(1)},${(tipY - headLen * sin - hw2 * cos).toFixed(1)}`;
+
+  const stroke = (color === '#DC2626') ? '#7F1D1D' : '#475569';
+  return `<polygon points="${tip} ${barb1} ${neck1} ${base1} ${base2} ${neck2} ${barb2}" fill="${color}" stroke="${stroke}" stroke-width="0.8" stroke-linejoin="round" filter="url(#airflowDropShadow)"/>`;
+}
+
+function drawPortLabel(x, y, text, subText = null, anchor = 'middle') {
+  let content = text;
+  if (subText && text.includes(subText)) {
+    const mainText = text.replace(subText, '');
+    content = `${mainText}<tspan baseline-shift="sub" font-size="75%">${subText}</tspan>`;
+  }
+  return `<text x="${x}" y="${y}" font-family="system-ui, -apple-system, sans-serif" font-size="7.5" font-weight="700" fill="#0F172A" stroke="#FFFFFF" stroke-width="2.2" paint-order="stroke fill" stroke-linejoin="round" text-anchor="${anchor}">${content}</text>`;
+}
+
+function drawFittingBadge(code, x = 76, y = 8, w = 18, h = 18) {
+  return `
+    <g class="airflow-badge">
+      <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="2.5" fill="#DC2626" filter="url(#airflowDropShadow)"/>
+      <text x="${x + w / 2}" y="${y + h / 2 + 3.2}" font-family="system-ui, -apple-system, sans-serif" font-size="9.5" font-weight="800" fill="#FFFFFF" text-anchor="middle">${code}</text>
+    </g>
+  `;
+}
+
+function getFittingAirflowSvg(typeKey, options = {}) {
+  const normKey = normalizeFittingKey(typeKey);
+  const def = FITTING_AIRFLOW_DEFINITIONS[normKey];
+  if (!def) return '';
+
+  const showBadge = options.showBadge !== false;
+  const showLabels = options.showLabels !== false && !options.isThumbnail;
+  const isThumbnail = !!options.isThumbnail;
+
+  let elements = [];
+
+  // 1. Centerline sweep curve if present
+  if (def.curve && !isThumbnail) {
+    elements.push(`<path d="${def.curve}" fill="none" stroke="#DC2626" stroke-width="2" stroke-dasharray="3,3" stroke-linecap="round" opacity="0.45"/>`);
+  }
+
+  // 2. Flow Arrows
+  if (def.arrows && Array.isArray(def.arrows)) {
+    def.arrows.forEach(arr => {
+      const isCrit = (arr.type === 'critical');
+      const color = isCrit ? '#DC2626' : '#9CA3AF';
+      const len = isThumbnail ? (arr.length * 1.1) : arr.length;
+      const hw = isThumbnail ? (arr.headWidth * 1.15) : arr.headWidth;
+      const sw = isThumbnail ? (arr.shaftWidth * 1.15) : arr.shaftWidth;
+      elements.push(drawBlockArrow(arr.tipX, arr.tipY, arr.angleDeg, len, hw, sw, color));
+    });
+  }
+
+  // 3. Port Labels
+  if (showLabels && def.labels && Array.isArray(def.labels)) {
+    def.labels.forEach(lbl => {
+      elements.push(drawPortLabel(lbl.x, lbl.y, lbl.text, lbl.sub, lbl.anchor || 'middle'));
+    });
+  }
+
+  // 4. Fitting Badge
+  if (showBadge && def.code) {
+    if (isThumbnail) {
+      elements.push(drawFittingBadge(def.code, 68, 4, 28, 18));
+    } else {
+      elements.push(drawFittingBadge(def.code, 76, 8, 18, 18));
+    }
+  }
+
+  return `
+    <svg viewBox="0 0 100 100" class="airflow-overlay-svg w-full h-full pointer-events-none select-none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+      <defs>
+        <filter id="airflowDropShadow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0.5" dy="1" stdDeviation="1" flood-color="#000000" flood-opacity="0.35"/>
+        </filter>
+      </defs>
+      ${elements.join('\n      ')}
+    </svg>
+  `;
+}
+
+// Global overlay state and interactive controller
+window.airflowOverlayEnabled = (localStorage.getItem('tool6_airflow_overlay') !== '0');
+window.activeLightboxTypeKey = null;
+
+function toggleAirflowOverlay() {
+  window.airflowOverlayEnabled = !window.airflowOverlayEnabled;
+  try {
+    localStorage.setItem('tool6_airflow_overlay', window.airflowOverlayEnabled ? '1' : '0');
+  } catch (e) {}
+  refreshAirflowOverlays();
+}
+
+function refreshAirflowOverlays() {
+  const isEnabled = window.airflowOverlayEnabled;
+
+  // 1. Update toggle button text & classes
+  const statuses = [
+    document.getElementById('modalFlowToggleStatus'),
+    document.getElementById('lightboxFlowToggleStatus'),
+    document.getElementById('galleryFlowToggleStatus')
+  ];
+  statuses.forEach(st => {
+    if (st) {
+      st.textContent = isEnabled ? 'ON' : 'OFF';
+      st.className = isEnabled ? 'text-emerald-400 font-bold' : 'text-slate-400 font-bold';
+    }
+  });
+
+  const lbBtnIcon = document.querySelector('#lightboxFlowOverlayToggleBtn i');
+  if (lbBtnIcon) {
+    lbBtnIcon.className = isEnabled ? 'fa-solid fa-toggle-on text-emerald-400' : 'fa-solid fa-toggle-off text-slate-500';
+  }
+
+  // 2. Refresh Modal Preview Overlay
+  const modalType = document.getElementById('modalFittingType')?.value;
+  const modalContainer = document.getElementById('modalFittingOverlayContainer');
+  if (modalContainer) {
+    if (isEnabled && modalType && modalType !== 'custom_fitting') {
+      modalContainer.innerHTML = getFittingAirflowSvg(modalType, { showBadge: true, showLabels: true });
+      modalContainer.classList.remove('hidden');
+    } else {
+      modalContainer.innerHTML = '';
+      modalContainer.classList.add('hidden');
+    }
+  }
+
+  // 3. Refresh Lightbox Overlay
+  updateLightboxOverlayContent();
+
+  // 4. Refresh Gallery Card Overlays
+  renderGalleryAirflowOverlays();
+}
+
+function updateLightboxOverlayContent() {
+  const lbContainer = document.getElementById('lightboxOverlayContainer');
+  const lbBadge = document.getElementById('lightboxFlowPathBadge');
+  const typeKey = window.activeLightboxTypeKey;
+
+  if (!typeKey || typeKey === 'custom_fitting') {
+    if (lbContainer) { lbContainer.innerHTML = ''; lbContainer.classList.add('hidden'); }
+    if (lbBadge) lbBadge.textContent = '';
+    return;
+  }
+
+  const def = getFittingAirflowDef(typeKey);
+  if (lbBadge && def) {
+    lbBadge.textContent = def.description || '';
+  }
+
+  if (lbContainer) {
+    if (window.airflowOverlayEnabled && def) {
+      lbContainer.innerHTML = getFittingAirflowSvg(typeKey, { showBadge: true, showLabels: true });
+      lbContainer.classList.remove('hidden');
+      syncLightboxOverlayDimensions();
+    } else {
+      lbContainer.innerHTML = '';
+      lbContainer.classList.add('hidden');
+    }
+  }
+}
+
+function syncLightboxOverlayDimensions() {
+  const img = document.getElementById('lightboxModalImg');
+  const container = document.getElementById('lightboxOverlayContainer');
+  if (img && container) {
+    const w = img.clientWidth;
+    const h = img.clientHeight;
+    if (w > 0 && h > 0) {
+      container.style.width = w + 'px';
+      container.style.height = h + 'px';
+      container.style.left = img.offsetLeft + 'px';
+      container.style.top = img.offsetTop + 'px';
+    }
+  }
+}
+
+function renderGalleryAirflowOverlays() {
+  const cards = document.querySelectorAll('.fitting-gallery-card');
+  cards.forEach(card => {
+    const oc = card.getAttribute('onclick') || '';
+    const m = oc.match(/openAddFittingModal\(\s*['"]([^'"]+)['"]/);
+    if (!m) return;
+    const typeKey = m[1];
+    const imgContainer = card.querySelector('.img-container');
+    if (!imgContainer) return;
+
+    let overlay = imgContainer.querySelector('.gallery-airflow-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.className = 'gallery-airflow-overlay absolute inset-0 pointer-events-none flex items-center justify-center z-10';
+      imgContainer.appendChild(overlay);
+    }
+
+    if (window.airflowOverlayEnabled) {
+      overlay.innerHTML = getFittingAirflowSvg(typeKey, { showBadge: true, showLabels: false, isThumbnail: true });
+      overlay.classList.remove('hidden');
+    } else {
+      overlay.innerHTML = '';
+      overlay.classList.add('hidden');
+    }
+  });
+}
+
+function openImageLightbox(src, title, typeKey = null) {
   const modal = document.getElementById('imageLightboxModal');
   const img = document.getElementById('lightboxModalImg');
   const titleEl = document.getElementById('lightboxModalTitle');
   if (!modal || !img) return;
+
+  window.activeLightboxTypeKey = typeKey || findFittingKeyByImageSrc(src) || document.getElementById('modalFittingType')?.value || null;
+
   img.src = src;
   if (titleEl) titleEl.textContent = title || 'Fitting Diagram';
+
+  updateLightboxOverlayContent();
+
   modal.classList.remove('hidden');
   modal.classList.add('flex');
   lockBodyScroll();
+
+  img.onload = () => {
+    syncLightboxOverlayDimensions();
+  };
+  setTimeout(syncLightboxOverlayDimensions, 50);
 }
 
 function closeImageLightbox() {
@@ -807,6 +1776,8 @@ function switchTool6Tab(tabId) {
   if (tabId === 'estimator') {
     calculateDuctLoss();
     renderFittingsTable();
+  } else if (tabId === 'library') {
+    renderGalleryAirflowOverlays();
   }
 
   if (typeof saveActiveDraftState === 'function') {
@@ -1034,9 +2005,15 @@ function calcContinuousFittingEL(typeKey, inputs, angle = '90') {
     const areaDn = Math.max(1, parseFloat(a2) || 144);
     const ar = Math.max(areaUp, areaDn) / Math.min(areaUp, areaDn);
     ratioVal = ar;
-    ratioLabel = `A1/A2: ${ar.toFixed(2)}`;
-    const pts = [[1.0, 0], [1.5, 4], [2.0, 7], [3.0, 12], [4.0, 18]];
-    exactEL = interpolatePiecewise1D(pts, ar);
+    const lookup = lookupTransitionParamAndEL(typeKey, areaUp, areaDn, transAngle || '30');
+    if (lookup && lookup.el !== undefined) {
+      exactEL = lookup.el;
+      ratioLabel = lookup.paramKey || `A1/A2: ${ar.toFixed(2)}`;
+    } else {
+      ratioLabel = `A1/A2: ${ar.toFixed(2)}`;
+      const pts = [[1.0, 0], [1.5, 4], [2.0, 7], [3.0, 12], [4.0, 18]];
+      exactEL = interpolatePiecewise1D(pts, ar);
+    }
     feedback = `Transition &bull; Area Ratio: <strong>${ar.toFixed(2)}:1</strong> (&theta;=${transAngle}&deg;)`;
   }
   // 9. Custom Fitting
@@ -1069,6 +2046,8 @@ function calcContinuousFittingEL(typeKey, inputs, angle = '90') {
 
 function getCurrentDownstreamCFM() {
   if (chainedScheduleRows.length === 0) {
+    const modalInitCFM = parseFloat(document.getElementById('modalInitialCFM')?.value);
+    if (!isNaN(modalInitCFM) && modalInitCFM > 0) return modalInitCFM;
     return Math.max(10, parseFloat(document.getElementById('ductLossCFM')?.value) || 1200);
   }
   const last = chainedScheduleRows[chainedScheduleRows.length - 1];
@@ -1081,13 +2060,16 @@ function getTransitionGeometry(typeKey) {
   if (k === '9a_round_conical' || k === '9a') {
     return { upstream: 'round', downstream: 'round', isExpand: true };
   }
+  if (k === '10c_round_contracting' || k === '10c' || k === '10c_round') {
+    return { upstream: 'round', downstream: 'round', isExpand: false };
+  }
   if (k === '9c_round_to_rect' || k === '9c') {
     return { upstream: 'round', downstream: 'rect', isExpand: true };
   }
   if (k === '9d_rect_to_round' || k === '9d') {
     return { upstream: 'rect', downstream: 'round', isExpand: true };
   }
-  // 10a, 10b, 10c, 9b are strictly Rectangular-to-Rectangular
+  // 10a, 10b, 9b are strictly Rectangular-to-Rectangular
   if (k.startsWith('10') || k.startsWith('9b')) {
     return { upstream: 'rect', downstream: 'rect', isExpand: k.startsWith('9') || k.startsWith('10a') };
   }
@@ -1103,6 +2085,25 @@ function isTeeFitting(key) {
   return key.startsWith('4') || key.startsWith('5') || key.startsWith('6') || key.startsWith('7');
 }
 
+function isBranchTakeoffFitting(key) {
+  if (!key) return false;
+  const k = String(key).toLowerCase();
+  return k.startsWith('5a') || k.startsWith('5b') || k.startsWith('5c') ||
+         k === '6b' || k.startsWith('6b_') ||
+         k.startsWith('7a') || k.startsWith('7b') || k.startsWith('7c');
+}
+
+function getTeeBranchShape(key) {
+  if (!key) return 'round';
+  const k = String(key).toLowerCase();
+  // Rectangular branch takeoffs
+  if (k.startsWith('5a') || k.startsWith('5b') || k.startsWith('4a') || k.startsWith('4b') || k.startsWith('4d') || k.startsWith('4e') || k.startsWith('5d') || k.startsWith('5e')) {
+    return 'rect';
+  }
+  // Round branch takeoffs (5c, 6b, 7a-7c, 6a, 6c, 6d, 7d-7f, 4c, 4f, 5f)
+  return 'round';
+}
+
 function isTransitionFitting(key) {
   if (!key) return false;
   return key.includes('trans') || key.startsWith('9') || key.startsWith('10');
@@ -1111,19 +2112,69 @@ function isTransitionFitting(key) {
 function isRoundFitting(key) {
   if (!key) return false;
   const k = String(key).toLowerCase();
-  if (k.startsWith('10')) return false; // 10a, 10b, 10c are rectangular transitions
+  if (k === '10c_round_contracting' || k === '10c' || k === '10c_round') return true;
+  if (k.startsWith('10')) return false; // 10a, 10b are rectangular transitions
   return (/^1[a-f]/i.test(k)) || k.startsWith('6') || k.startsWith('7') || k === '9a_round_conical' || k.includes('flex');
 }
 
 function isRectFitting(key) {
   if (!key) return false;
   const k = String(key).toLowerCase();
+  if (k === '10c_round_contracting' || k === '10c' || k === '10c_round') return false;
   return k.startsWith('2') || k.startsWith('3') || k.startsWith('4') || k.startsWith('5') || k.startsWith('10') || k === '9b_rect_to_rect';
+}
+
+function getFittingEnteringShape(key) {
+  if (!key || key === 'custom_fitting') return null;
+  if (isTransitionFitting(key)) {
+    const geom = getTransitionGeometry(key);
+    return geom.upstream || 'rect';
+  }
+  if (isRoundFitting(key)) return 'round';
+  if (isRectFitting(key)) return 'rect';
+  return null;
+}
+
+function getRowEnteringShape(row) {
+  if (!row) return null;
+  if (row.type === 'straight_duct') return row.shape || 'rect';
+  if (row.type === 'transition') {
+    const geom = getTransitionGeometry(row.fittingKey);
+    return geom.upstream || row.shape || 'rect';
+  }
+  if (row.type === 'flex_drop') return 'round';
+  if (row.type === 'custom_fitting') return null;
+  if (isRoundFitting(row.fittingKey)) return 'round';
+  if (isRectFitting(row.fittingKey)) return 'rect';
+  return row.shape || null;
+}
+
+function getRowLeavingShape(row) {
+  if (!row) return null;
+  if (row.type === 'transition') {
+    return row.leavingShape || 'rect';
+  }
+  if (row.type === 'tee_branch' && (row.teeContinuation === 'branch' || isBranchTakeoffFitting(row.fittingKey))) {
+    const bShape = row.branchShape || getTeeBranchShape(row.fittingKey);
+    if (bShape === 'round' || (row.branchDia && !row.branchHeight)) return 'round';
+    if (bShape === 'rect' || row.branchWidth) return 'rect';
+    return 'round';
+  }
+  if (row.type === 'flex_drop') return 'round';
+  return row.shape || 'rect';
 }
 
 function getCurrentDownstreamDims() {
   if (chainedScheduleRows.length === 0) {
-    return { w: 18, h: 12, shape: 'rect', dia: 14 };
+    const initShape = document.getElementById('modalInitialShape')?.value || 'rect';
+    if (initShape === 'round') {
+      const d = parseFloat(document.getElementById('modalInitialDia')?.value) || 14;
+      return { w: d, h: d, shape: 'round', dia: d };
+    }
+    const w = parseFloat(document.getElementById('modalInitialWidth')?.value) || 18;
+    const h = parseFloat(document.getElementById('modalInitialHeight')?.value) || 12;
+    const de = Math.round(calcHuebscherDe(w, h) * 10) / 10;
+    return { w: w, h: h, shape: 'rect', dia: de || 14 };
   }
   const last = chainedScheduleRows[chainedScheduleRows.length - 1];
   if (last.type === 'transition') {
@@ -1136,14 +2187,15 @@ function getCurrentDownstreamDims() {
     const de = Math.round(calcHuebscherDe(w, h) * 10) / 10;
     return { w: w, h: h, shape: 'rect', dia: de || 14 };
   }
-  if (last.type === 'tee_branch' && last.teeContinuation === 'branch') {
-    if (last.branchDia && !last.branchHeight) {
-      const d = parseFloat(last.branchDia) || 14;
+  if (last.type === 'tee_branch' && (last.teeContinuation === 'branch' || isBranchTakeoffFitting(last.fittingKey))) {
+    const bShape = last.branchShape || getTeeBranchShape(last.fittingKey);
+    if (bShape === 'round' || (last.branchDia && !last.branchHeight)) {
+      const d = parseFloat(last.branchDia) || parseFloat(last.branchWidth) || parseFloat(last.branchHeight) || 12;
       return { w: d, h: d, shape: 'round', dia: d };
     }
     const w = parseFloat(last.branchWidth) || last.width || 18;
     const h = parseFloat(last.branchHeight) || last.height || 12;
-    const de = Math.round(calcHuebscherDe(w, h) * 10) / 10;
+    const de = Math.round(calcHuebscherDe(w, h) * 10) / 10 || 14;
     return { w: w, h: h, shape: 'rect', dia: de || 14 };
   }
   if (last.shape === 'round') {
@@ -1347,14 +2399,24 @@ function propagateChainedSchedule() {
     } else {
       if (isRoundFitting(row.fittingKey)) {
         row.shape = 'round';
-        row.dia = (currentShape === 'round') ? currentDia : (Math.round(calcHuebscherDe(currentWidth, currentHeight) * 10) / 10 || 14);
+        if (row.dia && row.hasCustomDia) {
+          currentDia = row.dia;
+        } else {
+          row.dia = (currentShape === 'round') ? currentDia : (Math.round(calcHuebscherDe(currentWidth, currentHeight) * 10) / 10 || 14);
+        }
         row.width = row.dia;
         row.height = row.dia;
       } else if (isRectFitting(row.fittingKey)) {
         row.shape = 'rect';
-        row.width = (currentShape === 'rect') ? currentWidth : (currentDia || 18);
-        row.height = (currentShape === 'rect') ? currentHeight : (currentDia ? Math.round(currentDia * 0.75) : 12);
-        row.dia = currentDia;
+        if (row.width && row.height && row.hasCustomDims) {
+          currentWidth = row.width;
+          currentHeight = row.height;
+          currentDia = Math.round(calcHuebscherDe(currentWidth, currentHeight) * 10) / 10 || 14;
+        } else {
+          row.width = (currentShape === 'rect') ? currentWidth : (currentDia || 18);
+          row.height = (currentShape === 'rect') ? currentHeight : (currentDia ? Math.round(currentDia * 0.75) : 12);
+          row.dia = currentDia;
+        }
       } else {
         row.shape = currentShape;
         row.width = currentWidth;
@@ -1389,25 +2451,75 @@ function propagateChainedSchedule() {
       }
       row.leavingCFM = row.enteringCFM;
     } else if (row.type === 'tee_branch') {
+      const isBranchCont = (row.teeContinuation === 'branch' || isBranchTakeoffFitting(row.fittingKey));
+      row.teeContinuation = isBranchCont ? 'branch' : 'trunk';
       const branchQ = Math.max(0, parseFloat(row.branchCFM) || 0);
-      if (row.teeContinuation === 'branch') {
+
+      if (isBranchCont) {
         row.leavingCFM = branchQ;
-        if (row.branchWidth && row.branchHeight) {
-          currentWidth = parseFloat(row.branchWidth) || currentWidth;
-          currentHeight = parseFloat(row.branchHeight) || currentHeight;
-          currentShape = 'rect';
-          currentDia = Math.round(calcHuebscherDe(currentWidth, currentHeight) * 10) / 10 || 14;
-        } else if (row.branchDia) {
-          currentDia = parseFloat(row.branchDia) || currentDia;
-          currentWidth = currentDia;
-          currentHeight = currentDia;
+        const branchShape = getTeeBranchShape(row.fittingKey);
+        row.branchShape = branchShape;
+        if (branchShape === 'round') {
+          const bDia = Math.max(2, parseFloat(row.branchDia) || parseFloat(row.branchWidth) || parseFloat(row.branchHeight) || 12);
+          row.branchDia = bDia;
+          row.branchWidth = bDia;
+          row.branchHeight = bDia;
+          currentDia = bDia;
+          currentWidth = bDia;
+          currentHeight = bDia;
           currentShape = 'round';
+        } else {
+          const bW = Math.max(2, parseFloat(row.branchWidth) || 16);
+          const bH = Math.max(2, parseFloat(row.branchHeight) || 10);
+          row.branchWidth = bW;
+          row.branchHeight = bH;
+          currentWidth = bW;
+          currentHeight = bH;
+          currentShape = 'rect';
+          currentDia = Math.round(calcHuebscherDe(bW, bH) * 10) / 10 || 14;
+          row.branchDia = currentDia;
         }
       } else {
         if (row.path === 'return') {
           row.leavingCFM = row.enteringCFM + branchQ;
         } else {
           row.leavingCFM = Math.max(0, row.enteringCFM - branchQ);
+        }
+      }
+      if (!row.isCustomEL && row.fittingKey) {
+        const map = getAllFittingsMap();
+        const def = map[row.fittingKey];
+        if (def && row.fittingKey !== 'custom_fitting') {
+          const branchShape = getTeeBranchShape(row.fittingKey);
+          let bArea = 0;
+          if (branchShape === 'round') {
+            const bDia = parseFloat(row.branchDia) || parseFloat(row.branchWidth) || 12;
+            bArea = (Math.PI * Math.pow(bDia, 2)) / 576.0;
+          } else {
+            const bW = parseFloat(row.branchWidth) || row.width || 16;
+            const bH = parseFloat(row.branchHeight) || row.height || 10;
+            bArea = (bW * bH) / 144.0;
+          }
+          const vb = (branchQ > 0 && bArea > 0) ? (branchQ / bArea) : row.velocity;
+          const rInputs = {
+            w: row.width,
+            h: row.height,
+            dia: row.dia,
+            r: row.radius || row.width,
+            qt: row.enteringCFM,
+            qb: branchQ,
+            vt: row.velocity,
+            vb: vb,
+            a1: row.area * 144,
+            a2: bArea * 144,
+            transAngle: row.transAngle || '30',
+            isVanes: row.isVanes !== false
+          };
+          const dyn = calcContinuousFittingEL(row.fittingKey, rInputs, row.angle || '90');
+          if (dyn && !isNaN(dyn.el)) {
+            row.baseEL = dyn.el;
+            if (dyn.ratioLabel) row.paramKey = dyn.ratioLabel;
+          }
         }
       }
       row.baseEL = Math.max(0, parseFloat(row.baseEL) || 0);
@@ -1465,6 +2577,31 @@ function propagateChainedSchedule() {
         currentDia = row.leavingDia || (Math.round(calcHuebscherDe(currentWidth, currentHeight) * 10) / 10 || 14);
       }
     } else {
+      if (!row.isCustomEL && row.fittingKey && row.type !== 'transition' && row.type !== 'straight_duct') {
+        const map = getAllFittingsMap();
+        const def = map[row.fittingKey];
+        if (def && row.fittingKey !== 'custom_fitting') {
+          const rInputs = {
+            w: row.width,
+            h: row.height,
+            dia: row.dia,
+            r: row.radius || (row.shape === 'round' ? (row.dia * 1.5) : row.width),
+            qt: row.enteringCFM,
+            qb: row.branchCFM || 0,
+            vt: row.velocity,
+            vb: row.velocity,
+            a1: row.area * 144,
+            a2: (row.leavingArea || row.area) * 144,
+            transAngle: row.transAngle || '30',
+            isVanes: row.isVanes !== false
+          };
+          const dyn = calcContinuousFittingEL(row.fittingKey, rInputs, row.angle || '90');
+          if (dyn && !isNaN(dyn.el)) {
+            row.baseEL = dyn.el;
+            if (dyn.ratioLabel) row.paramKey = dyn.ratioLabel;
+          }
+        }
+      }
       row.baseEL = Math.max(0, parseFloat(row.baseEL) || 0);
       row.lossDP = calcFittingStaticLoss(row.baseEL, row.velocity, row.pv);
 
@@ -1732,13 +2869,34 @@ function renderFittingsTable(cachedSummary) {
     const isFlex = (row.type === 'flex_drop');
     const isCustom = (row.type === 'custom_fitting');
 
+    // Check for aerodynamic shape mismatch with preceding schedule item
+    let shapeMismatchHtml = '';
+    if (idx > 0) {
+      const prevRow = chainedScheduleRows[idx - 1];
+      const prevLeavingShape = getRowLeavingShape(prevRow);
+      const curEnteringShape = getRowEnteringShape(row);
+      if (prevLeavingShape && curEnteringShape && prevLeavingShape !== curEnteringShape) {
+        const isR2Rd = (prevLeavingShape === 'rect' && curEnteringShape === 'round');
+        const label = isR2Rd ? 'Needs Transition (Rect → Round)' : 'Needs Transition (Round → Rect)';
+        const hint = isR2Rd
+          ? 'Preceding duct section is Rectangular while this fitting is Round. Consider inserting a Rect-to-Round transition fitting (such as Fitting 9d) between these items.'
+          : 'Preceding duct section is Round while this fitting is Rectangular. Consider inserting a Round-to-Rect transition fitting (such as Fitting 9c) between these items.';
+        shapeMismatchHtml = `
+          <div class="mt-1 inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-amber-500/15 border border-amber-500/40 text-amber-300 text-[10px] font-semibold cursor-help shadow-sm" title="${hint}">
+            <i class="fa-solid fa-triangle-exclamation text-amber-400 text-[10px]"></i>
+            <span>${label}</span>
+          </div>
+        `;
+      }
+    }
+
     // 1. Icon / Diagram Thumbnail
     let thumbHtml = '';
     if (fittingDef && fittingDef.image) {
       const imgSrc = getFittingImagePath(fittingDef.image);
       const safeTitle = (row.name || fittingDef.name).replace(/"/g, '&quot;').replace(/'/g, "\\'");
       thumbHtml = `
-        <button type="button" onclick="openImageLightbox('${imgSrc}', '${safeTitle}')"
+        <button type="button" onclick="openImageLightbox('${imgSrc}', '${safeTitle}', '${row.fittingKey || ''}')"
           class="fitting-thumb-btn flex-shrink-0 w-[44px] h-[44px] rounded-lg border border-slate-700 hover:border-rose-500 overflow-hidden bg-slate-900 p-0.5 transition shadow-sm group cursor-pointer"
           title="Click to view full 3D diagram">
           <img src="${imgSrc}" alt="${safeTitle}" class="w-full h-full object-contain group-hover:scale-110 transition-transform duration-200" loading="lazy">
@@ -1779,18 +2937,18 @@ function renderFittingsTable(cachedSummary) {
     // 2. Flow Cell HTML
     let flowCellHtml = '';
     if (isTee) {
-      const isBranchContinuation = (row.teeContinuation === 'branch');
+      const isBranchContinuation = (row.teeContinuation === 'branch' || isBranchTakeoffFitting(row.fittingKey));
       flowCellHtml = `
         <div class="text-center font-mono">
-          <div class="font-bold text-white text-xs">${Math.round(row.enteringCFM)} CFM</div>
+          <div class="font-bold ${isBranchContinuation ? 'text-slate-300' : 'text-white'} text-xs">${Math.round(row.enteringCFM)} <span class="text-[9px] font-normal text-slate-400">Trk</span></div>
           <div class="flex items-center justify-center gap-1 my-0.5">
-            <span class="text-[10px] text-amber-400 font-semibold">-</span>
+            <span class="text-[10px] text-amber-400 font-semibold">${isBranchContinuation ? '&rarr;' : '-'}</span>
             <input type="number" min="0" step="10" value="${row.branchCFM || 0}" onchange="updateChainedBranchCFM(${row.id}, this.value)"
-              class="schedule-field-input w-14 text-center bg-slate-900 border border-slate-700 rounded px-1 py-0.5 text-[11px] font-bold text-amber-300 mono outline-none focus:border-rose-500" title="Branch Takeoff Airflow (leaving branch)">
-            <span class="text-[9px] text-slate-400 font-sans">Br</span>
+              class="schedule-field-input w-14 text-center bg-slate-900 border border-slate-700 rounded px-1 py-0.5 text-[11px] font-bold text-amber-300 mono outline-none focus:border-rose-500" title="Branch Takeoff Airflow">
+            <span class="text-[9px] text-amber-400 font-sans">Br</span>
           </div>
           <div class="text-[10px] font-bold ${isBranchContinuation ? 'text-amber-400' : 'text-emerald-400'}">
-            &rarr; ${Math.round(row.leavingCFM)} CFM ${isBranchContinuation ? '<span class="text-[9px] font-normal text-amber-300">(Br)</span>' : ''}
+            &rarr; ${Math.round(row.leavingCFM)} CFM ${isBranchContinuation ? '<span class="text-[9px] font-normal text-amber-300">(Br Path)</span>' : ''}
           </div>
         </div>
       `;
@@ -1853,6 +3011,49 @@ function renderFittingsTable(cachedSummary) {
           ${leavingInputsHtml}
         </div>
       `;
+    } else if (isTee) {
+      const isBranchContinuation = (row.teeContinuation === 'branch' || isBranchTakeoffFitting(row.fittingKey));
+      const enterText = (row.shape === 'round') ? `&Oslash; ${row.dia || row.width}&quot;` : `${row.width}&quot;&times;${row.height}&quot;`;
+      if (isBranchContinuation) {
+        const bShape = row.branchShape || getTeeBranchShape(row.fittingKey);
+        let branchInputsHtml = '';
+        if (bShape === 'round') {
+          const bDia = parseFloat(row.branchDia) || parseFloat(row.branchWidth) || 12;
+          branchInputsHtml = `
+            <div class="flex items-center justify-center gap-1 mt-0.5">
+              <span class="text-amber-400 text-[10px] font-bold">&Oslash;</span>
+              <input type="number" min="2" max="120" step="0.5" value="${bDia}" onchange="updateChainedBranchDia(${row.id}, this.value)"
+                class="schedule-field-input w-12 text-center bg-slate-900 border border-slate-700 rounded p-0.5 text-xs font-bold text-amber-300 mono outline-none focus:border-rose-500" title="Branch Takeoff Diameter (in)">
+              <span class="text-[9px] text-amber-400 font-sans">Br</span>
+            </div>
+          `;
+        } else {
+          const bW = parseFloat(row.branchWidth) || 16;
+          const bH = parseFloat(row.branchHeight) || 10;
+          branchInputsHtml = `
+            <div class="flex items-center justify-center gap-1 mt-0.5">
+              <input type="number" min="2" max="120" step="0.5" value="${bW}" onchange="updateChainedBranchDims(${row.id}, this.value, ${bH})"
+                class="schedule-field-input w-10 text-center bg-slate-900 border border-slate-700 rounded p-0.5 text-xs font-bold text-amber-300 mono outline-none focus:border-rose-500" title="Branch Takeoff Width (in)">
+              <span class="text-slate-400 text-[10px]">&times;</span>
+              <input type="number" min="2" max="120" step="0.5" value="${bH}" onchange="updateChainedBranchDims(${row.id}, ${bW}, this.value)"
+                class="schedule-field-input w-10 text-center bg-slate-900 border border-slate-700 rounded p-0.5 text-xs font-bold text-amber-300 mono outline-none focus:border-rose-500" title="Branch Takeoff Height (in)">
+              <span class="text-[9px] text-amber-400 font-sans">Br</span>
+            </div>
+          `;
+        }
+        dimsCellHtml = `
+          <div class="text-center font-mono">
+            <span class="text-[10px] text-slate-400 font-sans">${enterText} <span class="text-[9px] text-slate-500">(Trk)</span> &rarr;</span>
+            ${branchInputsHtml}
+          </div>
+        `;
+      } else {
+        dimsCellHtml = `
+          <div class="text-center font-mono font-bold text-slate-200 text-xs">
+            ${enterText}
+          </div>
+        `;
+      }
     } else {
       const dimLabel = (row.shape === 'round') ? `&Oslash; ${row.dia || row.width}&quot;` : `${row.width}&quot; &times; ${row.height}&quot;`;
       dimsCellHtml = `
@@ -1937,6 +3138,7 @@ function renderFittingsTable(cachedSummary) {
               `)}
             </div>
             ${row.paramKey ? `<span class="text-[10px] text-slate-400 truncate block mt-0.5">${row.paramKey}</span>` : ''}
+            ${shapeMismatchHtml}
           </div>
         </div>
       </td>
@@ -2369,23 +3571,26 @@ function quickAddFlexDrop() {
   if (typeof saveActiveDraftState === 'function') saveActiveDraftState();
 }
 
-function addFittingRow(fittingKey, path = 'supply', defaultParam = null, qty = 1, angle = '90', customName = null, customEL = null, branchCFM = null, leavingWidth = null, leavingHeight = null, leavingDia = null, leavingShape = null, teeContinuation = 'trunk', branchWidth = null, branchHeight = null, transAngle = '30', initialCriteria = null) {
+function addFittingRow(fittingKey, path = 'supply', defaultParam = null, qty = 1, angle = '90', customName = null, customEL = null, branchCFM = null, leavingWidth = null, leavingHeight = null, leavingDia = null, leavingShape = null, teeContinuation = 'trunk', branchWidth = null, branchHeight = null, transAngle = '30', initialCriteria = null, extraGeometry = null) {
   const map = getAllFittingsMap();
   const def = map[fittingKey] || DUCT_LOSS_DATA.presetsSpecial.custom_fitting;
   
-  let paramKey = defaultParam;
-  let baseEL = (customEL !== null && !isNaN(customEL)) ? customEL : 0;
+  let paramKey = (extraGeometry && extraGeometry.ratioLabel) ? extraGeometry.ratioLabel : defaultParam;
+  let baseEL = 0;
 
-  if (customEL === null && def.options) {
+  if (customEL !== null && !isNaN(customEL)) {
+    baseEL = customEL;
+  } else if (extraGeometry && extraGeometry.calculatedEL !== null && extraGeometry.calculatedEL !== undefined && !isNaN(extraGeometry.calculatedEL)) {
+    baseEL = extraGeometry.calculatedEL;
+  } else if (def && def.options) {
     const keys = Object.keys(def.options);
     if (!paramKey || !def.options[paramKey]) {
       paramKey = keys[0];
     }
     baseEL = def.options[paramKey] || 0;
-  }
-
-  if (def.hasAngleFactor && angle && DUCT_LOSS_DATA.miteredAngleFactors && DUCT_LOSS_DATA.miteredAngleFactors[angle]) {
-    baseEL = Math.round(baseEL * DUCT_LOSS_DATA.miteredAngleFactors[angle]);
+    if (def.hasAngleFactor && angle && DUCT_LOSS_DATA.miteredAngleFactors && DUCT_LOSS_DATA.miteredAngleFactors[angle]) {
+      baseEL = Math.round(baseEL * DUCT_LOSS_DATA.miteredAngleFactors[angle]);
+    }
   }
 
   const isCustom = (fittingKey === 'custom_fitting');
@@ -2401,37 +3606,40 @@ function addFittingRow(fittingKey, path = 'supply', defaultParam = null, qty = 1
 
   const currentDims = initialCriteria ? initialCriteria : getCurrentDownstreamDims();
 
-  let fittingShape = currentDims.shape || 'rect';
-  let fittingW = currentDims.w;
-  let fittingH = currentDims.h;
-  let fittingDia = currentDims.dia || 14;
+  let fittingShape = (extraGeometry && extraGeometry.shape) ? extraGeometry.shape : (currentDims.shape || 'rect');
+  let fittingW = (extraGeometry && extraGeometry.width) ? extraGeometry.width : currentDims.w;
+  let fittingH = (extraGeometry && extraGeometry.height) ? extraGeometry.height : currentDims.h;
+  let fittingDia = (extraGeometry && extraGeometry.dia) ? extraGeometry.dia : (currentDims.dia || 14);
+  let fittingRadius = (extraGeometry && extraGeometry.radius) ? extraGeometry.radius : null;
 
-  if (isTrans) {
-    const geom = getTransitionGeometry(fittingKey);
-    if (geom.upstream === 'rect') {
-      fittingShape = 'rect';
-      fittingW = (currentDims.shape === 'rect' && currentDims.w) ? currentDims.w : 18;
-      fittingH = (currentDims.shape === 'rect' && currentDims.h) ? currentDims.h : 12;
-      fittingDia = Math.round(calcHuebscherDe(fittingW, fittingH) * 10) / 10 || 14;
-    } else {
+  if (!extraGeometry) {
+    if (isTrans) {
+      const geom = getTransitionGeometry(fittingKey);
+      if (geom.upstream === 'rect') {
+        fittingShape = 'rect';
+        fittingW = (currentDims.shape === 'rect' && currentDims.w) ? currentDims.w : 18;
+        fittingH = (currentDims.shape === 'rect' && currentDims.h) ? currentDims.h : 12;
+        fittingDia = Math.round(calcHuebscherDe(fittingW, fittingH) * 10) / 10 || 14;
+      } else {
+        fittingShape = 'round';
+        fittingDia = (currentDims.shape === 'round' && currentDims.dia) ? currentDims.dia : 14;
+        fittingW = fittingDia;
+        fittingH = fittingDia;
+      }
+    } else if (isRoundFitting(fittingKey)) {
       fittingShape = 'round';
-      fittingDia = (currentDims.shape === 'round' && currentDims.dia) ? currentDims.dia : 14;
-      fittingW = fittingDia;
-      fittingH = fittingDia;
-    }
-  } else if (isRoundFitting(fittingKey)) {
-    fittingShape = 'round';
-    if (currentDims.shape === 'rect') {
-      const de = Math.round(calcHuebscherDe(currentDims.w, currentDims.h) * 10) / 10;
-      fittingDia = de || currentDims.dia || 14;
-      fittingW = fittingDia;
-      fittingH = fittingDia;
-    }
-  } else if (isRectFitting(fittingKey)) {
-    fittingShape = 'rect';
-    if (currentDims.shape === 'round') {
-      fittingW = currentDims.dia || 18;
-      fittingH = currentDims.dia ? Math.round(currentDims.dia * 0.75) : 12;
+      if (currentDims.shape === 'rect') {
+        const de = Math.round(calcHuebscherDe(currentDims.w, currentDims.h) * 10) / 10;
+        fittingDia = de || currentDims.dia || 14;
+        fittingW = fittingDia;
+        fittingH = fittingDia;
+      }
+    } else if (isRectFitting(fittingKey)) {
+      fittingShape = 'rect';
+      if (currentDims.shape === 'round') {
+        fittingW = currentDims.dia || 18;
+        fittingH = currentDims.dia ? Math.round(currentDims.dia * 0.75) : 12;
+      }
     }
   }
 
@@ -2449,6 +3657,10 @@ function addFittingRow(fittingKey, path = 'supply', defaultParam = null, qty = 1
       height: fittingH,
       shape: fittingShape,
       dia: fittingDia,
+      radius: fittingRadius,
+      isVanes: (extraGeometry && extraGeometry.isVanes !== undefined) ? extraGeometry.isVanes : true,
+      hasCustomDia: !!(extraGeometry && extraGeometry.dia),
+      hasCustomDims: !!(extraGeometry && (extraGeometry.width || extraGeometry.height)),
       customName: customName || null
     };
 
@@ -2460,10 +3672,21 @@ function addFittingRow(fittingKey, path = 'supply', defaultParam = null, qty = 1
     if (isTee) {
       const curCFM = getCurrentDownstreamCFM();
       newRow.branchCFM = (branchCFM !== null && !isNaN(branchCFM)) ? branchCFM : Math.min(400, Math.round(curCFM * 0.33));
-      newRow.teeContinuation = teeContinuation || 'trunk';
-      newRow.branchWidth = branchWidth;
-      newRow.branchHeight = branchHeight;
-      newRow.branchDia = (currentDims.shape === 'round') ? (currentDims.dia || 14) : null;
+      const isBranchCont = isBranchTakeoffFitting(fittingKey) || (teeContinuation === 'branch');
+      newRow.teeContinuation = isBranchCont ? 'branch' : (teeContinuation || 'trunk');
+      const bShape = getTeeBranchShape(fittingKey);
+      newRow.branchShape = bShape;
+
+      if (bShape === 'round') {
+        const d = (extraGeometry && extraGeometry.branchDia) ? extraGeometry.branchDia : (parseFloat(branchDia) || parseFloat(branchWidth) || parseFloat(branchHeight) || ((currentDims.shape === 'round') ? currentDims.dia : 12));
+        newRow.branchDia = d;
+        newRow.branchWidth = d;
+        newRow.branchHeight = d;
+      } else {
+        newRow.branchWidth = (extraGeometry && extraGeometry.branchWidth) ? extraGeometry.branchWidth : (parseFloat(branchWidth) || Math.max(2, currentDims.w - 4) || 16);
+        newRow.branchHeight = (extraGeometry && extraGeometry.branchHeight) ? extraGeometry.branchHeight : (parseFloat(branchHeight) || currentDims.h || 10);
+        newRow.branchDia = Math.round(calcHuebscherDe(newRow.branchWidth, newRow.branchHeight) * 10) / 10 || 14;
+      }
     }
     if (isTrans) {
       const geom = getTransitionGeometry(fittingKey);
@@ -2525,6 +3748,33 @@ function updateChainedBranchCFM(id, val) {
   const row = chainedScheduleRows.find(r => r.id === id);
   if (row) {
     row.branchCFM = Math.max(0, parseFloat(val) || 0);
+    calculateDuctLoss();
+    renderFittingsTable();
+    if (typeof saveActiveDraftState === 'function') saveActiveDraftState();
+  }
+}
+
+function updateChainedBranchDia(id, dia) {
+  const row = chainedScheduleRows.find(r => r.id === id);
+  if (row) {
+    const d = Math.max(2, parseFloat(dia) || 12);
+    row.branchDia = d;
+    row.branchWidth = d;
+    row.branchHeight = d;
+    row.branchShape = 'round';
+    calculateDuctLoss();
+    renderFittingsTable();
+    if (typeof saveActiveDraftState === 'function') saveActiveDraftState();
+  }
+}
+
+function updateChainedBranchDims(id, w, h) {
+  const row = chainedScheduleRows.find(r => r.id === id);
+  if (row) {
+    row.branchWidth = Math.max(2, parseFloat(w) || 16);
+    row.branchHeight = Math.max(2, parseFloat(h) || 10);
+    row.branchDia = Math.round(calcHuebscherDe(row.branchWidth, row.branchHeight) * 10) / 10 || 14;
+    row.branchShape = 'rect';
     calculateDuctLoss();
     renderFittingsTable();
     if (typeof saveActiveDraftState === 'function') saveActiveDraftState();
@@ -3068,6 +4318,7 @@ function onModalInitialShapeChange() {
     if (roundCol) roundCol.classList.add('hidden');
   }
   updateModalInitialCriteriaReadout();
+  updateModalFittingAerodynamics();
 }
 
 function updateModalInitialCriteriaReadout() {
@@ -3088,6 +4339,26 @@ function updateModalInitialCriteriaReadout() {
 
   if (velEl) velEl.textContent = `${Math.round(vel).toLocaleString()} FPM`;
   if (dflEl) dflEl.textContent = `${friction.toFixed(3)}" / 100'`;
+
+  // Sync to geometry controls if starting schedule with fitting
+  if (chainedScheduleRows.length === 0) {
+    if (shape === 'round') {
+      const rDia = document.getElementById('modalRoundDia');
+      if (rDia && parseFloat(rDia.value) !== dia) {
+        rDia.value = dia;
+        const rRad = document.getElementById('modalRoundRadius');
+        if (rRad && (!rRad.value || parseFloat(rRad.value) === 21)) {
+          rRad.value = Math.round(dia * 1.5 * 10) / 10;
+        }
+      }
+    } else {
+      const elbW = document.getElementById('modalElbowWidth');
+      const elbH = document.getElementById('modalElbowHeight');
+      if (elbW && parseFloat(elbW.value) !== w) elbW.value = w;
+      if (elbH && parseFloat(elbH.value) !== h) elbH.value = h;
+    }
+  }
+  updateModalFittingAerodynamics();
 }
 
 function openAddFittingModal(preselectedKey = null, defaultPath = null) {
@@ -3108,12 +4379,21 @@ function openAddFittingModal(preselectedKey = null, defaultPath = null) {
     const initSection = document.getElementById('modalInitialCriteriaSection');
     const upstreamBanner = document.getElementById('modalUpstreamBanner');
 
+    let effectiveKey = preselectedKey || '1a_90_smooth';
+    if (effectiveKey === '10a') effectiveKey = '10a_rect_straight_sides';
+    if (effectiveKey === '10b') effectiveKey = '10b_rect_contracting';
+    if (effectiveKey === '10c' || effectiveKey === '10c_rect_straight_sides') effectiveKey = '10c_round_contracting';
+
     if (isScheduleEmpty) {
       if (initSection) {
         initSection.classList.remove('hidden');
         const initialCFMEl = document.getElementById('modalInitialCFM');
         if (initialCFMEl) {
           initialCFMEl.value = document.getElementById('ductLossCFM')?.value || 1200;
+        }
+        const initShapeEl = document.getElementById('modalInitialShape');
+        if (initShapeEl) {
+          initShapeEl.value = isRoundFitting(effectiveKey) ? 'round' : 'rect';
         }
         onModalInitialShapeChange();
       }
@@ -3160,14 +4440,13 @@ function openAddFittingModal(preselectedKey = null, defaultPath = null) {
       }
     }
 
-    let effectiveKey = preselectedKey || '1a_90_smooth';
-    if (effectiveKey === '10a') effectiveKey = '10a_rect_straight_sides';
-    if (effectiveKey === '10b') effectiveKey = '10b_rect_contracting';
-    if (effectiveKey === '10c' || effectiveKey === '10c_rect_straight_sides') effectiveKey = '10c_round_contracting';
-
-    if (effectiveKey.startsWith('10') && isScheduleEmpty) {
+    if ((effectiveKey.startsWith('10a') || effectiveKey.startsWith('10b')) && isScheduleEmpty) {
       const initShapeEl = document.getElementById('modalInitialShape');
       if (initShapeEl) initShapeEl.value = 'rect';
+      onModalInitialShapeChange();
+    } else if (effectiveKey.startsWith('10c') && isScheduleEmpty) {
+      const initShapeEl = document.getElementById('modalInitialShape');
+      if (initShapeEl) initShapeEl.value = 'round';
       onModalInitialShapeChange();
     }
 
@@ -3284,6 +4563,30 @@ function openEditFittingModal(row) {
 
     onModalTypeChange();
 
+    // Populate geometry fields from saved row
+    if (isRoundFitting(fittingKey)) {
+      const rDia = document.getElementById('modalRoundDia');
+      const rRad = document.getElementById('modalRoundRadius');
+      if (rDia) rDia.value = row.dia || row.width || 14;
+      if (rRad) rRad.value = row.radius || ((row.dia || row.width || 14) * 1.5);
+    } else if (fittingKey.startsWith('3')) {
+      const rrW = document.getElementById('modalRectRadiusW');
+      const rrH = document.getElementById('modalRectRadiusH');
+      const rrR = document.getElementById('modalRectRadiusR');
+      if (rrW) rrW.value = row.width || 20;
+      if (rrH) rrH.value = row.height || 12;
+      if (rrR) rrR.value = row.radius || row.width || 20;
+      const vSelect = document.getElementById('modalFittingVanesSelect');
+      if (vSelect && row.isVanes !== undefined) vSelect.value = row.isVanes ? 'with_vanes' : 'without_vanes';
+    } else if (isRectFitting(fittingKey)) {
+      const elbW = document.getElementById('modalElbowWidth');
+      const elbH = document.getElementById('modalElbowHeight');
+      if (elbW) elbW.value = row.width || 20;
+      if (elbH) elbH.value = row.height || 12;
+      const vSelect = document.getElementById('modalFittingVanesSelect');
+      if (vSelect && row.isVanes !== undefined) vSelect.value = row.isVanes ? 'with_vanes' : 'without_vanes';
+    }
+
     // Pre-populate parameter key
     const paramSelect = document.getElementById('modalFittingParam');
     if (paramSelect && row.paramKey) {
@@ -3301,11 +4604,16 @@ function openEditFittingModal(row) {
       const branchInput = document.getElementById('modalBranchCFM');
       if (branchInput) branchInput.value = row.branchCFM || 0;
       const contSelect = document.getElementById('modalTeePathContinuation');
-      if (contSelect) contSelect.value = row.teeContinuation || 'trunk';
+      if (contSelect) contSelect.value = isBranchTakeoffFitting(fittingKey) ? 'branch' : (row.teeContinuation || 'trunk');
       const bW = document.getElementById('modalTeeBranchWidth');
       const bH = document.getElementById('modalTeeBranchHeight');
       if (bW && row.branchWidth) bW.value = row.branchWidth;
       if (bH && row.branchHeight) bH.value = row.branchHeight;
+      const bDia = document.getElementById('modalTeeBranchDia');
+      if (bDia) {
+        if (row.branchDia) bDia.value = row.branchDia;
+        else if (row.branchWidth) bDia.value = row.branchWidth;
+      }
       updateModalTeeFlowReadout();
       onModalTeeBranchDimsInput();
     }
@@ -3322,6 +4630,7 @@ function openEditFittingModal(row) {
       updateModalTransitionCalculations();
     }
 
+    updateModalFittingAerodynamics();
     updateModalEquivalentHint();
   } catch (err) {
     console.error('Error opening edit fitting modal:', err);
@@ -3347,6 +4656,9 @@ function closeAddFittingModal() {
   if (titleEl) titleEl.textContent = 'Add Fitting to Schedule';
   if (submitBtnText) submitBtnText.textContent = 'Add to Schedule';
   if (submitBtnIcon) submitBtnIcon.className = 'fa-solid fa-plus';
+
+  const mismatchBanner = document.getElementById('modalShapeMismatchBanner');
+  if (mismatchBanner) mismatchBanner.classList.add('hidden');
 }
 
 function populateAddFittingCategorySelect() {
@@ -3487,8 +4799,8 @@ function updateModalTransitionCalculations() {
 function onModalTeeBranchDimsInput() {
   try {
     const branchCFM = parseFloat(document.getElementById('modalBranchCFM')?.value) || 0;
-    const bW = parseFloat(document.getElementById('modalTeeBranchWidth')?.value);
-    const bH = parseFloat(document.getElementById('modalTeeBranchHeight')?.value);
+    const typeKey = document.getElementById('modalFittingType')?.value || '';
+    const bShape = getTeeBranchShape(typeKey);
     const readout = document.getElementById('modalTeeVbReadout');
 
     const curDims = getCurrentDownstreamDims();
@@ -3496,9 +4808,25 @@ function onModalTeeBranchDimsInput() {
     const trunkArea = calcDuctArea(curDims.w, curDims.h, curDims.shape, curDims.dia);
     const vt = trunkArea > 0 ? (enteringCFM / trunkArea) * 144 : 1000;
 
-    if (!isNaN(bW) && bW > 0 && !isNaN(bH) && bH > 0 && branchCFM > 0) {
-      const branchArea = bW * bH;
-      const vb = (branchCFM / branchArea) * 144;
+    let branchArea = 0;
+    let vb = vt;
+
+    if (bShape === 'round') {
+      const bDia = parseFloat(document.getElementById('modalTeeBranchDia')?.value);
+      if (!isNaN(bDia) && bDia > 0) {
+        branchArea = (Math.PI * Math.pow(bDia, 2)) / 4.0;
+        if (branchCFM > 0) vb = (branchCFM / branchArea) * 144;
+      }
+    } else {
+      const bW = parseFloat(document.getElementById('modalTeeBranchWidth')?.value);
+      const bH = parseFloat(document.getElementById('modalTeeBranchHeight')?.value);
+      if (!isNaN(bW) && bW > 0 && !isNaN(bH) && bH > 0) {
+        branchArea = bW * bH;
+        if (branchCFM > 0) vb = (branchCFM / branchArea) * 144;
+      }
+    }
+
+    if (branchArea > 0 && branchCFM > 0) {
       const vRatio = vt > 0 ? (vb / vt) : 1.0;
       if (readout) {
         readout.textContent = `Vb: ${Math.round(vb)} FPM (${vRatio.toFixed(2)}x Vt)`;
@@ -3509,7 +4837,6 @@ function onModalTeeBranchDimsInput() {
       if (calcVb) calcVb.value = Math.round(vb);
       if (calcVt) calcVt.value = Math.round(vt);
 
-      const typeKey = document.getElementById('modalFittingType')?.value || '';
       const map = getAllFittingsMap();
       const def = map[typeKey];
       if (def && def.options) {
@@ -3518,7 +4845,7 @@ function onModalTeeBranchDimsInput() {
           qb: branchCFM,
           vt: vt,
           vb: vb,
-          area1: trunkArea,
+          area1: trunkArea * 144,
           area2: branchArea
         });
         if (best && best.key) {
@@ -3531,7 +4858,6 @@ function onModalTeeBranchDimsInput() {
       if (readout) {
         readout.textContent = `Vb ≈ Vt (${Math.round(vt)} FPM)`;
       }
-      const typeKey = document.getElementById('modalFittingType')?.value || '';
       const map = getAllFittingsMap();
       const def = map[typeKey];
       if (def && def.options) {
@@ -3540,8 +4866,8 @@ function onModalTeeBranchDimsInput() {
           qb: branchCFM,
           vt: vt,
           vb: vt,
-          area1: trunkArea,
-          area2: trunkArea * (branchCFM / Math.max(1, enteringCFM))
+          area1: trunkArea * 144,
+          area2: (trunkArea * 144) * (branchCFM / Math.max(1, enteringCFM))
         });
         if (best && best.key) {
           const paramSelect = document.getElementById('modalFittingParam');
@@ -3631,6 +4957,43 @@ function onModalTypeChange() {
         if (branchInput && (!branchInput.value || branchInput.value === '')) {
           branchInput.value = Math.min(400, Math.round(enteringCFM * 0.33));
         }
+
+        const isBranchTakeoff = isBranchTakeoffFitting(typeKey);
+        const contSelect = document.getElementById('modalTeePathContinuation');
+        const noticeBadge = document.getElementById('modalTeeBranchNoticeBadge');
+        if (isBranchTakeoff) {
+          if (contSelect) contSelect.value = 'branch';
+          if (noticeBadge) noticeBadge.classList.remove('hidden');
+        } else {
+          if (contSelect && !editingFittingRowId) contSelect.value = 'trunk';
+          if (noticeBadge) noticeBadge.classList.add('hidden');
+        }
+
+        const bShape = getTeeBranchShape(typeKey);
+        const rectCol = document.getElementById('modalTeeBranchRectCol');
+        const roundCol = document.getElementById('modalTeeBranchRoundCol');
+        const curDims = getCurrentDownstreamDims();
+
+        if (bShape === 'round') {
+          if (roundCol) roundCol.classList.remove('hidden');
+          if (rectCol) rectCol.classList.add('hidden');
+          const bDiaInput = document.getElementById('modalTeeBranchDia');
+          if (bDiaInput && (!bDiaInput.value || bDiaInput.value === '')) {
+            bDiaInput.value = (curDims.shape === 'round') ? Math.max(4, Math.round(curDims.dia * 0.75)) : Math.max(4, Math.round((curDims.w || 14) * 0.6));
+          }
+        } else {
+          if (roundCol) roundCol.classList.add('hidden');
+          if (rectCol) rectCol.classList.remove('hidden');
+          const bWInput = document.getElementById('modalTeeBranchWidth');
+          const bHInput = document.getElementById('modalTeeBranchHeight');
+          if (bWInput && (!bWInput.value || bWInput.value === '')) {
+            bWInput.value = Math.max(4, Math.round((curDims.w || 18) * 0.75));
+          }
+          if (bHInput && (!bHInput.value || bHInput.value === '')) {
+            bHInput.value = curDims.h || 10;
+          }
+        }
+
         updateModalTeeFlowReadout();
         onModalTeeBranchDimsInput();
       } else {
@@ -3696,6 +5059,122 @@ function onModalTypeChange() {
   // Update Modal Fitting Image Preview Card & live aerodynamics
   updateModalFittingImagePreview(def, typeKey);
   updateModalFittingAerodynamics();
+  updateModalShapeMismatchWarning();
+}
+
+function updateModalShapeMismatchWarning() {
+  const banner = document.getElementById('modalShapeMismatchBanner');
+  if (!banner) return;
+
+  const typeEl = document.getElementById('modalFittingType');
+  if (!typeEl) {
+    banner.classList.add('hidden');
+    return;
+  }
+  const typeKey = typeEl.value;
+
+  // Determine preceding ductwork leaving shape
+  let prevShape = null;
+  let prevDesc = '';
+  if (editingFittingRowId !== null) {
+    const rowIdx = chainedScheduleRows.findIndex(r => r.id === editingFittingRowId);
+    if (rowIdx > 0) {
+      const prevRow = chainedScheduleRows[rowIdx - 1];
+      prevShape = getRowLeavingShape(prevRow);
+      if (prevShape === 'round') {
+        const d = prevRow.leavingDia || prevRow.dia || prevRow.width || 14;
+        prevDesc = `Ø ${d}" Round`;
+      } else {
+        const w = prevRow.leavingWidth || prevRow.width || 18;
+        const h = prevRow.leavingHeight || prevRow.height || 12;
+        prevDesc = `${w}" × ${h}" Rect`;
+      }
+    }
+  } else if (chainedScheduleRows.length > 0) {
+    const prevRow = chainedScheduleRows[chainedScheduleRows.length - 1];
+    prevShape = getRowLeavingShape(prevRow);
+    const curDims = getCurrentDownstreamDims();
+    if (prevShape === 'round') {
+      const d = curDims.dia || curDims.w || 14;
+      prevDesc = `Ø ${d}" Round`;
+    } else {
+      const w = curDims.w || 18;
+      const h = curDims.h || 12;
+      prevDesc = `${w}" × ${h}" Rect`;
+    }
+  }
+
+  // If schedule is empty or this is the first fitting, no mismatch
+  if (!prevShape) {
+    banner.classList.add('hidden');
+    return;
+  }
+
+  const enteringShape = getFittingEnteringShape(typeKey);
+  if (!enteringShape) {
+    banner.classList.add('hidden');
+    return;
+  }
+
+  if (prevShape !== enteringShape) {
+    const isRectToRound = (prevShape === 'rect' && enteringShape === 'round');
+    const titleEl = document.getElementById('modalShapeMismatchTitle');
+    const textEl = document.getElementById('modalShapeMismatchText');
+    const btnText = document.getElementById('modalBtnQuickAddTransitionText');
+
+    if (titleEl) {
+      titleEl.textContent = isRectToRound
+        ? 'Shape Mismatch: Rectangular → Round Transition Recommended'
+        : 'Shape Mismatch: Round → Rectangular Transition Recommended';
+    }
+
+    if (textEl) {
+      if (isRectToRound) {
+        textEl.innerHTML = `Preceding ductwork is <strong>Rectangular</strong> (${prevDesc}), but the selected fitting is <strong>Round</strong>. To maintain aerodynamic continuity and standard construction, consider inserting a <strong>Rectangular-to-Round transition fitting (such as Fitting 9d)</strong> before this fitting.`;
+      } else {
+        textEl.innerHTML = `Preceding ductwork is <strong>Round</strong> (${prevDesc}), but the selected fitting is <strong>Rectangular</strong>. To maintain aerodynamic continuity and standard construction, consider inserting a <strong>Round-to-Rectangular transition fitting (such as Fitting 9c)</strong> before this fitting.`;
+      }
+    }
+
+    if (btnText) {
+      btnText.textContent = isRectToRound ? 'Switch to 9d (Rect → Round)' : 'Switch to 9c (Round → Rect)';
+    }
+
+    banner.classList.remove('hidden');
+  } else {
+    banner.classList.add('hidden');
+  }
+}
+
+function quickSelectTransitionFitting() {
+  const typeEl = document.getElementById('modalFittingType');
+  const catEl = document.getElementById('modalFittingCategory');
+  if (!typeEl || !catEl) return;
+
+  let prevShape = 'rect';
+  if (editingFittingRowId !== null) {
+    const rowIdx = chainedScheduleRows.findIndex(r => r.id === editingFittingRowId);
+    if (rowIdx > 0) {
+      prevShape = getRowLeavingShape(chainedScheduleRows[rowIdx - 1]) || 'rect';
+    }
+  } else if (chainedScheduleRows.length > 0) {
+    prevShape = getRowLeavingShape(chainedScheduleRows[chainedScheduleRows.length - 1]) || 'rect';
+  }
+
+  const targetCategory = 'transitionsExpanding';
+  const targetFitting = (prevShape === 'rect') ? '9d_rect_to_round' : '9c_round_to_rect';
+
+  catEl.value = targetCategory;
+  const grp = DUCT_LOSS_DATA[targetCategory] || {};
+  typeEl.innerHTML = Object.keys(grp).map(k => `<option value="${k}">${grp[k].name}</option>`).join('');
+  typeEl.value = targetFitting;
+
+  onModalTypeChange();
+
+  if (typeof showToast === 'function') {
+    const name = (targetFitting === '9d_rect_to_round') ? '9d: Rectangular to Round' : '9c: Round to Rectangular';
+    showToast('Transition Selected', `Switched fitting to ${name}. Configure leaving dimensions below.`);
+  }
 }
 
 function updateModalFittingAerodynamics() {
@@ -3731,15 +5210,35 @@ function updateModalFittingAerodynamics() {
   }
 
   const upstreamArea = calcDuctArea(curDims.w, curDims.h, curDims.shape, curDims.dia);
-  inputs.vt = upstreamArea > 0 ? (curCFM / upstreamArea) * 144 : 1000;
+  let enteringArea = upstreamArea;
+  if (isRoundFitting(typeKey)) {
+    enteringArea = calcDuctArea(inputs.dia, inputs.dia, 'round', inputs.dia);
+  } else if (isRectFitting(typeKey) && !isTeeFitting(typeKey)) {
+    enteringArea = calcDuctArea(inputs.w, inputs.h, 'rect');
+  }
+  inputs.vt = calcDuctVelocity(curCFM, enteringArea) || 1000;
 
   if (isTeeFitting(typeKey)) {
-    const bW = parseFloat(document.getElementById('modalTeeBranchWidth')?.value);
-    const bH = parseFloat(document.getElementById('modalTeeBranchHeight')?.value);
-    if (!isNaN(bW) && bW > 0 && !isNaN(bH) && bH > 0 && inputs.qb > 0) {
-      inputs.vb = (inputs.qb / (bW * bH)) * 144;
+    const bShape = getTeeBranchShape(typeKey);
+    let bArea = 0;
+    if (bShape === 'round') {
+      const bDia = parseFloat(document.getElementById('modalTeeBranchDia')?.value);
+      if (!isNaN(bDia) && bDia > 0) {
+        bArea = (Math.PI * Math.pow(bDia, 2)) / 4.0;
+      }
+    } else {
+      const bW = parseFloat(document.getElementById('modalTeeBranchWidth')?.value);
+      const bH = parseFloat(document.getElementById('modalTeeBranchHeight')?.value);
+      if (!isNaN(bW) && bW > 0 && !isNaN(bH) && bH > 0) {
+        bArea = bW * bH;
+      }
+    }
+    if (bArea > 0 && inputs.qb > 0) {
+      inputs.vb = calcDuctVelocity(inputs.qb, bArea / 144.0);
+      inputs.a2 = bArea;
     } else {
       inputs.vb = inputs.vt;
+      inputs.a2 = (upstreamArea * 144) * (inputs.qb / Math.max(1, inputs.qt));
     }
   }
 
@@ -3761,7 +5260,7 @@ function updateModalFittingAerodynamics() {
   const result = calcContinuousFittingEL(typeKey, inputs, angle);
 
   const paramInput = document.getElementById('modalFittingParam');
-  if (paramInput) paramInput.value = `${result.ratioLabel} (${result.el}' EL)`;
+  if (paramInput) paramInput.value = result.ratioLabel || '—';
 
   const ratioBadge = document.getElementById('modalTrueRatioBadge');
   const elDisplay = document.getElementById('modalTrueELDisplay');
@@ -3786,11 +5285,22 @@ function updateModalFittingAerodynamics() {
   const cascadeNote = document.getElementById('modalLeavingCascadeNote');
   if (cascadeNote) {
     if (isTeeFitting(typeKey)) {
-      const isBr = (document.getElementById('modalTeePathContinuation')?.value === 'branch');
+      const isBr = isBranchTakeoffFitting(typeKey) || (document.getElementById('modalTeePathContinuation')?.value === 'branch');
+      const bShape = getTeeBranchShape(typeKey);
+      let branchDimsStr = '';
+      if (bShape === 'round') {
+        const bDia = parseFloat(document.getElementById('modalTeeBranchDia')?.value) || 12;
+        branchDimsStr = `Ø ${bDia}" Round`;
+      } else {
+        const bW = parseFloat(document.getElementById('modalTeeBranchWidth')?.value) || 16;
+        const bH = parseFloat(document.getElementById('modalTeeBranchHeight')?.value) || 10;
+        branchDimsStr = `${bW}" × ${bH}" Rect`;
+      }
       const leavingQ = isBr ? inputs.qb : Math.max(0, curCFM - inputs.qb);
       const leavingArea = isBr ? (inputs.vb > 0 ? (inputs.qb / inputs.vb) * 144 : upstreamArea) : upstreamArea;
       const leavingVel = leavingArea > 0 ? (leavingQ / leavingArea) * 144 : 800;
-      cascadeNote.innerHTML = `<i class="fa-solid fa-arrow-right"></i> Leaving ${isBr ? 'Branch' : 'Trunk'}: <strong>${Math.round(leavingQ)} CFM</strong> (${Math.round(leavingVel)} FPM) &bull; Cascades downstream`;
+      const pathLabel = isBr ? `Leaving Branch Takeoff (${branchDimsStr})` : `Leaving Trunk`;
+      cascadeNote.innerHTML = `<i class="fa-solid fa-arrow-right"></i> ${pathLabel}: <strong>${Math.round(leavingQ)} CFM</strong> (${Math.round(leavingVel)} FPM) &bull; Cascades downstream`;
     } else if (isTransitionFitting(typeKey)) {
       const geom = getTransitionGeometry(typeKey);
       let dnArea = 144;
@@ -3808,7 +5318,7 @@ function updateModalFittingAerodynamics() {
       const leavingVel = dnArea > 0 ? (curCFM / (dnArea / 144)) : 800;
       cascadeNote.innerHTML = `<i class="fa-solid fa-arrow-right"></i> Exiting: <strong>${Math.round(curCFM)} CFM</strong> &bull; ${dnDimsStr} (${Math.round(leavingVel)} FPM) &bull; Cascades downstream`;
     } else {
-      cascadeNote.innerHTML = `<i class="fa-solid fa-arrow-right"></i> Continuing: <strong>${Math.round(curCFM)} CFM</strong> &bull; Downstream ductwork inherits these conditions`;
+      cascadeNote.innerHTML = `<i class="fa-solid fa-arrow-right"></i> Continuing: <strong>${Math.round(curCFM)} CFM</strong> @ ${Math.round(inputs.vt)} FPM &bull; Downstream ductwork inherits these conditions`;
     }
   }
 
@@ -3817,7 +5327,25 @@ function updateModalFittingAerodynamics() {
 }
 
 function onFittingGeometryInput() {
+  const isScheduleEmpty = (chainedScheduleRows.length === 0);
+  if (isScheduleEmpty) {
+    const typeKey = document.getElementById('modalFittingType')?.value || '';
+    if (isRoundFitting(typeKey)) {
+      const rDia = document.getElementById('modalRoundDia')?.value;
+      const initDia = document.getElementById('modalInitialDia');
+      if (initDia && rDia) initDia.value = rDia;
+    } else if (isRectFitting(typeKey)) {
+      const wVal = document.getElementById('modalElbowWidth')?.value || document.getElementById('modalRectRadiusW')?.value;
+      const hVal = document.getElementById('modalElbowHeight')?.value || document.getElementById('modalRectRadiusH')?.value;
+      const initW = document.getElementById('modalInitialWidth');
+      const initH = document.getElementById('modalInitialHeight');
+      if (initW && wVal) initW.value = wVal;
+      if (initH && hVal) initH.value = hVal;
+    }
+    updateModalInitialCriteriaReadout();
+  }
   updateModalFittingAerodynamics();
+  updateModalEquivalentHint();
 }
 
 function swapElbowOrientation() {
@@ -3847,7 +5375,8 @@ function swapElbowOrientation() {
 function updateModalTeeFlowReadout() {
   const enteringCFM = getCurrentDownstreamCFM();
   const branchCFM = parseFloat(document.getElementById('modalBranchCFM')?.value) || 0;
-  const isBranchCont = (document.getElementById('modalTeePathContinuation')?.value === 'branch');
+  const typeKey = document.getElementById('modalFittingType')?.value || '';
+  const isBranchCont = (document.getElementById('modalTeePathContinuation')?.value === 'branch') || isBranchTakeoffFitting(typeKey);
   const leavingCFM = isBranchCont ? branchCFM : Math.max(0, enteringCFM - branchCFM);
   const readout = document.getElementById('modalTeeFlowReadout');
   if (readout) {
@@ -4636,12 +6165,23 @@ function updateModalFittingImagePreview(def, typeKey = null) {
   const previewName = document.getElementById('modalFittingPreviewName');
   const previewCat = document.getElementById('modalFittingPreviewCat');
   const previewBox = previewCard ? previewCard.querySelector('.preview-box') : null;
+  const overlayContainer = document.getElementById('modalFittingOverlayContainer');
+  const flowPathBadge = document.getElementById('modalFittingFlowPathBadge');
+  const flowPathText = document.getElementById('modalFittingFlowPathText');
+  const toggleStatus = document.getElementById('modalFlowToggleStatus');
   if (!previewCard) return;
+
+  if (toggleStatus) {
+    toggleStatus.textContent = window.airflowOverlayEnabled ? 'ON' : 'OFF';
+    toggleStatus.className = window.airflowOverlayEnabled ? 'text-emerald-400 font-bold' : 'text-slate-400 font-bold';
+  }
 
   const currentType = typeKey || document.getElementById('modalFittingType')?.value;
 
   if (currentType === 'custom_fitting') {
     if (previewImg) previewImg.classList.add('hidden');
+    if (overlayContainer) { overlayContainer.innerHTML = ''; overlayContainer.classList.add('hidden'); }
+    if (flowPathBadge) flowPathBadge.classList.add('hidden');
     let customIcon = document.getElementById('modalCustomWrenchIcon');
     if (!customIcon && previewBox) {
       customIcon = document.createElement('div');
@@ -4663,6 +6203,15 @@ function updateModalFittingImagePreview(def, typeKey = null) {
   if (customIcon) customIcon.classList.add('hidden');
   if (previewImg) previewImg.classList.remove('hidden');
 
+  // Update Flow Path description badge
+  const flowDef = getFittingAirflowDef(currentType);
+  if (flowPathBadge && flowPathText && flowDef) {
+    flowPathText.textContent = flowDef.description;
+    flowPathBadge.classList.remove('hidden');
+  } else if (flowPathBadge) {
+    flowPathBadge.classList.add('hidden');
+  }
+
   if (def && def.image) {
     const rawPath = getFittingImagePath(def.image);
     previewImg.onerror = function() {
@@ -4681,9 +6230,22 @@ function updateModalFittingImagePreview(def, typeKey = null) {
     previewImg.alt = def.name || 'Fitting Diagram';
     if (previewName) previewName.textContent = def.name || '';
     if (previewCat) previewCat.textContent = def.category || '';
+
+    // Render Overlay
+    if (overlayContainer) {
+      if (window.airflowOverlayEnabled) {
+        overlayContainer.innerHTML = getFittingAirflowSvg(currentType, { showBadge: true, showLabels: true });
+        overlayContainer.classList.remove('hidden');
+      } else {
+        overlayContainer.innerHTML = '';
+        overlayContainer.classList.add('hidden');
+      }
+    }
+
     previewCard.classList.remove('hidden');
     previewCard.classList.add('flex');
   } else {
+    if (overlayContainer) { overlayContainer.innerHTML = ''; overlayContainer.classList.add('hidden'); }
     previewCard.classList.add('hidden');
     previewCard.classList.remove('flex');
   }
@@ -4699,6 +6261,7 @@ function adjustModalQty(delta) {
 }
 
 function onModalParamChange() {
+  updateModalFittingAerodynamics();
   updateModalEquivalentHint();
 }
 
@@ -4718,6 +6281,8 @@ function updateModalEquivalentHint() {
   if (isCustom) {
     const customElInput = document.getElementById('modalCustomEL');
     baseEL = Math.max(0, parseFloat(customElInput?.value) || 0);
+  } else if (window.activeModalFittingResult && window.activeModalFittingResult.el !== undefined && !isNaN(window.activeModalFittingResult.el)) {
+    baseEL = window.activeModalFittingResult.el;
   } else {
     const catKey = catSelect ? catSelect.value : findCategoryForFittingKey(typeKey);
     const def = (DUCT_LOSS_DATA[catKey] && DUCT_LOSS_DATA[catKey][typeKey]) ? DUCT_LOSS_DATA[catKey][typeKey] : null;
@@ -4737,7 +6302,7 @@ function updateModalEquivalentHint() {
   }
 
   const qty = Math.max(1, parseInt(qtyInput ? qtyInput.value : 1, 10) || 1);
-  const total = baseEL * qty;
+  const total = (baseEL * qty).toFixed(1).replace(/\.0$/, '');
   hintEl.textContent = `Unit EL: ${baseEL}' | Qty: ${qty} | Total: ${total}' Equivalent Length`;
 }
 
@@ -4771,9 +6336,24 @@ function commitAddFittingFromModal() {
     branchCFM = parseFloat(branchCFMInput.value);
   }
 
-  const teeContinuation = document.getElementById('modalTeePathContinuation')?.value || 'trunk';
-  const branchWidth = parseFloat(document.getElementById('modalTeeBranchWidth')?.value) || null;
-  const branchHeight = parseFloat(document.getElementById('modalTeeBranchHeight')?.value) || null;
+  const isBranchTakeoff = isBranchTakeoffFitting(fittingKey);
+  const teeContinuation = isBranchTakeoff ? 'branch' : (document.getElementById('modalTeePathContinuation')?.value || 'trunk');
+  const bShape = getTeeBranchShape(fittingKey);
+  let branchWidth = null;
+  let branchHeight = null;
+  let branchDia = null;
+
+  if (bShape === 'round') {
+    branchDia = parseFloat(document.getElementById('modalTeeBranchDia')?.value) || parseFloat(document.getElementById('modalTeeBranchHeight')?.value) || null;
+    branchWidth = branchDia;
+    branchHeight = branchDia;
+  } else {
+    branchWidth = parseFloat(document.getElementById('modalTeeBranchWidth')?.value) || null;
+    branchHeight = parseFloat(document.getElementById('modalTeeBranchHeight')?.value) || null;
+    if (branchWidth && branchHeight) {
+      branchDia = Math.round(calcHuebscherDe(branchWidth, branchHeight) * 10) / 10 || 14;
+    }
+  }
 
   let leavingWidth = null;
   let leavingHeight = null;
@@ -4801,6 +6381,63 @@ function commitAddFittingFromModal() {
     leavingShape = geom.downstream;
   }
 
+  // Ensure latest aerodynamics calculation is run and capture geometry
+  const aeroResult = (typeof updateModalFittingAerodynamics === 'function') ? updateModalFittingAerodynamics() : null;
+
+  let shape = isRoundFitting(fittingKey) ? 'round' : 'rect';
+  let dia = null;
+  let radius = null;
+  let width = null;
+  let height = null;
+  let isVanes = true;
+
+  if (isTrans) {
+    const geom = getTransitionGeometry(fittingKey);
+    if (geom.upstream === 'round') {
+      const curDims = getCurrentDownstreamDims();
+      dia = (curDims.shape === 'round' && curDims.dia) ? curDims.dia : (parseFloat(document.getElementById('modalInitialDia')?.value) || 14);
+      width = dia;
+      height = dia;
+      shape = 'round';
+    } else {
+      const curDims = getCurrentDownstreamDims();
+      width = curDims.w || 18;
+      height = curDims.h || 12;
+      dia = Math.round(calcHuebscherDe(width, height) * 10) / 10;
+      shape = 'rect';
+    }
+  } else if (isRoundFitting(fittingKey)) {
+    dia = parseFloat(document.getElementById('modalRoundDia')?.value) || null;
+    radius = parseFloat(document.getElementById('modalRoundRadius')?.value) || null;
+  } else if (fittingKey.startsWith('3')) {
+    width = parseFloat(document.getElementById('modalRectRadiusW')?.value) || null;
+    height = parseFloat(document.getElementById('modalRectRadiusH')?.value) || null;
+    radius = parseFloat(document.getElementById('modalRectRadiusR')?.value) || null;
+  } else if (fittingKey.startsWith('2')) {
+    width = parseFloat(document.getElementById('modalElbowWidth')?.value) || null;
+    height = parseFloat(document.getElementById('modalElbowHeight')?.value) || null;
+    isVanes = (document.getElementById('modalFittingVanesSelect')?.value !== 'without_vanes');
+  }
+
+  const extraGeometry = {
+    calculatedEL: (aeroResult && aeroResult.el !== undefined && aeroResult.el !== null) ? aeroResult.el : null,
+    ratioLabel: (aeroResult && aeroResult.ratioLabel) ? aeroResult.ratioLabel : paramKey,
+    shape: shape,
+    dia: dia,
+    radius: radius,
+    width: width,
+    height: height,
+    isVanes: isVanes,
+    branchDia: branchDia,
+    branchWidth: branchWidth,
+    branchHeight: branchHeight,
+    branchShape: bShape
+  };
+
+  if (fittingKey !== 'custom_fitting' && aeroResult && aeroResult.ratioLabel) {
+    paramKey = aeroResult.ratioLabel;
+  }
+
   // Check if we are in EDIT MODE
   if (editingFittingRowId !== null) {
     const row = chainedScheduleRows.find(r => r.id === editingFittingRowId);
@@ -4821,6 +6458,8 @@ function commitAddFittingFromModal() {
 
       if (isCustom) {
         row.baseEL = customEL;
+      } else if (aeroResult && aeroResult.el !== null && aeroResult.el !== undefined && !isNaN(aeroResult.el)) {
+        row.baseEL = aeroResult.el;
       } else if (def && def.options && def.options[paramKey] !== undefined) {
         row.baseEL = def.options[paramKey];
         if (def.hasAngleFactor && angle && DUCT_LOSS_DATA.miteredAngleFactors && DUCT_LOSS_DATA.miteredAngleFactors[angle]) {
@@ -4828,12 +6467,29 @@ function commitAddFittingFromModal() {
         }
       }
 
+      row.shape = shape;
+      if (dia) {
+        row.dia = dia;
+        row.hasCustomDia = true;
+      }
+      if (radius !== null) row.radius = radius;
+      if (width) {
+        row.width = width;
+        row.hasCustomDims = true;
+      }
+      if (height) {
+        row.height = height;
+        row.hasCustomDims = true;
+      }
+      row.isVanes = isVanes;
+
       if (isTee) {
         row.branchCFM = branchCFM;
-        row.teeContinuation = teeContinuation;
+        row.teeContinuation = isBranchTakeoff ? 'branch' : teeContinuation;
+        row.branchShape = bShape;
         row.branchWidth = branchWidth;
         row.branchHeight = branchHeight;
-        row.branchDia = branchHeight;
+        row.branchDia = branchDia;
       }
 
       if (isTrans) {
@@ -4857,10 +6513,17 @@ function commitAddFittingFromModal() {
   // Check if starting the schedule with a fitting
   let initialCriteria = null;
   if (chainedScheduleRows.length === 0) {
-    const initShape = document.getElementById('modalInitialShape')?.value || 'rect';
-    const initW = Math.max(2, parseFloat(document.getElementById('modalInitialWidth')?.value) || 18);
-    const initH = Math.max(2, parseFloat(document.getElementById('modalInitialHeight')?.value) || 12);
-    const initDia = Math.max(2, parseFloat(document.getElementById('modalInitialDia')?.value) || 14);
+    let initShape = document.getElementById('modalInitialShape')?.value || (isRoundFitting(fittingKey) ? 'round' : 'rect');
+    let initW = Math.max(2, parseFloat(document.getElementById('modalInitialWidth')?.value) || 18);
+    let initH = Math.max(2, parseFloat(document.getElementById('modalInitialHeight')?.value) || 12);
+    let initDia = Math.max(2, parseFloat(document.getElementById('modalInitialDia')?.value) || 14);
+
+    if (dia) {
+      initDia = dia;
+      if (isRoundFitting(fittingKey)) initShape = 'round';
+    }
+    if (width) initW = width;
+    if (height) initH = height;
 
     const initialCFM = Math.max(10, parseFloat(document.getElementById('modalInitialCFM')?.value) || parseFloat(document.getElementById('ductLossCFM')?.value) || 1200);
     const mainCFMEl = document.getElementById('ductLossCFM');
@@ -4881,10 +6544,22 @@ function commitAddFittingFromModal() {
     };
   }
 
+  // Check for aerodynamic shape mismatch with preceding item
+  let mismatchWarning = null;
+  if (chainedScheduleRows.length > 0 && editingFittingRowId === null) {
+    const prevRow = chainedScheduleRows[chainedScheduleRows.length - 1];
+    const prevShape = getRowLeavingShape(prevRow);
+    const enteringShape = getFittingEnteringShape(fittingKey);
+    if (prevShape && enteringShape && prevShape !== enteringShape) {
+      mismatchWarning = { prevShape, enteringShape };
+    }
+  }
+
   addFittingRow(
     fittingKey, path, paramKey, qty, angle, customName, customEL,
     branchCFM, leavingWidth, leavingHeight, leavingDia, leavingShape,
-    teeContinuation, branchWidth, branchHeight, transAngle, initialCriteria
+    teeContinuation, branchWidth, branchHeight, transAngle, initialCriteria,
+    extraGeometry
   );
 
   closeAddFittingModal();
@@ -4895,7 +6570,18 @@ function commitAddFittingFromModal() {
   const pathLabel = path === 'return' ? 'Return Path' : 'Supply Path';
 
   if (typeof showToast === 'function') {
-    showToast('Added to Schedule', `Added ${qty}x ${fittingName} to ${pathLabel}.`);
+    if (mismatchWarning) {
+      const fromLabel = (mismatchWarning.prevShape === 'rect') ? 'Rectangular' : 'Round';
+      const toLabel = (mismatchWarning.enteringShape === 'rect') ? 'Rectangular' : 'Round';
+      const transName = (mismatchWarning.prevShape === 'rect') ? 'Fitting 9d (Rect → Round)' : 'Fitting 9c (Round → Rect)';
+      showToast(
+        'Fitting Added (Transition Needed)',
+        `Added ${qty}x ${fittingName}. Preceding ductwork is ${fromLabel} while this fitting is ${toLabel}. Remember to insert a transition (${transName}).`,
+        'warning'
+      );
+    } else {
+      showToast('Added to Schedule', `Added ${qty}x ${fittingName} to ${pathLabel}.`);
+    }
   }
 }
 
@@ -4974,4 +6660,12 @@ window.addEventListener('DOMContentLoaded', () => {
   renderFittingsTable();
   renderComponentsTable();
   calculateDuctLoss();
+
+  // Render Airflow Path overlays on catalog gallery and refresh overlay state
+  renderGalleryAirflowOverlays();
+  refreshAirflowOverlays();
+
+  window.addEventListener('resize', () => {
+    syncLightboxOverlayDimensions();
+  });
 });

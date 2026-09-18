@@ -727,6 +727,19 @@
     html.light #modalCustomFittingFields label {
       color: #334155 !important;
     }
+    html.light #modalShapeMismatchBanner {
+      background-color: #fffbeb !important;
+      border-color: #f59e0b !important;
+    }
+    html.light #modalShapeMismatchBanner span,
+    html.light #modalShapeMismatchBanner p {
+      color: #92400e !important;
+    }
+    html.light #modalBtnQuickAddTransition {
+      background-color: #fef3c7 !important;
+      border-color: #f59e0b !important;
+      color: #b45309 !important;
+    }
     html.light .fitting-gallery-card {
       background-color: #ffffff !important;
       border: 1px solid #cbd5e1 !important;
@@ -1115,13 +1128,18 @@
       <!-- SUBTAB 2: FITTINGS LIBRARY & LOSS VISUALIZER -->
       <!-- ============================================================== -->
       <div id="view-subtab-library" class="hidden space-y-6">
-        <div class="glass-card rounded-2xl p-5 border border-slate-800">
-          <h3 class="text-sm font-bold text-white flex items-center gap-2 mb-1">
-            <i class="fa-solid fa-shapes text-rose-400"></i> Loren Cook Pocket Guide Fitting Loss Charts
-          </h3>
-          <p class="text-xs text-slate-400">
-            All tables are calibrated for standard air at 1,350 FPM and 0.10" w.g. friction loss per 100 feet. <strong>Click on any fitting diagram below</strong> to configure options and add it directly to your Critical Path schedule.
-          </p>
+        <div class="glass-card rounded-2xl p-5 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h3 class="text-sm font-bold text-white flex items-center gap-2 mb-1">
+              <i class="fa-solid fa-shapes text-rose-400"></i> Loren Cook Pocket Guide Fitting Loss Charts
+            </h3>
+            <p class="text-xs text-slate-400">
+              All tables are calibrated for standard air at 1,350 FPM and 0.10" w.g. friction loss per 100 feet. <strong>Click on any fitting diagram below</strong> to configure options and add it directly to your Critical Path schedule.
+            </p>
+          </div>
+          <button type="button" onclick="toggleAirflowOverlay()" class="self-start sm:self-center px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold flex items-center gap-2 transition cursor-pointer shadow-sm flex-shrink-0" title="Toggle airflow path arrows across all catalog fitting diagrams">
+            <i class="fa-solid fa-wind text-rose-400"></i> Airflow Overlay: <span id="galleryFlowToggleStatus" class="text-emerald-400 font-bold">ON</span>
+          </button>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -2131,14 +2149,14 @@
                 </div>
                 <span class="text-[10px] font-bold text-slate-300 mt-1 text-center truncate w-full group-hover:text-rose-400 transition-colors">10b Cont Rect</span>
               </div>
-              <div class="fitting-gallery-card flex flex-col items-center bg-slate-900/90 rounded-xl p-2 border border-slate-800 hover:border-rose-500 hover:shadow-md hover:shadow-rose-500/10 transition group cursor-pointer relative" onclick="openAddFittingModal('10c_round_contracting', 'return')" title="Click to configure and add 10c Contracting Flow (Rectangular Straight Sides) to schedule">
+              <div class="fitting-gallery-card flex flex-col items-center bg-slate-900/90 rounded-xl p-2 border border-slate-800 hover:border-rose-500 hover:shadow-md hover:shadow-rose-500/10 transition group cursor-pointer relative" onclick="openAddFittingModal('10c_round_contracting', 'return')" title="Click to configure and add 10c Contracting Flow (Round) to schedule">
                 <div class="img-container w-12 h-12 bg-white/5 rounded-lg flex items-center justify-center p-1 overflow-hidden border border-slate-800 relative">
-                  <img src="Duct Fittings/10b - Trans Rect.jpeg" onerror="handleFittingImgError(this)" alt="10c" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
+                  <img src="Duct Fittings/10c - Trans Round.jpeg" onerror="handleFittingImgError(this)" alt="10c" class="w-full h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
                   <div class="absolute inset-0 bg-rose-600/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
                     <i class="fa-solid fa-plus text-white text-xs drop-shadow"></i>
                   </div>
                 </div>
-                <span class="text-[10px] font-bold text-slate-300 mt-1 text-center truncate w-full group-hover:text-rose-400 transition-colors">10c Cont Rect</span>
+                <span class="text-[10px] font-bold text-slate-300 mt-1 text-center truncate w-full group-hover:text-rose-400 transition-colors">10c Cont Round</span>
               </div>
             </div>
 
@@ -2220,7 +2238,7 @@
               <!-- 10b, 10c TABLE -->
               <div class="rounded-xl border border-slate-800 bg-slate-900/60 p-3 space-y-2">
                 <span class="text-[11px] font-bold text-rose-400 flex items-center gap-1.5">
-                  <i class="fa-solid fa-table"></i> 10b, 10c: Contracting Flow (Rectangular, Page 67)
+                  <i class="fa-solid fa-table"></i> 10b: Rectangular &amp; 10c: Round Contracting Flow (Page 67)
                 </span>
                 <div class="overflow-x-auto text-[10px]">
                   <table class="w-full text-center border-collapse">
@@ -2238,7 +2256,7 @@
                     </tbody>
                   </table>
                 </div>
-                <p class="text-[9px] text-slate-400">Contracting: 10b &amp; 10c Rectangular (Width &amp; Length in). Ratio = Area₁ / Area₂.</p>
+                <p class="text-[9px] text-slate-400">Contracting: 10b Rectangular &amp; 10c Round (Diameter in). Ratio = Area₁ / Area₂.</p>
               </div>
 
             </div>
@@ -2412,16 +2430,28 @@
       <div class="overflow-y-auto p-5 sm:p-6 pt-4 space-y-4 flex-1 custom-modal-scroll">
         <!-- PROMINENT FITTING DIAGRAM PREVIEW CARD AT TOP -->
       <div id="modalFittingPreviewCard" class="flex flex-col sm:flex-row items-center gap-4 p-3 rounded-2xl bg-slate-950 border border-slate-800 transition-all">
-        <div class="preview-box relative w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden bg-white/5 border border-slate-800 flex items-center justify-center p-1.5 flex-shrink-0 group cursor-pointer" onclick="openImageLightbox(document.getElementById('modalFittingPreviewImg').src, document.getElementById('modalFittingPreviewName').textContent)" title="Click to expand diagram in full view">
-          <img id="modalFittingPreviewImg" src="" alt="Fitting Diagram" class="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-200">
+        <div class="preview-box relative w-28 h-28 sm:w-32 sm:h-32 rounded-xl overflow-hidden bg-white/5 border border-slate-800 flex items-center justify-center p-1.5 flex-shrink-0 group cursor-pointer" onclick="openImageLightbox(document.getElementById('modalFittingPreviewImg').src, document.getElementById('modalFittingPreviewName').textContent, document.getElementById('modalFittingType')?.value)" title="Click to expand diagram in full view">
+          <div class="relative w-full h-full flex items-center justify-center">
+            <img id="modalFittingPreviewImg" src="" alt="Fitting Diagram" class="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-200 select-none">
+            <div id="modalFittingOverlayContainer" class="absolute inset-0 pointer-events-none flex items-center justify-center select-none"></div>
+          </div>
           <span class="absolute bottom-1 right-1 px-1.5 py-0.5 rounded bg-slate-900/90 text-[9px] font-bold text-slate-300 backdrop-blur-sm border border-slate-700 flex items-center gap-1 shadow-sm">
             <i class="fa-solid fa-expand text-[8px] text-rose-400"></i> Expand
           </span>
         </div>
-        <div class="min-w-0 flex-1 text-center sm:text-left">
-          <span id="modalFittingPreviewCat" class="badge-fitting-cat px-2 py-0.5 rounded text-[10px] font-mono inline-block mb-1">Category</span>
+        <div class="min-w-0 flex-1 text-center sm:text-left space-y-1">
+          <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+            <span id="modalFittingPreviewCat" class="badge-fitting-cat px-2 py-0.5 rounded text-[10px] font-mono inline-block">Category</span>
+            <button type="button" id="modalFlowOverlayToggleBtn" onclick="toggleAirflowOverlay()" class="px-2 py-0.5 rounded bg-slate-800/90 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 text-[10px] font-medium flex items-center gap-1.5 transition cursor-pointer" title="Toggle airflow arrows on diagram">
+              <i class="fa-solid fa-wind text-rose-400"></i> Flow Arrows: <span id="modalFlowToggleStatus" class="text-emerald-400 font-bold">ON</span>
+            </button>
+          </div>
           <p id="modalFittingPreviewName" class="text-sm font-bold text-white leading-snug">Fitting Name</p>
-          <p id="modalFittingEquivalentHint" class="text-xs text-rose-400 font-mono font-semibold mt-1">Unit EL: 0' | Qty: 1 | Total: 0' Equivalent Length</p>
+          <div id="modalFittingFlowPathBadge" class="hidden inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-rose-950/60 border border-rose-800/80 text-[11px] font-semibold text-rose-200">
+            <i class="fa-solid fa-arrows-split-up-and-left text-rose-400"></i>
+            <span id="modalFittingFlowPathText">Flow Path</span>
+          </div>
+          <p id="modalFittingEquivalentHint" class="text-xs text-rose-400 font-mono font-semibold">Unit EL: 0' | Qty: 1 | Total: 0' Equivalent Length</p>
         </div>
       </div>
 
@@ -2462,6 +2492,27 @@
             <span id="modalUpstreamVelText" class="text-emerald-400 font-bold">840 FPM</span>
             <span class="text-slate-600 mx-1">|</span>
             <span id="modalUpstreamDFLText" class="text-rose-400 font-semibold">0.082" / 100'</span>
+          </div>
+        </div>
+
+        <!-- SHAPE MISMATCH TRANSITION WARNING BANNER -->
+        <div id="modalShapeMismatchBanner" class="hidden p-3 rounded-2xl bg-amber-950/40 border border-amber-600/50 space-y-1.5 text-xs animate-fade-in">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2 text-amber-300 font-bold text-xs">
+              <i class="fa-solid fa-triangle-exclamation text-amber-400 text-sm shrink-0"></i>
+              <span id="modalShapeMismatchTitle">Shape Mismatch: Transition Fitting Recommended</span>
+            </div>
+            <span class="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-mono font-bold uppercase tracking-wider border border-amber-500/30">Advisory</span>
+          </div>
+          <p id="modalShapeMismatchText" class="text-[11px] text-amber-200/90 leading-relaxed pl-5">
+            The preceding ductwork is Rectangular, but the selected fitting is Round. You should insert a transition fitting between these sections.
+          </p>
+          <div class="flex flex-wrap items-center justify-between gap-2 pl-5 pt-1 text-[10px] text-amber-400/80">
+            <span class="italic">You can still proceed and add this fitting now; you may insert the transition and reorder the schedule later.</span>
+            <button type="button" id="modalBtnQuickAddTransition" onclick="quickSelectTransitionFitting()" class="px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 hover:text-white border border-amber-500/40 font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm">
+              <i class="fa-solid fa-right-left text-amber-400"></i>
+              <span id="modalBtnQuickAddTransitionText">Select 9d (Rect &rarr; Round) Instead</span>
+            </button>
           </div>
         </div>
 
@@ -2631,32 +2682,46 @@
           <div id="modalTeeBranchRow" class="hidden p-3 rounded-2xl bg-slate-900 border border-slate-800 space-y-2.5 text-xs">
             <div class="flex items-center justify-between">
               <label class="block font-bold text-slate-200 text-[11px]">Branch Airflow (Q<sub>b</sub>, CFM)</label>
-              <span class="text-[10px] text-slate-400 font-mono" id="modalTeeFlowReadout">Leaving Trunk: 800 CFM</span>
+              <span class="text-[10px] text-slate-400 font-mono" id="modalTeeFlowReadout">Leaving Branch: 400 CFM</span>
             </div>
             <input type="number" id="modalBranchCFM" placeholder="e.g. 400" min="0" step="10" oninput="onModalBranchCFMInput()" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-xs font-bold text-emerald-400 mono outline-none focus:border-rose-500">
 
-            <!-- Critical Path Continuation Selection -->
-            <div>
-              <label class="block text-[10px] font-semibold text-slate-400 mb-1">Critical Path Flow Continuation</label>
+            <!-- Critical Path Continuation Selection & Advisory Badge -->
+            <div class="space-y-1">
+              <div class="flex items-center justify-between">
+                <label class="block text-[10px] font-semibold text-slate-400">Critical Path Flow Continuation</label>
+                <span id="modalTeeBranchNoticeBadge" class="hidden text-[9px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-mono font-bold border border-amber-500/30">Branch Critical Path</span>
+              </div>
               <select id="modalTeePathContinuation" onchange="onModalBranchCFMInput()" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-1.5 text-xs font-bold text-white outline-none focus:border-rose-500">
+                <option value="branch">Branch Takeoff Path (Critical path turns into branch: Q = Qb)</option>
                 <option value="trunk">Main Trunk Path (Path continues straight down trunk: Q = Qt - Qb)</option>
-                <option value="branch">Branch Takeoff Path (Critical path turns into 90° branch: Q = Qb)</option>
               </select>
+              <p id="modalTeeBranchHelpText" class="text-[10px] text-slate-400 leading-tight">
+                For diverging branch takeoffs (5a, 5b, 5c, 6b, 7a, 7b, 7c), the critical path continues through the branch. Downstream schedule sections will inherit this branch volume and geometry.
+              </p>
             </div>
 
-            <!-- Optional Branch Dimensions to solve Branch Velocity Vb -->
+            <!-- Branch Dimensions to solve Branch Velocity Vb and downstream duct sizing -->
             <div class="pt-2 border-t border-slate-800/80 space-y-1.5">
               <div class="flex items-center justify-between">
-                <span class="text-[10px] font-bold text-slate-300">Branch Duct Sizing (Calculates V<sub>b</sub>)</span>
+                <span class="text-[10px] font-bold text-slate-300">Branch Duct Sizing (Calculates V<sub>b</sub> &amp; Inherited Dimensions)</span>
                 <span id="modalTeeVbReadout" class="text-[10px] font-mono text-emerald-400 font-bold">V<sub>b</sub>: — FPM</span>
               </div>
-              <div class="grid grid-cols-2 gap-2">
+              <!-- Rectangular Branch Dimensions (5a, 5b, 4a, 4b, etc.) -->
+              <div id="modalTeeBranchRectCol" class="grid grid-cols-2 gap-2">
                 <div>
+                  <label class="block text-[10px] font-semibold text-slate-400 mb-0.5">Branch Width W<sub>b</sub> (in)</label>
                   <input type="number" id="modalTeeBranchWidth" placeholder="Branch W (in)" min="2" max="120" step="0.5" oninput="onModalTeeBranchDimsInput()" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-1.5 text-xs font-bold text-white mono text-center outline-none focus:border-rose-500">
                 </div>
                 <div>
-                  <input type="number" id="modalTeeBranchHeight" placeholder="Branch H or Dia (in)" min="2" max="120" step="0.5" oninput="onModalTeeBranchDimsInput()" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-1.5 text-xs font-bold text-white mono text-center outline-none focus:border-rose-500">
+                  <label class="block text-[10px] font-semibold text-slate-400 mb-0.5">Branch Height H<sub>b</sub> (in)</label>
+                  <input type="number" id="modalTeeBranchHeight" placeholder="Branch H (in)" min="2" max="120" step="0.5" oninput="onModalTeeBranchDimsInput()" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-1.5 text-xs font-bold text-white mono text-center outline-none focus:border-rose-500">
                 </div>
+              </div>
+              <!-- Round Branch Diameter (5c, 6b, 7a, 7b, 7c, 6d, 7d-7f, etc.) -->
+              <div id="modalTeeBranchRoundCol" class="hidden">
+                <label class="block text-[10px] font-semibold text-slate-400 mb-0.5">Branch Diameter &Oslash; D<sub>b</sub> (in)</label>
+                <input type="number" id="modalTeeBranchDia" placeholder="Branch Dia (in)" min="2" max="120" step="0.5" oninput="onModalTeeBranchDimsInput()" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-1.5 text-xs font-bold text-sky-300 mono text-center outline-none focus:border-rose-500">
               </div>
             </div>
           </div>
@@ -2959,24 +3024,47 @@
 
   <!-- IMAGE LIGHTBOX / 3D DIAGRAM MODAL -->
   <div id="imageLightboxModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-[60] hidden flex items-center justify-center p-4" onclick="if(event.target === this) closeImageLightbox()">
-    <div class="glass-card bg-slate-900/95 border border-slate-700/80 rounded-3xl max-w-2xl w-full p-6 shadow-2xl space-y-4 animate-fade-in relative flex flex-col items-center">
-      <div class="w-full flex items-center justify-between border-b border-slate-800 pb-3">
-        <h3 class="text-sm font-bold text-white flex items-center gap-2">
-          <i class="fa-solid fa-image text-rose-400"></i>
-          <span id="lightboxModalTitle">Loren Cook Fitting Diagram</span>
-        </h3>
-        <button onclick="closeImageLightbox()" class="text-slate-400 hover:text-white text-lg p-1 transition" title="Close (ESC)">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
+    <div class="glass-card bg-slate-900/95 border border-slate-700/80 rounded-3xl max-w-2xl w-full p-5 sm:p-6 shadow-2xl space-y-4 animate-fade-in relative flex flex-col items-center">
+      <div class="w-full flex items-center justify-between border-b border-slate-800 pb-3 gap-3">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <div class="w-8 h-8 rounded-lg bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400 flex-shrink-0">
+            <i class="fa-solid fa-wind text-sm"></i>
+          </div>
+          <div class="min-w-0">
+            <h3 id="lightboxModalTitle" class="text-sm font-bold text-white truncate">Loren Cook Fitting Diagram</h3>
+            <p id="lightboxFlowPathBadge" class="text-xs text-rose-300 font-medium truncate"></p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 flex-shrink-0">
+          <button type="button" id="lightboxFlowOverlayToggleBtn" onclick="toggleAirflowOverlay()" class="px-2.5 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer" title="Toggle airflow overlay">
+            <i class="fa-solid fa-toggle-on text-emerald-400"></i> Overlay: <span id="lightboxFlowToggleStatus" class="text-emerald-400 font-bold">ON</span>
+          </button>
+          <button onclick="closeImageLightbox()" class="text-slate-400 hover:text-white text-lg p-1 transition" title="Close (ESC)">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
       </div>
-      <div class="w-full rounded-2xl bg-white p-4 flex items-center justify-center border border-slate-700/60 shadow-inner overflow-hidden min-h-[260px] max-h-[65vh]">
-        <img id="lightboxModalImg" src="" onerror="handleFittingImgError(this)" alt="Fitting Diagram" class="max-h-[58vh] max-w-full object-contain select-none">
+      <div class="relative w-full rounded-2xl bg-white p-4 flex items-center justify-center border border-slate-700/60 shadow-inner overflow-hidden min-h-[280px] max-h-[65vh]">
+        <div class="relative flex items-center justify-center max-h-[58vh] max-w-full">
+          <img id="lightboxModalImg" src="" onerror="handleFittingImgError(this)" alt="Fitting Diagram" class="max-h-[58vh] max-w-full object-contain select-none">
+          <div id="lightboxOverlayContainer" class="absolute inset-0 pointer-events-none flex items-center justify-center select-none"></div>
+        </div>
       </div>
-      <div class="w-full flex items-center justify-between text-[11px] text-slate-400 pt-1">
-        <span>Source: Loren Cook Cookbook Pocket Guide (Pages 54–67)</span>
-        <button onclick="closeImageLightbox()" class="px-4 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold transition">
-          Close
-        </button>
+      <div class="w-full flex flex-col sm:flex-row items-center justify-between gap-2.5 text-[11px] text-slate-400 pt-1 border-t border-slate-800">
+        <div class="flex flex-wrap items-center gap-3">
+          <span class="flex items-center gap-1.5 text-rose-400 font-semibold">
+            <span class="inline-block w-3 h-2 bg-red-600 rounded-sm"></span> Red: Critical Path (TEL)
+          </span>
+          <span class="flex items-center gap-1.5 text-slate-400 font-semibold">
+            <span class="inline-block w-3 h-2 bg-slate-400 rounded-sm"></span> Grey: Secondary / Tributary
+          </span>
+        </div>
+        <div class="flex items-center gap-3">
+          <span class="text-slate-500">Loren Cook Pocket Guide (pp. 54–67)</span>
+          <button onclick="closeImageLightbox()" class="px-4 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold transition cursor-pointer">
+            Close
+          </button>
+        </div>
       </div>
     </div>
   </div>
