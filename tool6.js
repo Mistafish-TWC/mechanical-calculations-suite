@@ -1849,6 +1849,118 @@ function interpolatePiecewise1D(pts, x) {
   return pts[pts.length - 1][1];
 }
 
+function interpolateTee2D(tiers, tierVal, subVal) {
+  if (!tiers || tiers.length === 0) return 0;
+  if (tiers.length === 1 || tierVal <= tiers[0].v) {
+    return interpolatePiecewise1D(tiers[0].pts, subVal);
+  }
+  if (tierVal >= tiers[tiers.length - 1].v) {
+    return interpolatePiecewise1D(tiers[tiers.length - 1].pts, subVal);
+  }
+  for (let i = 0; i < tiers.length - 1; i++) {
+    const t0 = tiers[i];
+    const t1 = tiers[i + 1];
+    if (tierVal >= t0.v && tierVal <= t1.v) {
+      const el0 = interpolatePiecewise1D(t0.pts, subVal);
+      const el1 = interpolatePiecewise1D(t1.pts, subVal);
+      if (Math.abs(t1.v - t0.v) < 1e-6) return el0;
+      const frac = (tierVal - t0.v) / (t1.v - t0.v);
+      return el0 + frac * (el1 - el0);
+    }
+  }
+  return interpolatePiecewise1D(tiers[tiers.length - 1].pts, subVal);
+}
+
+// -------------------------------------------------------------------
+// TRANSITION CONTINUOUS AERODYNAMIC EQUIVALENT LENGTH ENGINE
+// -------------------------------------------------------------------
+function calcContinuousTransitionEL(fittingKey, a1, a2, angleStr = '30') {
+  const map = getAllFittingsMap();
+  const def = (fittingKey && map[fittingKey]) ? map[fittingKey] : null;
+  if (!def || !def.options) {
+    return { el: 6, exactEL: 6, ratio: 1.0, ratioLabel: 'A1/A2: 1.00 (30°)', paramKey: null, feedback: 'Standard Transition' };
+  }
+
+  const optKeys = Object.keys(def.options);
+  if (optKeys.length === 0) {
+    return { el: 6, exactEL: 6, ratio: 1.0, ratioLabel: 'A1/A2: 1.00 (30°)', paramKey: null, feedback: 'Standard Transition' };
+  }
+
+  const area1 = Math.max(1, parseFloat(a1) || 144);
+  const area2 = Math.max(1, parseFloat(a2) || 144);
+  const ratio = Math.max(area1, area2) / Math.min(area1, area2);
+
+  const cleanAngle = angleStr ? angleStr.toString().trim() : '30';
+  let angleAlias = cleanAngle;
+  if ((fittingKey.startsWith('10b') || fittingKey.startsWith('10c')) && (cleanAngle === '30' || cleanAngle === '30°')) {
+    angleAlias = '15-40°';
+  }
+
+  let candidateKeys = optKeys.filter(k => k.includes(angleAlias));
+  if (candidateKeys.length === 0) {
+    const numAngle = cleanAngle.match(/\d+/);
+    if (numAngle) {
+      candidateKeys = optKeys.filter(k => k.includes(numAngle[0]));
+    }
+  }
+  if (candidateKeys.length === 0) {
+    candidateKeys = optKeys;
+  }
+
+  let bestKey = candidateKeys[0];
+  let minDiff = Infinity;
+  const ratioPoints = [];
+
+  for (const k of candidateKeys) {
+    const match = k.match(/A1\/A2\s*=\s*([0-9.]+)/i);
+    if (!match) continue;
+    const optVal = parseFloat(match[1]);
+    const elVal = def.options[k];
+    ratioPoints.push([optVal, elVal]);
+    const diff = Math.abs(ratio - optVal);
+    if (diff < minDiff) {
+      minDiff = diff;
+      bestKey = k;
+    }
+  }
+
+  ratioPoints.sort((a, b) => a[0] - b[0]);
+
+  // Determine baseline EL at Ratio = 1.0 (equal area)
+  // For shape-change transitions (9c round-to-rect, 9d rect-to-round), there is a transformation form loss:
+  // Theta <= 30 deg -> 6' EL; 45 deg -> 8' EL; 60 deg -> 10' EL; 90 deg -> 14' EL; >= 120 deg -> 18' EL
+  // For same-shape transitions (9a conical round, 9b rect-to-rect, 10a rect straight sides, 10b rect contracting, 10c round contracting):
+  // At Ratio 1.0, there is zero expansion/contraction or shape change -> EL = 0
+  const isShapeChange = (fittingKey.startsWith('9c') || fittingKey.startsWith('9d'));
+  let baseEL1 = 0;
+  if (isShapeChange) {
+    const numAngle = parseInt(cleanAngle.replace(/\D/g, ''), 10) || 30;
+    if (numAngle <= 30) baseEL1 = 6;
+    else if (numAngle <= 45) baseEL1 = 8;
+    else if (numAngle <= 60) baseEL1 = 10;
+    else if (numAngle <= 90) baseEL1 = 14;
+    else baseEL1 = 18;
+  }
+
+  const pts = ratioPoints.length > 0 ? [[1.0, baseEL1], ...ratioPoints] : [[1.0, 6], [2.0, 28]];
+
+  const exactEL = interpolatePiecewise1D(pts, ratio);
+  const roundedEL = Math.round(exactEL * 10) / 10;
+
+  const displayAngle = cleanAngle.endsWith('°') ? cleanAngle : `${cleanAngle}°`;
+  const ratioLabel = `A1/A2: ${ratio.toFixed(2)} (${displayAngle})`;
+  const feedback = `Transition &bull; Area Ratio: <strong>${ratio.toFixed(2)}:1</strong> (&theta;=${displayAngle})`;
+
+  return {
+    paramKey: bestKey,
+    el: roundedEL,
+    exactEL: exactEL,
+    ratio: ratio,
+    ratioLabel: ratioLabel,
+    feedback: feedback
+  };
+}
+
 function calcContinuousFittingEL(typeKey, inputs, angle = '90') {
   const map = getAllFittingsMap();
   const def = map[typeKey];
@@ -1938,16 +2050,40 @@ function calcContinuousFittingEL(typeKey, inputs, angle = '90') {
     if (typeKey === '5d_rect_trunk' || typeKey === '5e_rect_45_trunk' || typeKey === '5f_round_trunk') {
       ratioVal = qRatio;
       ratioLabel = `Qb/Qt: ${qRatio.toFixed(3)}`;
-      const pts = [[0.1, 32], [0.2, 25], [0.3, 19], [0.4, 15], [0.5, 10], [0.6, 7], [0.8, 2], [1.0, 0]];
+      const pts = [[0.0, 35], [0.1, 32], [0.2, 25], [0.3, 19], [0.4, 15], [0.5, 10], [0.6, 7], [0.8, 2], [1.0, 0]];
       exactEL = interpolatePiecewise1D(pts, qRatio);
       feedback = `Trunk Path &bull; Flow Ratio Q<sub>b</sub>/Q<sub>t</sub>: <strong>${qRatio.toFixed(3)}</strong>`;
     } else {
       ratioVal = qRatio;
       ratioLabel = `Vb/Vt: ${vRatio.toFixed(2)}, Qb/Qt: ${qRatio.toFixed(3)}`;
-      let pts = [[0.1, 157], [0.2, 159], [0.3, 148], [0.4, 155], [0.5, 144]];
-      if (typeKey === '5b_rect_45_entry') pts = [[0.1, 89], [0.2, 111], [0.3, 97], [0.4, 90], [0.5, 84]];
-      else if (typeKey === '5c_round_branch') pts = [[0.1, 148], [0.2, 157], [0.3, 136], [0.4, 140], [0.5, 143]];
-      exactEL = interpolatePiecewise1D(pts, qRatio);
+      let tiers = [];
+      if (typeKey === '5b_rect_45_entry') {
+        tiers = [
+          { v: 0.2, pts: [[0.1, 103], [0.5, 103]] },
+          { v: 0.4, pts: [[0.1, 92], [0.2, 90], [0.5, 90]] },
+          { v: 0.6, pts: [[0.1, 87], [0.2, 82], [0.3, 80], [0.5, 80]] },
+          { v: 0.8, pts: [[0.1, 89], [0.2, 83], [0.3, 78], [0.4, 75], [0.5, 75]] },
+          { v: 1.0, pts: [[0.1, 89], [0.2, 111], [0.3, 97], [0.4, 90], [0.5, 84]] }
+        ];
+      } else if (typeKey === '5c_round_branch') {
+        tiers = [
+          { v: 0.2, pts: [[0.1, 114], [0.5, 114]] },
+          { v: 0.4, pts: [[0.1, 115], [0.2, 122], [0.5, 122]] },
+          { v: 0.6, pts: [[0.1, 130], [0.2, 125], [0.3, 123], [0.5, 123]] },
+          { v: 0.8, pts: [[0.1, 134], [0.2, 149], [0.3, 127], [0.4, 128], [0.5, 128]] },
+          { v: 1.0, pts: [[0.1, 148], [0.2, 157], [0.3, 136], [0.4, 140], [0.5, 143]] }
+        ];
+      } else {
+        // 5a Rect Branch
+        tiers = [
+          { v: 0.2, pts: [[0.1, 117], [0.5, 117]] },
+          { v: 0.4, pts: [[0.1, 118], [0.2, 115], [0.5, 115]] },
+          { v: 0.6, pts: [[0.1, 126], [0.2, 117], [0.3, 119], [0.5, 119]] },
+          { v: 0.8, pts: [[0.1, 132], [0.2, 137], [0.3, 133], [0.4, 127], [0.5, 127]] },
+          { v: 1.0, pts: [[0.1, 157], [0.2, 159], [0.3, 148], [0.4, 155], [0.5, 144]] }
+        ];
+      }
+      exactEL = interpolateTee2D(tiers, vRatio, qRatio);
       feedback = `Branch Path &bull; V<sub>b</sub>/V<sub>t</sub>: <strong>${vRatio.toFixed(2)}</strong> | Q<sub>b</sub>/Q<sub>t</sub>: <strong>${qRatio.toFixed(3)}</strong>`;
     }
   }
@@ -1960,63 +2096,146 @@ function calcContinuousFittingEL(typeKey, inputs, angle = '90') {
 
     if (typeKey === '4d_rect_trunk' || typeKey === '4e_rect_45_trunk' || typeKey === '4f_round_trunk') {
       ratioLabel = `Qb/Qt: ${qRatio.toFixed(3)}`;
-      const pts = [[0.1, 18], [0.2, 31], [0.3, 43], [0.4, 52], [0.5, 60], [0.6, 65], [0.7, 67], [0.8, 68], [0.9, 67]];
+      const pts = [[0.0, 0], [0.1, 18], [0.2, 31], [0.3, 43], [0.4, 52], [0.5, 60], [0.6, 65], [0.7, 67], [0.8, 68], [0.9, 67]];
       exactEL = interpolatePiecewise1D(pts, qRatio);
       feedback = `Trunk Path &bull; Flow Ratio Q<sub>b</sub>/Q<sub>t</sub>: <strong>${qRatio.toFixed(3)}</strong>`;
     } else {
-      ratioLabel = `Qb/Qt: ${qRatio.toFixed(3)}`;
-      let pts = [[0.1, 1], [0.2, 8], [0.3, 26], [0.4, 76], [0.5, 133], [0.6, 189], [0.7, 303], [0.8, 382], [0.9, 447]];
-      if (typeKey === '4b_rect_45_entry') pts = [[0.1, 2], [0.2, 10], [0.3, 20], [0.4, 39], [0.5, 86], [0.6, 130], [0.7, 208], [0.8, 228], [0.9, 330]];
-      else if (typeKey === '4c_round_branch') pts = [[0.1, 2], [0.2, 12], [0.3, 26], [0.4, 68], [0.5, 144], [0.6, 234], [0.7, 312], [0.8, 420], [0.9, 560]];
+      const isHighV = (vt >= 1200);
+      ratioLabel = `${isHighV ? 'Vt>=1200' : 'Vt<1200'}, Qb/Qt: ${qRatio.toFixed(3)}`;
+      let pts = [];
+      if (typeKey === '4b_rect_45_entry') {
+        pts = isHighV
+          ? [[0.0, 0], [0.1, 2], [0.2, 10], [0.3, 20], [0.4, 39], [0.5, 86], [0.6, 130], [0.7, 208], [0.8, 228], [0.9, 330]]
+          : [[0.0, 0], [0.1, 0], [0.2, 8], [0.3, 16], [0.4, 32], [0.5, 62], [0.6, 117], [0.7, 170], [0.8, 219], [0.9, 284]];
+      } else if (typeKey === '4c_round_branch') {
+        pts = isHighV
+          ? [[0.0, 0], [0.1, 2], [0.2, 12], [0.3, 26], [0.4, 68], [0.5, 144], [0.6, 234], [0.7, 312], [0.8, 420], [0.9, 560]]
+          : [[0.0, 0], [0.1, 0], [0.2, 7], [0.3, 18], [0.4, 48], [0.5, 95], [0.6, 150], [0.7, 219], [0.8, 320], [0.9, 447]];
+      } else {
+        // 4a Rect Branch
+        pts = isHighV
+          ? [[0.0, 0], [0.1, 1], [0.2, 8], [0.3, 26], [0.4, 76], [0.5, 133], [0.6, 189], [0.7, 303], [0.8, 382], [0.9, 447]]
+          : [[0.0, 0], [0.1, 0], [0.2, 3], [0.3, 10], [0.4, 37], [0.5, 117], [0.6, 125], [0.7, 244], [0.8, 333], [0.9, 475]];
+      }
       exactEL = interpolatePiecewise1D(pts, qRatio);
-      feedback = `Branch Path &bull; Q<sub>b</sub>/Q<sub>t</sub>: <strong>${qRatio.toFixed(3)}</strong>`;
+      feedback = `Branch Path &bull; Q<sub>b</sub>/Q<sub>t</sub>: <strong>${qRatio.toFixed(3)}</strong> (V<sub>t</sub>: ${Math.round(vt)} FPM)`;
     }
   }
-  // 6. Group 6 & 7: Round Tees (6a-6d, 7a-7f)
-  else if (typeKey.startsWith('6') || typeKey.startsWith('7')) {
+  // 6. Group 6: Round Tees 90° (6a, 6b, 6c, 6d)
+  else if (typeKey.startsWith('6')) {
     const totQ = Math.max(1, parseFloat(qt) || 1200);
     const brQ = Math.max(0, parseFloat(qb) || 400);
     const qRatio = Math.min(1.0, brQ / totQ);
-    ratioVal = qRatio;
-    ratioLabel = `Qb/Qt: ${qRatio.toFixed(3)}`;
-    if (typeKey === '6c_converging_trunk' || typeKey === '6d_diverging_trunk') {
-      const pts = [[0.1, 35], [0.2, 30], [0.3, 25], [0.4, 20], [0.5, 15], [0.7, 8], [1.0, 0]];
+    const vRatio = (vt > 0 && vb > 0) ? Math.min(2.0, vb / vt) : 1.0;
+    const aRatio = (a1 > 0 && a2 > 0) ? Math.min(1.0, a2 / a1) : 0.6;
+
+    if (typeKey === '6c_converging_trunk') {
+      ratioVal = qRatio;
+      ratioLabel = `Qb/Qt: ${qRatio.toFixed(3)}`;
+      const pts = [[0.0, 0], [0.1, 18], [0.2, 31], [0.3, 43], [0.4, 52], [0.5, 60], [0.6, 65], [0.8, 68], [0.9, 67]];
       exactEL = interpolatePiecewise1D(pts, qRatio);
+      feedback = `Round Tee Trunk &bull; Q<sub>b</sub>/Q<sub>t</sub>: <strong>${qRatio.toFixed(3)}</strong>`;
+    } else if (typeKey === '6d_diverging_trunk') {
+      ratioVal = vRatio;
+      ratioLabel = `Vb/Vt: ${vRatio.toFixed(2)}`;
+      const pts = [[0.0, 35], [0.1, 32], [0.2, 25], [0.3, 19], [0.4, 15], [0.5, 10], [0.6, 7], [0.8, 2], [1.0, 0]];
+      exactEL = interpolatePiecewise1D(pts, vRatio);
+      feedback = `Round Tee Trunk &bull; V<sub>b</sub>/V<sub>t</sub>: <strong>${vRatio.toFixed(2)}</strong>`;
+    } else if (typeKey === '6a_converging_branch') {
+      ratioVal = qRatio;
+      ratioLabel = `Qb/Qt: ${qRatio.toFixed(2)}, Ab/At: ${aRatio.toFixed(2)}`;
+      const tiers6a = [
+        { v: 0.2, pts: [[0.1, 432], [0.2, 82], [0.3, 19], [0.4, 17], [0.6, 15], [0.8, 13], [1.0, 12]] },
+        { v: 0.4, pts: [[0.2, 489], [0.3, 239], [0.4, 107], [0.6, 61], [0.8, 45], [1.0, 36]] },
+        { v: 0.6, pts: [[0.3, 534], [0.4, 182], [0.6, 105], [0.8, 78], [1.0, 65]] },
+        { v: 0.8, pts: [[0.4, 307], [0.6, 170], [0.8, 125], [1.0, 98]] },
+        { v: 1.0, pts: [[0.4, 454], [0.6, 239], [0.8, 159], [1.0, 125]] }
+      ];
+      exactEL = interpolateTee2D(tiers6a, qRatio, aRatio);
+      feedback = `Round Branch &bull; Q<sub>b</sub>/Q<sub>t</sub>: <strong>${qRatio.toFixed(2)}</strong> | A<sub>b</sub>/A<sub>t</sub>: <strong>${aRatio.toFixed(2)}</strong>`;
     } else {
-      const pts = [[0.1, 40], [0.2, 55], [0.3, 70], [0.5, 95], [0.7, 120], [1.0, 150]];
-      exactEL = interpolatePiecewise1D(pts, qRatio);
+      // 6b Diverging Branch
+      ratioVal = aRatio;
+      ratioLabel = `Ab/At: ${aRatio.toFixed(2)}, Qb/Qt: ${qRatio.toFixed(2)}`;
+      const tiers6b = [
+        { v: 0.2, pts: [[0.1, 64], [0.2, 64], [0.3, 114], [0.4, 205], [0.9, 205]] },
+        { v: 0.4, pts: [[0.1, 75], [0.2, 53], [0.3, 45], [0.4, 49], [0.5, 61], [0.6, 78], [0.7, 108], [0.8, 148], [0.9, 193]] },
+        { v: 0.6, pts: [[0.1, 84], [0.2, 64], [0.3, 50], [0.4, 42], [0.5, 40], [0.6, 41], [0.7, 49], [0.8, 61], [0.9, 77]] },
+        { v: 0.8, pts: [[0.1, 89], [0.2, 70], [0.3, 56], [0.4, 45], [0.5, 39], [0.6, 35], [0.7, 36], [0.8, 40], [0.9, 45]] }
+      ];
+      exactEL = interpolateTee2D(tiers6b, aRatio, qRatio);
+      feedback = `Round Branch &bull; A<sub>b</sub>/A<sub>t</sub>: <strong>${aRatio.toFixed(2)}</strong> | Q<sub>b</sub>/Q<sub>t</sub>: <strong>${qRatio.toFixed(2)}</strong>`;
     }
-    feedback = `Round Tee &bull; Q<sub>b</sub>/Q<sub>t</sub>: <strong>${qRatio.toFixed(3)}</strong>`;
   }
-  // 7. Group 8: Wyes (Pair of Pants)
+  // 7. Group 7: Diverging Round Tees (7a-7f)
+  else if (typeKey.startsWith('7')) {
+    const vRatio = (vt > 0 && vb > 0) ? Math.min(2.0, vb / vt) : 1.0;
+    ratioVal = vRatio;
+    ratioLabel = `Vb/Vt: ${vRatio.toFixed(2)}`;
+
+    if (typeKey === '7a_45_elbow') {
+      const pts = [[0.0, 114], [0.2, 108], [0.4, 102], [0.6, 98], [0.8, 92], [1.0, 90]];
+      exactEL = interpolatePiecewise1D(pts, vRatio);
+      feedback = `Round 45° Branch &bull; V<sub>b</sub>/V<sub>t</sub>: <strong>${vRatio.toFixed(2)}</strong>`;
+    } else if (typeKey === '7b_conical') {
+      const pts = [[0.0, 110], [0.2, 97], [0.4, 84], [0.6, 70], [0.8, 59], [1.0, 48]];
+      exactEL = interpolatePiecewise1D(pts, vRatio);
+      feedback = `Conical Branch &bull; V<sub>b</sub>/V<sub>t</sub>: <strong>${vRatio.toFixed(2)}</strong>`;
+    } else if (typeKey === '7c_90_elbow') {
+      const pts = [[0.0, 111], [0.2, 117], [0.4, 123], [0.6, 134], [0.8, 151], [1.0, 177]];
+      exactEL = interpolatePiecewise1D(pts, vRatio);
+      feedback = `Round 90° Branch &bull; V<sub>b</sub>/V<sub>t</sub>: <strong>${vRatio.toFixed(2)}</strong>`;
+    } else {
+      // 7d, 7e, 7f Diverging Round Trunk Paths
+      const pts = [[0.0, 35], [0.1, 32], [0.2, 25], [0.3, 19], [0.4, 15], [0.5, 10], [0.6, 7], [0.8, 2], [1.0, 0]];
+      exactEL = interpolatePiecewise1D(pts, vRatio);
+      feedback = `Round Trunk Path &bull; V<sub>b</sub>/V<sub>t</sub>: <strong>${vRatio.toFixed(2)}</strong>`;
+    }
+  }
+  // 8. Group 8: Wyes (Pair of Pants)
   else if (typeKey.startsWith('8')) {
     const totQ = Math.max(1, parseFloat(qt) || 1200);
     const brQ = Math.max(0, parseFloat(qb) || 400);
     const qRatio = Math.min(1.0, brQ / totQ);
-    ratioVal = qRatio;
-    ratioLabel = `Qb/Qt: ${qRatio.toFixed(3)}`;
-    const pts = [[0.1, 15], [0.2, 22], [0.3, 30], [0.5, 45], [0.7, 60], [1.0, 80]];
-    exactEL = interpolatePiecewise1D(pts, qRatio);
-    feedback = `Wye Fitting &bull; Q<sub>b</sub>/Q<sub>t</sub>: <strong>${qRatio.toFixed(3)}</strong>`;
+    const vRatio = (vt > 0 && vb > 0) ? Math.min(2.0, vb / vt) : 1.0;
+    const cleanAngle = (angle || '30').toString().replace(/\D/g, '');
+
+    if (typeKey === '8a_diverging') {
+      ratioVal = vRatio;
+      ratioLabel = `Vb/Vt: ${vRatio.toFixed(2)} (${cleanAngle}°)`;
+      const wye8aAngles = {
+        '15': [[0.1, 92], [0.2, 70], [0.3, 58], [0.4, 43], [0.5, 32], [0.6, 23], [0.8, 12], [1.0, 8]],
+        '30': [[0.1, 95], [0.2, 78], [0.3, 64], [0.4, 50], [0.5, 39], [0.6, 32], [0.8, 22], [1.0, 15]],
+        '45': [[0.1, 99], [0.2, 84], [0.3, 72], [0.4, 61], [0.5, 51], [0.6, 43], [0.8, 33], [1.0, 25]],
+        '60': [[0.1, 102], [0.2, 93], [0.3, 90], [0.4, 75], [0.5, 67], [0.6, 60], [0.8, 49], [1.0, 40]]
+      };
+      const pts = wye8aAngles[cleanAngle] || wye8aAngles['30'];
+      exactEL = interpolatePiecewise1D(pts, vRatio);
+      feedback = `Wye Diverging &bull; V<sub>b</sub>/V<sub>t</sub>: <strong>${vRatio.toFixed(2)}</strong> (${cleanAngle}&deg;)`;
+    } else {
+      ratioVal = qRatio;
+      ratioLabel = `Qb/Qt: ${qRatio.toFixed(3)} (${cleanAngle}°)`;
+      const wye8bAngles = {
+        '15': [[0.0, 0], [0.1, 0], [0.2, 1], [0.3, 2], [0.4, 4], [0.5, 11], [0.6, 47], [0.8, 97], [1.0, 150]],
+        '30': [[0.0, 0], [0.1, 2], [0.2, 4], [0.3, 8], [0.4, 16], [0.5, 32], [0.6, 78], [0.8, 125], [1.0, 180]],
+        '45': [[0.0, 0], [0.1, 4], [0.2, 8], [0.3, 10], [0.4, 23], [0.5, 64], [0.6, 105], [0.8, 182], [1.0, 240]]
+      };
+      const pts = wye8bAngles[cleanAngle] || wye8bAngles['30'];
+      exactEL = interpolatePiecewise1D(pts, qRatio);
+      feedback = `Wye Converging &bull; Q<sub>b</sub>/Q<sub>t</sub>: <strong>${qRatio.toFixed(3)}</strong> (${cleanAngle}&deg;)`;
+    }
   }
-  // 8. Group 9 & 10: Transitions
+  // 9. Group 9 & 10: Transitions
   else if (isTransitionFitting(typeKey)) {
     const areaUp = Math.max(1, parseFloat(a1) || 144);
     const areaDn = Math.max(1, parseFloat(a2) || 144);
-    const ar = Math.max(areaUp, areaDn) / Math.min(areaUp, areaDn);
-    ratioVal = ar;
-    const lookup = lookupTransitionParamAndEL(typeKey, areaUp, areaDn, transAngle || '30');
-    if (lookup && lookup.el !== undefined) {
-      exactEL = lookup.el;
-      ratioLabel = lookup.paramKey || `A1/A2: ${ar.toFixed(2)}`;
-    } else {
-      ratioLabel = `A1/A2: ${ar.toFixed(2)}`;
-      const pts = [[1.0, 0], [1.5, 4], [2.0, 7], [3.0, 12], [4.0, 18]];
-      exactEL = interpolatePiecewise1D(pts, ar);
-    }
-    feedback = `Transition &bull; Area Ratio: <strong>${ar.toFixed(2)}:1</strong> (&theta;=${transAngle}&deg;)`;
+    const trans = calcContinuousTransitionEL(typeKey, areaUp, areaDn, transAngle || angle || '30');
+    exactEL = trans.exactEL;
+    ratioVal = trans.ratio;
+    ratioLabel = trans.ratioLabel;
+    feedback = trans.feedback;
   }
-  // 9. Custom Fitting
+  // 10. Custom Fitting
   else if (typeKey === 'custom_fitting') {
     exactEL = Math.max(0, parseFloat(inputs?.customEL) || 20);
     ratioVal = 1.0;
@@ -2230,54 +2449,7 @@ function isDefaultTransitionName(name) {
 // TRANSITION CATALOG EQUIVALENT LENGTH & PARAMETER LOOKUP HELPER
 // -------------------------------------------------------------------
 function lookupTransitionParamAndEL(fittingKey, a1, a2, angleStr = '30') {
-  const map = getAllFittingsMap();
-  const def = (fittingKey && map[fittingKey]) ? map[fittingKey] : null;
-  if (!def || !def.options) {
-    return { paramKey: null, el: 6 };
-  }
-
-  const optKeys = Object.keys(def.options);
-  if (optKeys.length === 0) return { paramKey: null, el: 6 };
-
-  const area1 = Math.max(1, parseFloat(a1) || 144);
-  const area2 = Math.max(1, parseFloat(a2) || 144);
-  const ratio = Math.max(area1, area2) / Math.min(area1, area2);
-
-  const cleanAngle = angleStr ? angleStr.toString().trim() : '30';
-  let angleAlias = cleanAngle;
-  if ((fittingKey.startsWith('10b') || fittingKey.startsWith('10c')) && (cleanAngle === '30' || cleanAngle === '30°')) {
-    angleAlias = '15-40°';
-  }
-
-  let candidateKeys = optKeys.filter(k => k.includes(angleAlias));
-  if (candidateKeys.length === 0) {
-    const numAngle = cleanAngle.match(/\d+/);
-    if (numAngle) {
-      candidateKeys = optKeys.filter(k => k.includes(numAngle[0]));
-    }
-  }
-  if (candidateKeys.length === 0) {
-    candidateKeys = optKeys;
-  }
-
-  let bestKey = candidateKeys[0];
-  let minDiff = Infinity;
-
-  for (const k of candidateKeys) {
-    const match = k.match(/A1\/A2\s*=\s*([0-9.]+)/i);
-    if (!match) continue;
-    const optVal = parseFloat(match[1]);
-    const diff = Math.abs(ratio - optVal);
-    if (diff < minDiff) {
-      minDiff = diff;
-      bestKey = k;
-    }
-  }
-
-  return {
-    paramKey: bestKey,
-    el: def.options[bestKey] !== undefined ? def.options[bestKey] : 6
-  };
+  return calcContinuousTransitionEL(fittingKey, a1, a2, angleStr);
 }
 
 // -------------------------------------------------------------------
@@ -2544,7 +2716,8 @@ function propagateChainedSchedule() {
       if (def && def.options) {
         const lookup = lookupTransitionParamAndEL(row.fittingKey, row.area * 144, row.leavingArea * 144, row.transAngle || '30');
         row.baseEL = lookup.el;
-        if (lookup.paramKey) row.paramKey = lookup.paramKey;
+        if (lookup.ratioLabel) row.paramKey = lookup.ratioLabel;
+        else if (lookup.paramKey) row.paramKey = lookup.paramKey;
       } else {
         row.baseEL = Math.max(0, parseFloat(row.baseEL) || 6);
       }
