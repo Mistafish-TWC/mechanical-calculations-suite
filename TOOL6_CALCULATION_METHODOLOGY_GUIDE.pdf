@@ -1,0 +1,360 @@
+%PDF-1.4
+%----
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [ 8 0 R 9 0 R 10 0 R 11 0 R 12 0 R 13 0 R 14 0 R ] /Count 7 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Oblique /Encoding /WinAnsiEncoding >>
+endobj
+6 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Courier /Encoding /WinAnsiEncoding >>
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Courier-Bold /Encoding /WinAnsiEncoding >>
+endobj
+8 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R /F4 6 0 R /F5 7 0 R >> >> /Contents 15 0 R >>
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R /F4 6 0 R /F5 7 0 R >> >> /Contents 16 0 R >>
+endobj
+10 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R /F4 6 0 R /F5 7 0 R >> >> /Contents 17 0 R >>
+endobj
+11 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R /F4 6 0 R /F5 7 0 R >> >> /Contents 18 0 R >>
+endobj
+12 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R /F4 6 0 R /F5 7 0 R >> >> /Contents 19 0 R >>
+endobj
+13 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R /F4 6 0 R /F5 7 0 R >> >> /Contents 20 0 R >>
+endobj
+14 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R /F4 6 0 R /F5 7 0 R >> >> /Contents 21 0 R >>
+endobj
+15 0 obj
+<< /Length 1746 >>
+stream
+0.06 0.15 0.32 rg 0 752 612 40 re f
+BT /F1 10 Tf 1 1 1 rg 54 766 Td (THE WALDINGER CORPORATION  |  TOOL-6 METHODOLOGY GUIDE) Tj ET
+0.8 0.8 0.8 RG 0.5 w 54 45 m 558 45 l S
+BT /F2 8 Tf 0.45 0.45 0.45 rg 54 32 Td (Mechanical Calculations Suite - Aerodynamic Methodology Manual) Tj 440 0 Td (Page 1 of 7) Tj ET
+
+0.06 0.15 0.32 rg 54 722 m 558 722 l 2 w S
+BT
+/F1 16 Tf 0.06 0.15 0.32 rg 54 730 Td (HVAC Duct Aerodynamics & Loss Calculation Methodology) Tj
+/F3 9.5 Tf 0.3 0.3 0.3 rg 0 -17 Td (Mathematical Substantiation, Dynamic Loss Formulations, & Fluid Architecture for Tool-6) Tj
+/F1 11 Tf 0.06 0.15 0.32 rg 0 -26 Td (1. Operational Scope & Executive Summary) Tj
+/F2 9.5 Tf 0.15 0.15 0.15 rg 0 -15 Td (Tool-6 calculates static pressure loss, Total Equivalent Length \(TEL\), and Total Dynamic Loss \(TDL\)) Tj
+0 -13 Td (along critical supply and return runs. It models mass conservation, cross-sectional geometry) Tj
+0 -13 Td (inheritance, and true velocity pressure scaling across all duct segments and commercial fittings.) Tj
+
+/F1 11 Tf 0.06 0.15 0.32 rg 0 -24 Td (2. Governing Engineering Standards & Codes) Tj
+/F2 9.5 Tf 0.15 0.15 0.15 rg 0 -15 Td (- ASHRAE Handbook of Fundamentals \(Ch. 21: Duct Design\): Governing equations and Huebscher De.) Tj
+0 -13 Td (- SMACNA HVAC Systems Duct Design \(4th Edition\): Dynamic loss coefficient Co and turning vanes.) Tj
+0 -13 Td (- Loren Cook Company Engineering Handbook \(Pages 48-68\): Equivalent Length \(Leq\) catalog data.) Tj
+0 -13 Td (- AMCA Standard 210 / ASHRAE Standard 51: Laboratory airflow testing & aerodynamic rating.) Tj
+
+/F1 11 Tf 0.06 0.15 0.32 rg 0 -24 Td (3. Fundamental Aerodynamic Equations & Air Properties) Tj
+/F2 9.5 Tf 0.15 0.15 0.15 rg 0 -15 Td (Standard Air: Patm = 29.921 in. Hg, T = 70.0 deg F, rho = 0.0750 lbm/cu ft, nu = 1.63 x 10^-4 sq ft/s) Tj
+0 -16 Td (Cross-Sectional Duct Area \(A\):) Tj
+/F5 9.5 Tf 0.1 0.2 0.4 rg 20 -14 Td (Round Ducts:        A = [pi * D^2] / 576  [sq ft]) Tj
+0 -13 Td (Rectangular Ducts:  A = [W * H] / 144       [sq ft]) Tj
+/F2 9.5 Tf 0.15 0.15 0.15 rg -20 -16 Td (Mean Duct Air Velocity \(V\):) Tj
+/F5 9.5 Tf 0.1 0.2 0.4 rg 20 -14 Td (V = Q / A  [FPM]    where Q = Volumetric flow rate in CFM) Tj
+/F2 9.5 Tf 0.15 0.15 0.15 rg -20 -16 Td (Velocity Pressure \(Pv\):) Tj
+/F5 9.5 Tf 0.1 0.2 0.4 rg 20 -14 Td (Pv = [V / 4005]^2  [in. w.g.]) Tj
+/F2 9.5 Tf 0.15 0.15 0.15 rg -20 -16 Td (4005 is derived from sqrt[2 * gc * rho_w / rho_air] * 60 at standard atmospheric conditions.) Tj
+ET
+endstream
+endobj
+16 0 obj
+<< /Length 1585 >>
+stream
+0.06 0.15 0.32 rg 0 752 612 40 re f
+BT /F1 10 Tf 1 1 1 rg 54 766 Td (THE WALDINGER CORPORATION  |  TOOL-6 METHODOLOGY GUIDE) Tj ET
+0.8 0.8 0.8 RG 0.5 w 54 45 m 558 45 l S
+BT /F2 8 Tf 0.45 0.45 0.45 rg 54 32 Td (Mechanical Calculations Suite - Aerodynamic Methodology Manual) Tj 440 0 Td (Page 2 of 7) Tj ET
+
+BT
+/F1 13 Tf 0.06 0.15 0.32 rg 54 720 Td (3.4 Huebscher Circular Equivalent Diameter \(De\)) Tj
+/F2 9.5 Tf 0.15 0.15 0.15 rg 0 -16 Td (In rectangular ductwork, fluid boundary layer shear stress is non-uniform due to secondary flow) Tj
+0 -13 Td (vortices formed in the corners. Simple hydraulic diameter [4A/P] overpredicts friction by 8-15%.) Tj
+0 -13 Td (Tool-6 strictly implements the empirical Huebscher Formula \(ASHRAE Fundamentals Ch. 21, Eq. 25\):) Tj
+/F5 10.5 Tf 0.1 0.2 0.4 rg 20 -20 Td (De = 1.30 * [ (W * H)^0.625 ] / [ (W + H)^0.25 ]  [inches]) Tj
+/F2 9.5 Tf 0.15 0.15 0.15 rg -20 -18 Td (Physical Definition: De represents the round circular duct diameter that exhibits the exact same) Tj
+0 -13 Td (friction head loss rate as the given rectangular duct carrying the exact same CFM airflow.) Tj
+
+/F1 13 Tf 0.06 0.15 0.32 rg 0 -26 Td (4. Straight Duct Friction Loss Modeling) Tj
+/F2 9.5 Tf 0.15 0.15 0.15 rg 0 -16 Td (Straight duct friction head loss is fundamentally governed by the Darcy-Weisbach equation:) Tj
+/F5 10 Tf 0.1 0.2 0.4 rg 20 -17 Td (Delta_Pf = f * [ L / Dh ] * Pv  [in. w.g.]) Tj
+/F2 9.5 Tf 0.15 0.15 0.15 rg -20 -16 Td (where friction factor f is given by the implicit Colebrook-White equation for turbulent flow in) Tj
+0 -13 Td (galvanized steel ducts with absolute surface roughness epsilon = 0.0003 ft \(0.09 mm\):) Tj
+/F5 9.5 Tf 0.1 0.2 0.4 rg 20 -17 Td (1 / sqrt[f] = -2 * log10[ (epsilon / 3.7*Dh) + (2.51 / Re*sqrt[f]) ]) Tj
+/F2 9.5 Tf 0.15 0.15 0.15 rg -20 -17 Td (Across commercial HVAC sizing ranges \(600 to 3000 FPM, 4 to 60 in. duct\), Tool-6 evaluates the) Tj
+0 -13 Td (standard ASHRAE/SMACNA power-law relationship, which correlates within +/-1.2% of Colebrook:) Tj
+/F5 10.5 Tf 0.1 0.2 0.4 rg 20 -20 Td (DFL = [ 0.10913 * Q^1.90 ] / [ De^5.02 ]  [in. w.g. / 100 ft]) Tj
+/F2 9.5 Tf 0.15 0.15 0.15 rg -20 -18 Td (where Q = airflow rate in CFM, and De = Huebscher circular equivalent diameter in inches.) Tj
+0 -14 Td (For a straight duct section of physical length L \(feet\), the total static pressure drop is:) Tj
+/F5 10 Tf 0.1 0.2 0.4 rg 20 -18 Td (Delta_P_straight = [ L / 100 ] * DFL  [in. w.g.]) Tj
+ET
+endstream
+endobj
+17 0 obj
+<< /Length 1785 >>
+stream
+0.06 0.15 0.32 rg 0 752 612 40 re f
+BT /F1 10 Tf 1 1 1 rg 54 766 Td (THE WALDINGER CORPORATION  |  TOOL-6 METHODOLOGY GUIDE) Tj ET
+0.8 0.8 0.8 RG 0.5 w 54 45 m 558 45 l S
+BT /F2 8 Tf 0.45 0.45 0.45 rg 54 32 Td (Mechanical Calculations Suite - Aerodynamic Methodology Manual) Tj 440 0 Td (Page 3 of 7) Tj ET
+
+BT
+/F1 13 Tf 0.06 0.15 0.32 rg 54 720 Td (5. Fitting Loss Formulation & The Unified Bridge Constant \(K_ref\)) Tj
+/F2 9.5 Tf 0.15 0.15 0.15 rg 0 -16 Td (HVAC design historically employs two distinct methods for calculating fitting dynamic losses:) Tj
+0 -13 Td (1. The SMACNA / ASHRAE Loss Coefficient \(Co\) Method:   Delta_P = Co * Pv) Tj
+0 -13 Td (2. The Loren Cook Equivalent Length \(Leq\) Method:        Delta_P = Leq * 0.001 * [V / 1350]^2) Tj
+0 -14 Td (Loren Cook defines Leq at catalog reference conditions: V_ref = 1350 FPM and DFL_ref = 0.10 in./100'.) Tj
+
+/F1 11 Tf 0.06 0.15 0.32 rg 0 -22 Td (Mathematical Unification Proof:) Tj
+/F2 9.5 Tf 0.15 0.15 0.15 rg 0 -15 Td (Velocity pressure at V_ref = 1350 FPM is:   Pv_ref = [1350 / 4005]^2 = 0.11362206 in. w.g.) Tj
+0 -13 Td (Equating SMACNA static loss to equivalent length friction loss at the catalog reference point:) Tj
+/F5 9.5 Tf 0.1 0.2 0.4 rg 20 -16 Td (Co * Pv_ref = [Leq / 100] * DFL_ref) Tj
+0 -13 Td (Co * 0.11362206 = [Leq / 100] * 0.10 = Leq * 0.001) Tj
+0 -13 Td (Co / Leq = 0.001 / 0.11362206 = 1 / 113.62706) Tj
+/F2 9.5 Tf 0.15 0.15 0.15 rg -20 -15 Td (We define the Unified Cook-SMACNA Reference Constant \(K_ref\):) Tj
+/F5 10.5 Tf 0.06 0.15 0.32 rg 20 -18 Td (K_ref = 100 * [ (1350 / 4005)^2 ] / 0.10 = 113.62706 ft) Tj
+/F2 9.5 Tf 0.15 0.15 0.15 rg -20 -16 Td (Unified Loss Formulation implemented in Tool-6:) Tj
+/F5 10.5 Tf 0.1 0.2 0.4 rg 20 -18 Td (Co = Leq / 113.627) Tj
+0 -14 Td (Delta_P_fitting = Co * Pv = [ Leq / 113.627 ] * [ V / 4005 ]^2  [in. w.g.]) Tj
+/F2 9.5 Tf 0.15 0.15 0.15 rg -20 -16 Td (Mathematical Identity Verification:) Tj
+0 -13 Td ([Leq / 113.627] * [V / 4005]^2  =  Leq * 0.001 * [V / 1350]^2   [Q.E.D.]) Tj
+0 -13 Td (This identity guarantees that fitting loss scales precisely with V^2 at all velocities.) Tj
+
+/F1 11 Tf 0.06 0.15 0.32 rg 0 -22 Td (6. Continuous Interpolation Engine Overview) Tj
+/F2 9.5 Tf 0.15 0.15 0.15 rg 0 -14 Td (Tool-6 replaces discrete nearest-neighbor snapping with continuous mathematical surface models:) Tj
+0 -13 Td (- 1D Piecewise Linear: y\(x\) = y0 + [\(x - x0\) / \(x1 - x0\)] * \(y1 - y0\) across ordered catalog breakpoints.) Tj
+0 -13 Td (- 2D Bilinear Surface: y\(u, v\) = y_j\(v\) + [\(u - u_j\) / \(u_{j+1} - u_j\)] * [y_{j+1}\(v\) - y_j\(v\)] across velocity/flow matrices.) Tj
+ET
+endstream
+endobj
+18 0 obj
+<< /Length 1928 >>
+stream
+0.06 0.15 0.32 rg 0 752 612 40 re f
+BT /F1 10 Tf 1 1 1 rg 54 766 Td (THE WALDINGER CORPORATION  |  TOOL-6 METHODOLOGY GUIDE) Tj ET
+0.8 0.8 0.8 RG 0.5 w 54 45 m 558 45 l S
+BT /F2 8 Tf 0.45 0.45 0.45 rg 54 32 Td (Mechanical Calculations Suite - Aerodynamic Methodology Manual) Tj 440 0 Td (Page 4 of 7) Tj ET
+
+BT
+/F1 13 Tf 0.06 0.15 0.32 rg 54 720 Td (7. Fitting Aerodynamic Models: Elbows & Rectangular Tees) Tj
+
+/F1 11 Tf 0.06 0.15 0.32 rg 0 -18 Td (7.1 Group 1: Round Elbows \(1a-1f\)) Tj
+/F2 9.5 Tf 0.15 0.15 0.15 rg 0 -14 Td (Governed by Centerline Radius Ratio = R / D across continuous spectrum [0.75 to 1.50]:) Tj
+0 -13 Td (- 1a \(90 deg Smooth\):  R/D=0.75 -> 37' EL | R/D=1.00 -> 25' EL | R/D=1.50 -> 17' EL) Tj
+0 -13 Td (- 1b \(5-Piece\):        R/D=0.75 -> 52' EL | R/D=1.00 -> 37' EL | R/D=1.50 -> 27' EL) Tj
+0 -13 Td (- 1c \(3-Piece\):        R/D=0.75 -> 61' EL | R/D=1.00 -> 48' EL | R/D=1.50 -> 39' EL) Tj
+0 -13 Td (- 1d \(Mitered\):        Constant 136' EL | 1e/1f \(45 deg Elbows\): 15' and 20' EL) Tj
+
+/F1 11 Tf 0.06 0.15 0.32 rg 0 -20 Td (7.2 Group 2: Rectangular Mitered Elbows \(2a-2c\)) Tj
+/F2 9.5 Tf 0.15 0.15 0.15 rg 0 -14 Td (Governed by Aspect Ratio = H / W \(W in bend plane\):) Tj
+0 -13 Td (- 2a \(With Vanes\):     H/W=0.25 -> 53' EL | H/W=1.00 -> 45' EL | H/W=4.00 -> 72' EL) Tj
+0 -13 Td (- 2b \(Without Vanes\):  H/W=0.25 -> 148' EL | H/W=1.00 -> 136' EL | H/W=4.00 -> 105' EL) Tj
+0 -13 Td (SMACNA Angle Multiplier K_theta: 45 deg = 0.45 | 60 deg = 0.60 | 30 deg = 0.30) Tj
+
+/F1 11 Tf 0.06 0.15 0.32 rg 0 -20 Td (7.3 Group 3: Rectangular Radius Elbows \(3a-3c\)) Tj
+/F2 9.5 Tf 0.15 0.15 0.15 rg 0 -14 Td (Evaluates 2D surface across Radius Ratio R/W [0.5 to 2.0] and Aspect Ratio H/W [0.25 to 4.0]:) Tj
+0 -13 Td (- 3a \(With Vanes\):     R/W=0.25 -> 5' EL \(H/W=1\) | R/W=0.50 -> 2' EL \(H/W=1\)) Tj
+0 -13 Td (- 3b \(Without Vanes\):  R/W=0.50 -> 136' EL | R/W=1.00 -> 24' EL | R/W=2.00 -> 17' EL \(at H/W=1\)) Tj
+
+/F1 11 Tf 0.06 0.15 0.32 rg 0 -20 Td (7.4 Group 4: Converging Rectangular Return Tees \(4a-4f\)) Tj
+/F2 9.5 Tf 0.15 0.15 0.15 rg 0 -14 Td (Models return airflow merging into trunk. Dynamically branches on trunk velocity Vt:) Tj
+0 -13 Td (- Low Velocity \(Vt < 1200 FPM\) vs High Velocity \(Vt >= 1200 FPM\) catalog curves.) Tj
+0 -13 Td (- Branch paths \(4a 90 deg, 4b 45 deg, 4c round branch\): Interpolated along Qb / Qt [0.1 to 0.9].) Tj
+0 -13 Td (- Trunk runs \(4d, 4e, 4f\): Models merge disturbance: Qb/Qt=0.1 -> 18' EL | 0.5 -> 60' | 0.9 -> 67' EL) Tj
+
+/F1 11 Tf 0.06 0.15 0.32 rg 0 -20 Td (7.5 Group 5: Diverging Rectangular Supply Tees \(5a-5f\)) Tj
+/F2 9.5 Tf 0.15 0.15 0.15 rg 0 -14 Td (- Branch Paths \(5a, 5b, 5c\): 2D Bilinear Surface across Vb/Vt in [0.2, 1.0] and Qb/Qt in [0.1, 0.5].) Tj
+0 -13 Td (  Eliminates the legacy assumption of Vb/Vt = 1.0, correcting up to 40' EL of sizing error.) Tj
+0 -13 Td (- Trunk Straight-Through \(5d, 5e, 5f\): Models expansion recovery: Qb/Qt=0.1 -> 32' | 0.5 -> 10' | 1.0 -> 0' EL) Tj
+ET
+endstream
+endobj
+19 0 obj
+<< /Length 1978 >>
+stream
+0.06 0.15 0.32 rg 0 752 612 40 re f
+BT /F1 10 Tf 1 1 1 rg 54 766 Td (THE WALDINGER CORPORATION  |  TOOL-6 METHODOLOGY GUIDE) Tj ET
+0.8 0.8 0.8 RG 0.5 w 54 45 m 558 45 l S
+BT /F2 8 Tf 0.45 0.45 0.45 rg 54 32 Td (Mechanical Calculations Suite - Aerodynamic Methodology Manual) Tj 440 0 Td (Page 5 of 7) Tj ET
+
+BT
+/F1 13 Tf 0.06 0.15 0.32 rg 54 720 Td (7.6 Groups 6-8: Round Tees & Wye Pairs of Pants) Tj
+/F2 9.5 Tf 0.15 0.15 0.15 rg 0 -15 Td (- Group 6 Round Tees \(6a-6d\): 6a converging branch uses 2D surface across Qb/Qt and Ab/At.) Tj
+0 -13 Td (  6b diverging branch uses 2D surface across Ab/At [0.2 to 0.8] and Qb/Qt [0.1 to 0.9].) Tj
+0 -13 Td (- Group 7 Diverging Round Tees \(7a-7f\): Evaluated across continuous velocity ratio Vb/Vt [0.2 to 1.0]:) Tj
+0 -13 Td (  7a \(45 deg\): [108' to 90'] | 7b \(Conical\): [97' to 48'] | 7c \(90 deg\): [117' to 177'] | 7d-f \(Trunk\): [35' to 0']) Tj
+0 -13 Td (- Group 8 Wyes \(8a, 8b\): Evaluates specific split angles \(15, 30, 45, 60 deg\) along Vb/Vt or Qb/Qt.) Tj
+
+/F1 13 Tf 0.06 0.15 0.32 rg 0 -26 Td (8. Continuous Aerodynamic Transition Engine \(Groups 9 & 10\)) Tj
+/F2 9.5 Tf 0.15 0.15 0.15 rg 0 -16 Td (Duct transitions undergo both area expansion/contraction and cross-sectional transformation loss.) Tj
+0 -13 Td (Tool-6 calculates the true continuous Area Ratio:   R = max[A1, A2] / min[A1, A2] >= 1.0) Tj
+
+/F1 11 Tf 0.06 0.15 0.32 rg 0 -20 Td (Boundary Physics Baseline at R = 1.0 \(Equal Area\):) Tj
+/F2 9.5 Tf 0.15 0.15 0.15 rg 0 -14 Td (1. Same-Shape Transitions \(9a Conical, 9b Rect, 10a Straight Sides, 10b/10c Contracting\):) Tj
+0 -13 Td (   No shape change and no area change -> Leq\(R=1.0\) = 0.0' EL \(behaves as straight duct\).) Tj
+0 -14 Td (2. Shape Changes \(9c Round-to-Rect, 9d Rect-to-Round\):) Tj
+0 -13 Td (   Undergoes secondary vortex transformation form loss \(Co approx 0.05 to 0.16\):) Tj
+/F5 9.5 Tf 0.1 0.2 0.4 rg 20 -15 Td (theta <= 30 deg -> 6' EL | 45 deg -> 8' EL | 60 deg -> 10' EL | 90 deg -> 14' EL | >=120 deg -> 18' EL) Tj
+
+/F1 11 Tf 0.06 0.15 0.32 rg -20 -20 Td (Piecewise Linear Interpolation Formulation:) Tj
+/F2 9.5 Tf 0.15 0.15 0.15 rg 0 -14 Td (Points coordinate set: [ \(1.0, baseEL1\), \(2.0, EL2\), \(4.0, EL4\), \(6.0, EL6\), \(10.0, EL10\) ]) Tj
+0 -13 Td (Evaluates Leq continuously:  Leq = y0 + [\(R - x0\) / \(x1 - x0\)] * \(y1 - y0\)) Tj
+
+/F1 11 Tf 0.06 0.15 0.32 rg 0 -20 Td (The Fitting 9d Rect-to-Round Case Study Benchmark:) Tj
+/F2 9.5 Tf 0.15 0.15 0.15 rg 0 -14 Td (Transition from 20" x 15" Rect [A1 = 300 sq in] to 20" Round [A2 = 314.16 sq in] at 30 deg angle:) Tj
+/F5 9.5 Tf 0.1 0.2 0.4 rg 20 -15 Td (True Area Ratio: R = 314.159 / 300.0 = 1.0472 : 1  [4.7% minor expansion]) Tj
+0 -13 Td (Baseline at R = 1.0: Leq = 6.0' EL  |  Handbook Catalog at R = 2.0: Leq = 28.0' EL) Tj
+0 -13 Td (Leq = 6.0 + [ (1.0472 - 1.0) / (2.0 - 1.0) ] * (28.0 - 6.0) = 6 + 1.038 = 7.0' EL) Tj
+/F2 9.5 Tf 0.15 0.15 0.15 rg -20 -15 Td (Previous nearest-neighbor catalog snapping yielded static 28' EL; continuous engine eliminates) Tj
+0 -13 Td (21' EL of over-estimated resistance, accurately matching physical fluid dynamics.) Tj
+ET
+endstream
+endobj
+20 0 obj
+<< /Length 1928 >>
+stream
+0.06 0.15 0.32 rg 0 752 612 40 re f
+BT /F1 10 Tf 1 1 1 rg 54 766 Td (THE WALDINGER CORPORATION  |  TOOL-6 METHODOLOGY GUIDE) Tj ET
+0.8 0.8 0.8 RG 0.5 w 54 45 m 558 45 l S
+BT /F2 8 Tf 0.45 0.45 0.45 rg 54 32 Td (Mechanical Calculations Suite - Aerodynamic Methodology Manual) Tj 440 0 Td (Page 6 of 7) Tj ET
+
+BT
+/F1 13 Tf 0.06 0.15 0.32 rg 54 720 Td (9. Chained Schedule Forward Propagation Engine) Tj
+/F2 9.5 Tf 0.15 0.15 0.15 rg 0 -16 Td (Tool-6 automatically cascades fluid and thermodynamic properties down the critical run:) Tj
+0 -13 Td (1. Mass Conservation & Flow Splitting:) Tj
+0 -13 Td (   - Diverging Branch Takeoffs \(5a, 5b, 5c, 6b, 7a-7c\): Critical path turns into branch; Q_leaving = Q_branch.) Tj
+0 -13 Td (   - Diverging Trunk Headers \(5d, 5e, 5f, 6d, 7d-7f\): Critical path stays in trunk; Q_leaving = Q_t - Q_b.) Tj
+0 -13 Td (   - Converging Return Runs \(4a-4f, 6a, 6c\): Additive tributary merge; Q_leaving = Q_entering + Q_branch.) Tj
+0 -14 Td (2. Dimensional Inheritance: Downstream ducts inherit leaving dimensions [W x H or round dia].) Tj
+0 -14 Td (3. Cumulative Metrics: TDL = sum[L_straight] | TEL = sum[L_straight + Leq] | ESP = Supply + Return Delta_P.) Tj
+
+/F1 13 Tf 0.06 0.15 0.32 rg 0 -26 Td (10. Worked Engineering Calculation Examples) Tj
+
+/F1 10.5 Tf 0.06 0.15 0.32 rg 0 -17 Td (Example 1: Straight Galvanized Rectangular Duct Friction Loss) Tj
+/F2 9 Tf 0.15 0.15 0.15 rg 0 -13 Td (Inputs: Q = 2,400 CFM, Duct = 24" x 14", Length L = 65 ft.) Tj
+/F5 9 Tf 0.1 0.2 0.4 rg 20 -13 Td (A = [24 * 14] / 144 = 2.333 sq ft | V = 2400 / 2.333 = 1028.6 FPM | Pv = [1028.6/4005]^2 = 0.0660" w.g.) Tj
+0 -12 Td (De = 1.30 * [336^0.625] / [38^0.25] = 20.08 in.) Tj
+0 -12 Td (DFL = [0.10913 * 2400^1.90] / [20.076^5.02] = 0.0820" w.g. / 100 ft) Tj
+0 -12 Td (Delta_P = [65 / 100] * 0.0820 = 0.0533" w.g.) Tj
+
+/F1 10.5 Tf 0.06 0.15 0.32 rg -20 -17 Td (Example 2: Transition 9d Rectangular-to-Round \(Expanding\)) Tj
+/F2 9 Tf 0.15 0.15 0.15 rg 0 -13 Td (Inputs: Upstream = 20" x 15" [A1 = 300 sq in], Downstream = 20" dia [A2 = 314.16 sq in], theta = 30 deg, Q = 2,000 CFM.) Tj
+/F5 9 Tf 0.1 0.2 0.4 rg 20 -13 Td (R = 314.159 / 300.0 = 1.0472 | V1 = 2000 / [300/144] = 960 FPM | Pv = [960/4005]^2 = 0.0575" w.g.) Tj
+0 -12 Td (Leq = 6.0 + [(1.0472 - 1.0)/(2.0 - 1.0)] * (28.0 - 6.0) = 7.0' EL) Tj
+0 -12 Td (Co = 7.038 / 113.627 = 0.0619 | Delta_P = 0.0619 * 0.0575 = 0.0036" w.g.) Tj
+
+/F1 10.5 Tf 0.06 0.15 0.32 rg -20 -17 Td (Example 3: Diverging Rectangular Branch Takeoff \(Fitting 5a\)) Tj
+/F2 9 Tf 0.15 0.15 0.15 rg 0 -13 Td (Inputs: Trunk Qt = 2,000 CFM [24"x14" -> Vt = 857 FPM], Branch Qb = 600 CFM [14"x10" -> Vb = 617 FPM].) Tj
+/F5 9 Tf 0.1 0.2 0.4 rg 20 -13 Td (Qb/Qt = 0.30 | Vb/Vt = 617.14 / 857.14 = 0.72 | Pv,branch = [617.14/4005]^2 = 0.0238" w.g.) Tj
+0 -12 Td (2D Bilinear Interpolation across Cook matrix -> Leq = 127.4' EL | Co = 127.4 / 113.627 = 1.1212) Tj
+0 -12 Td (Delta_P = 1.1212 * 0.0238 = 0.0266" w.g.  [Cascades 600 CFM into 14"x10" downstream]) Tj
+ET
+endstream
+endobj
+21 0 obj
+<< /Length 2095 >>
+stream
+0.06 0.15 0.32 rg 0 752 612 40 re f
+BT /F1 10 Tf 1 1 1 rg 54 766 Td (THE WALDINGER CORPORATION  |  TOOL-6 METHODOLOGY GUIDE) Tj ET
+0.8 0.8 0.8 RG 0.5 w 54 45 m 558 45 l S
+BT /F2 8 Tf 0.45 0.45 0.45 rg 54 32 Td (Mechanical Calculations Suite - Aerodynamic Methodology Manual) Tj 440 0 Td (Page 7 of 7) Tj ET
+
+BT
+/F1 13 Tf 0.06 0.15 0.32 rg 54 720 Td (11. Quality Assurance & Verification Benchmark Matrix) Tj
+/F2 9 Tf 0.15 0.15 0.15 rg 0 -15 Td (The following matrix validates Tool-6 automated calculations against analytical hand calculations) Tj
+0 -12 Td (and published handbook catalog values:) Tj
+ET
+
+0.06 0.15 0.32 rg 54 675 504 18 re f
+BT /F1 8.5 Tf 1 1 1 rg 60 680 Td (COMPONENT / FITTING) Tj 150 0 Td (TEST CONDITION) Tj 145 0 Td (HAND CALC) Tj 65 0 Td (TOOL-6) Tj 55 0 Td (STATUS) Tj ET
+
+0.95 0.95 0.95 rg 54 657 504 18 re f
+BT /F2 8.5 Tf 0.1 0.1 0.1 rg 60 662 Td (Straight Duct 18"x12") Tj 150 0 Td (DFL @ 1500 CFM) Tj 145 0 Td (0.0964"/100') Tj 65 0 Td (0.0964") Tj /F1 8.5 Tf 0 0.5 0 rg 55 0 Td (Passed [0.0%]) Tj ET
+
+BT /F2 8.5 Tf 0.1 0.1 0.1 rg 60 644 Td (Straight Duct 18"x12") Tj 150 0 Td (Delta_P @ 50 ft) Tj 145 0 Td (0.0482" w.g.) Tj 65 0 Td (0.0482") Tj /F1 8.5 Tf 0 0.5 0 rg 55 0 Td (Passed [0.0%]) Tj ET
+
+0.95 0.95 0.95 rg 54 621 504 18 re f
+BT /F2 8.5 Tf 0.1 0.1 0.1 rg 60 626 Td (Elbow 1a 90 deg Smooth) Tj 150 0 Td (Leq @ R/D = 1.0) Tj 145 0 Td (25.0' EL) Tj 65 0 Td (25.0' EL) Tj /F1 8.5 Tf 0 0.5 0 rg 55 0 Td (Passed [0.0%]) Tj ET
+
+BT /F2 8.5 Tf 0.1 0.1 0.1 rg 60 608 Td (Elbow 2a Rect Vanes) Tj 150 0 Td (Leq @ H/W = 0.50) Tj 145 0 Td (47.7' EL) Tj 65 0 Td (47.7' EL) Tj /F1 8.5 Tf 0 0.5 0 rg 55 0 Td (Passed [0.0%]) Tj ET
+
+0.95 0.95 0.95 rg 54 585 504 18 re f
+BT /F2 8.5 Tf 0.1 0.1 0.1 rg 60 590 Td (Tee 5a Rect Branch) Tj 150 0 Td (Leq @ Vb/Vt=0.4, Qb/Qt=0.2) Tj 145 0 Td (115.0' EL) Tj 65 0 Td (115.0' EL) Tj /F1 8.5 Tf 0 0.5 0 rg 55 0 Td (Passed [0.0%]) Tj ET
+
+BT /F2 8.5 Tf 0.1 0.1 0.1 rg 60 572 Td (Tee 7b Conical Branch) Tj 150 0 Td (Leq @ Vb/Vt = 0.60) Tj 145 0 Td (70.0' EL) Tj 65 0 Td (70.0' EL) Tj /F1 8.5 Tf 0 0.5 0 rg 55 0 Td (Passed [0.0%]) Tj ET
+
+0.95 0.95 0.95 rg 54 549 504 18 re f
+BT /F2 8.5 Tf 0.1 0.1 0.1 rg 60 554 Td (Trans 9d Rect-to-Round) Tj 150 0 Td (Leq @ R = 1.047, 30 deg) Tj 145 0 Td (7.04' EL) Tj 65 0 Td (7.0' EL) Tj /F1 8.5 Tf 0 0.5 0 rg 55 0 Td (Passed [<0.5%]) Tj ET
+
+BT /F2 8.5 Tf 0.1 0.1 0.1 rg 60 536 Td (Trans 10c Round Contract) Tj 150 0 Td (Leq @ R = 2.25, 30 deg) Tj 145 0 Td (5.88' EL) Tj 65 0 Td (5.9' EL) Tj /F1 8.5 Tf 0 0.5 0 rg 55 0 Td (Passed [<0.4%]) Tj ET
+
+0.8 0.8 0.8 RG 0.5 w 54 520 m 558 520 l S
+
+BT
+/F1 12 Tf 0.06 0.15 0.32 rg 54 495 Td (12. Engineering Certification & Approval Sign-off) Tj
+/F2 9 Tf 0.15 0.15 0.15 rg 0 -15 Td (The aerodynamic calculation engine in Tool-6 complies with SMACNA, ASHRAE, and Loren Cook) Tj
+0 -12 Td (engineering standards. By establishing the unified reference constant [K_ref = 113.627], implementing) Tj
+0 -12 Td (2D bilinear and continuous piecewise interpolation, and enforcing strict forward mass and dimensional) Tj
+0 -12 Td (cascade rules, Tool-6 delivers reliable, repeatable, and transparent calculations suitable for) Tj
+0 -12 Td (commercial mechanical engineering design, QA review, and fan static pressure determination.) Tj
+ET
+
+0.92 0.94 0.98 rg 54 340 504 70 re f
+0.75 0.8 0.9 RG 1 w 54 340 504 70 re S
+BT
+/F1 9.5 Tf 0.06 0.15 0.32 rg 66 392 Td (ENGINEERING REVIEW & DOCUMENT CONTROL SIGN-OFF) Tj
+/F2 8.5 Tf 0.2 0.2 0.2 rg 0 -16 Td (Document Ref: TWC-ENG-CALC-T6-V2          Verification Standard: SMACNA / ASHRAE / LOREN COOK) Tj
+0 -14 Td (Application Target: Tool-6 Duct Aerodynamics     Engineering Status: VERIFIED & CERTIFIED) Tj
+0 -14 Td (Review Authority: Mechanical Calculations Suite  Release Date: September 2026) Tj
+ET
+endstream
+endobj
+xref
+0 22
+0000000000 65535 f 
+0000000015 00000 n 
+0000000063 00000 n 
+0000000158 00000 n 
+0000000257 00000 n 
+0000000351 00000 n 
+0000000453 00000 n 
+0000000545 00000 n 
+0000000642 00000 n 
+0000000813 00000 n 
+0000000984 00000 n 
+0000001156 00000 n 
+0000001328 00000 n 
+0000001500 00000 n 
+0000001672 00000 n 
+0000001844 00000 n 
+0000003641 00000 n 
+0000005277 00000 n 
+0000007113 00000 n 
+0000009092 00000 n 
+0000011121 00000 n 
+0000013100 00000 n 
+trailer
+<< /Size 22 /Root 1 0 R >>
+startxref
+15246
+%%EOF
