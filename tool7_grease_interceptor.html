@@ -1,0 +1,1372 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-950 text-slate-100 antialiased selection:bg-amber-500 selection:text-white">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Grease Interceptor Sizer (WRA) - Mechanical System Calculations Suite</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#fffbeb', 100: '#fef3c7', 500: '#f59e0b', 600: '#d97706', 700: '#b45309', 800: '#92400e', 900: '#78350f',
+            }
+          }
+        }
+      }
+    }
+
+    if (localStorage.getItem('ps_theme') === 'dark') {
+      document.documentElement.classList.remove('light');
+    } else {
+      document.documentElement.classList.add('light');
+    }
+  </script>
+
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #020617; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #475569; }
+    
+    .glass-card {
+      background: rgba(30, 41, 59, 0.7);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .active-nav-btn {
+      background-color: #f59e0b !important;
+      color: #0f172a !important;
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+    }
+    .active-step-tab {
+      background-color: #f59e0b !important;
+      color: #0f172a !important;
+      font-weight: 700 !important;
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);
+    }
+    .animate-fade-in { animation: fadeIn 0.25s ease-in-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* LIGHT MODE STYLING & HIGH CONTRAST SYSTEM */
+    html.light { background-color: #f8fafc !important; color: #0f172a !important; }
+    html.light body { background-color: #f8fafc !important; color: #0f172a !important; }
+    html.light header { background-color: rgba(255, 255, 255, 0.95) !important; border-color: #e2e8f0 !important; color: #0f172a !important; }
+    html.light header h1, html.light header h2, html.light header h3 { color: #0f172a !important; }
+    html.light .glass-card { background: rgba(255, 255, 255, 0.94) !important; border: 1px solid #e2e8f0 !important; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); color: #1e293b !important; }
+    html.light .glass-card h2, html.light .glass-card h3, html.light .glass-card h4 { color: #0f172a !important; }
+    html.light .glass-card p { color: #475569 !important; }
+    html.light input[type="text"], html.light input[type="number"], html.light select { background-color: #ffffff !important; color: #0f172a !important; border-color: #cbd5e1 !important; }
+    html.light table th { background-color: #f1f5f9 !important; color: #334155 !important; border-color: #cbd5e1 !important; }
+    html.light table td { border-color: #e2e8f0 !important; color: #0f172a !important; }
+    html.light .bg-slate-900, html.light .bg-slate-900\/80, html.light .bg-slate-900\/90, html.light .bg-slate-950 { background-color: #f1f5f9 !important; color: #0f172a !important; border-color: #e2e8f0 !important; }
+    html.light button.bg-slate-800, html.light .bg-slate-800 { background-color: #e2e8f0 !important; color: #0f172a !important; border-color: #cbd5e1 !important; }
+    html.light button.bg-slate-800:hover, html.light .bg-slate-800:hover { background-color: #cbd5e1 !important; color: #020617 !important; }
+    html.light .text-white { color: #0f172a !important; }
+    html.light .text-slate-300, html.light .text-slate-400 { color: #475569 !important; }
+    html.light .text-slate-200 { color: #1e293b !important; }
+    html.light .border-slate-800, html.light .border-slate-800\/60, html.light .border-slate-800\/80, html.light .border-slate-700 { border-color: #e2e8f0 !important; }
+    html.light footer { background-color: #ffffff !important; border-color: #e2e8f0 !important; color: #64748b !important; }
+
+    /* Tool 7 Warm Amber/Orange Accents */
+    html.light .text-amber-400, html.light .text-amber-500 { color: #b45309 !important; font-weight: 700 !important; }
+    html.light .bg-amber-500\/10 { background-color: #fef3c7 !important; color: #92400e !important; border: 1px solid #fde68a !important; }
+    html.light .bg-amber-500\/20 { background-color: #fde68a !important; color: #78350f !important; }
+
+    /* =================================================================== */
+    /* TRUE-TO-SCALE 8.5" x 11" LETTER PROPOSAL PREVIEW SHEET              */
+    /* =================================================================== */
+    .proposal-paper-sheet {
+      width: 8.5in;
+      min-height: 11in;
+      background: #ffffff !important;
+      color: #000000 !important;
+      box-shadow: 0 10px 35px rgba(0, 0, 0, 0.4);
+      margin: 0 auto;
+      padding: 0.4in 0.5in 0.35in 0.5in;
+      box-sizing: border-box;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 11.5px;
+      line-height: 1.25;
+      position: relative;
+    }
+
+    .form-underline {
+      border-bottom: 1px solid #000000;
+      color: #000000;
+      font-weight: 600;
+      display: inline-block;
+      padding: 0 4px 1px 4px;
+      min-height: 16px;
+    }
+
+    .box-checkbox {
+      width: 14px;
+      height: 14px;
+      border: 1.2px solid #000000;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 11px;
+      color: #000000;
+      margin-right: 4px;
+      vertical-align: middle;
+      background: #ffffff;
+    }
+
+    .calc-box {
+      border: 1.2px solid #000000;
+      background: #ffffff;
+      min-height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 14px;
+      color: #000000;
+      padding: 2px 6px;
+    }
+
+    /* PRINT MEDIA STYLESHEET: PRINTS CLEAN 1:1 FORM WITHOUT BROWSER CHROME OR HEADERS/FOOTERS */
+    @media print {
+      @page {
+        size: letter portrait;
+        margin: 0 !important; /* Strips browser URL, date, filename from print headers and footers */
+      }
+
+      html, body {
+        background: #ffffff !important;
+        color: #000000 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        height: auto !important;
+        overflow: visible !important;
+      }
+
+      /* Hide all suite UI elements, navigation bars, and non-printable step panes */
+      header, footer, nav,
+      #suiteHeaderBar,
+      #wizardNavBar,
+      #projectMetadataStrip,
+      #metricsSummaryBar,
+      #step-pane-1,
+      #step-pane-2,
+      #step-pane-3,
+      #step-pane-4,
+      #step5Toolbar,
+      #saveSessionModal,
+      #editSessionModal,
+      #toastNotification,
+      .no-print {
+        display: none !important;
+        visibility: hidden !important;
+      }
+
+      /* Unconstrain body, main, step panes and wrappers */
+      body {
+        background: #ffffff !important;
+        color: #000000 !important;
+      }
+
+      main,
+      #stepPaneContainer,
+      #step-pane-5,
+      #previewOuterScrollWrapper {
+        display: block !important;
+        visibility: visible !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow: visible !important;
+      }
+
+      #printableProposalPage {
+        display: block !important;
+        visibility: visible !important;
+        position: relative !important;
+        width: 8.5in !important;
+        min-height: 11in !important;
+        margin: 0 auto !important;
+        padding: 0.35in 0.5in 0.35in 0.5in !important;
+        box-sizing: border-box !important;
+        background: #ffffff !important;
+        transform: none !important;
+      }
+
+      #printableProposalPage * {
+        visibility: visible !important;
+      }
+
+      .proposal-paper-sheet {
+        box-shadow: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-height: auto !important;
+        transform: none !important;
+        background: #ffffff !important;
+        color: #000000 !important;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col bg-slate-950 text-slate-100 antialiased selection:bg-amber-500 selection:text-white">
+
+  <!-- SUITE GLOBAL HEADER -->
+  <header id="suiteHeaderBar" class="bg-slate-900/90 border-b border-slate-800 sticky top-0 z-50 backdrop-blur-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between py-2.5 md:py-0 md:h-16 gap-2.5 sm:gap-3 md:gap-4">
+        
+        <a href="Mechanical_Suite_Dashboard.html" onclick="saveActiveDraftState()" class="flex items-center gap-2.5 sm:gap-3 cursor-pointer min-w-0">
+          <div class="p-2 sm:p-2.5 bg-gradient-to-tr from-amber-500 to-orange-500 rounded-xl shadow-lg shadow-amber-500/20 text-slate-950 flex items-center justify-center shrink-0">
+            <i class="fa-solid fa-kitchen-set text-lg sm:text-xl"></i>
+          </div>
+          <div class="min-w-0">
+            <h1 class="font-bold text-sm sm:text-base md:text-lg leading-snug tracking-tight text-white flex flex-wrap items-center gap-1.5 sm:gap-2">
+              <span>Mechanical System Calculations Suite</span>
+              <span class="text-xs font-semibold bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full shrink-0">v5.00</span>
+            </h1>
+            <p class="text-[11px] text-slate-400 truncate">Tool 7: WRA Grease Interceptor Sizing & Official Proposal Generator</p>
+          </div>
+        </a>
+
+        <div class="flex items-center flex-wrap gap-2">
+          <a href="Mechanical_Suite_Dashboard.html" onclick="saveActiveDraftState()" id="nav-btn-dashboard" class="px-3 py-1.5 sm:py-2 text-xs font-bold rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 border border-slate-700/80 transition flex items-center gap-1.5 sm:gap-2" title="Return to Suite Dashboard Home">
+            <i class="fa-solid fa-house text-amber-400"></i>
+            <span>Dashboard</span>
+          </a>
+
+          <button onclick="openSaveSessionModal()" class="px-3 sm:px-3.5 py-1.5 sm:py-2 text-xs font-bold rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white transition flex items-center gap-1.5 shadow-md shadow-emerald-600/20" title="Save & Sync Project Session">
+            <i class="fa-solid fa-floppy-disk"></i>
+            <span>Save Session</span>
+          </button>
+
+          <button id="theme-toggle-btn" onclick="toggleTheme()" class="px-3 py-1.5 sm:py-2 text-xs font-semibold rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 border border-slate-700/80 transition flex items-center gap-1.5" title="Toggle Light/Dark Visual Theme">
+            <i id="theme-toggle-icon" class="fa-solid fa-sun text-amber-400 text-sm"></i>
+            <span id="theme-toggle-text" class="hidden sm:inline">Light</span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN SUITE WORKSPACE -->
+  <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 space-y-5">
+
+    <!-- PROJECT METADATA & CLOUD STATUS STRIP -->
+    <div id="projectMetadataStrip" class="no-print glass-card rounded-2xl p-3.5 border border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs">
+      <div class="flex items-center gap-3 flex-wrap">
+        <div class="flex items-center gap-1.5">
+          <span class="text-slate-400 font-semibold">Active Project:</span>
+          <input type="text" id="projectNameInput" value="Untitled Mechanical Project" oninput="updateProjectTitleDisplay()" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-white font-bold outline-none focus:border-amber-500">
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="text-slate-400 font-semibold">Author:</span>
+          <input type="text" id="projectAuthorInput" placeholder="Engineer Name" oninput="saveActiveDraftState()" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-slate-200 outline-none focus:border-amber-500">
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <span id="autoSyncBadge" class="text-[10px] font-semibold text-emerald-400 flex items-center gap-1">
+          <i class="fa-solid fa-cloud text-emerald-400"></i> Cloud Synced
+        </span>
+        <span class="text-[10px] text-slate-500">|</span>
+        <span id="ordinanceComplianceBadge" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+          <i class="fa-solid fa-circle-check"></i> Ordinance Compliant (≥ 1,000 Gal)
+        </span>
+      </div>
+    </div>
+
+    <!-- LIVE METRICS BANNER (STICKY SUMMARY) -->
+    <div id="metricsSummaryBar" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
+      <div class="glass-card rounded-xl p-3 border border-amber-500/30 bg-amber-500/5">
+        <p class="text-[10px] uppercase font-bold text-amber-400 tracking-wider">Calculated GI Size</p>
+        <p id="metricCalculatedSize" class="text-xl sm:text-2xl font-extrabold text-white mono mt-1">1,625 gal</p>
+        <p class="text-[10px] text-slate-400">Exact formula volume</p>
+      </div>
+      <div class="glass-card rounded-xl p-3 border border-emerald-500/30 bg-emerald-500/5">
+        <p class="text-[10px] uppercase font-bold text-emerald-400 tracking-wider">Recommended Tank</p>
+        <p id="metricRecommendedSize" class="text-xl sm:text-2xl font-extrabold text-emerald-400 mono mt-1">2,000 gal</p>
+        <p class="text-[10px] text-slate-400">Standard commercial size</p>
+      </div>
+      <div class="glass-card rounded-xl p-3 border border-slate-800">
+        <p class="text-[10px] uppercase font-semibold text-slate-400 tracking-wider">Peak Meals / Hr</p>
+        <p id="metricPeakMeals" class="text-base sm:text-lg font-bold text-white mono mt-1">65</p>
+        <p class="text-[10px] text-slate-400">Meals per hour</p>
+      </div>
+      <div class="glass-card rounded-xl p-3 border border-slate-800">
+        <p class="text-[10px] uppercase font-semibold text-slate-400 tracking-wider">Waste Flow Rate</p>
+        <p id="metricFlowRate" class="text-base sm:text-lg font-bold text-white mono mt-1">5 GPM</p>
+        <p class="text-[10px] text-slate-400">Fixture drainage rate</p>
+      </div>
+      <div class="glass-card rounded-xl p-3 border border-slate-800">
+        <p class="text-[10px] uppercase font-semibold text-slate-400 tracking-wider">Retention Time</p>
+        <p id="metricRetentionTime" class="text-base sm:text-lg font-bold text-white mono mt-1">2.5 hrs</p>
+        <p class="text-[10px] text-slate-400">Commercial standard</p>
+      </div>
+      <div class="glass-card rounded-xl p-3 border border-slate-800">
+        <p class="text-[10px] uppercase font-semibold text-slate-400 tracking-wider">Storage Factor</p>
+        <p id="metricStorageFactor" class="text-base sm:text-lg font-bold text-white mono mt-1">2.0</p>
+        <p class="text-[10px] text-slate-400">16h operating multiplier</p>
+      </div>
+    </div>
+
+    <!-- WIZARD STEP NAVIGATION BAR -->
+    <div id="wizardNavBar" class="glass-card rounded-2xl p-1.5 border border-slate-800 flex items-center justify-between overflow-x-auto gap-1">
+      <button id="wizard-step-btn-1" onclick="setWizardStep(1)" class="active-step-tab px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap">
+        <span class="w-5 h-5 rounded-full bg-slate-900/30 flex items-center justify-center text-[10px] font-extrabold">1</span>
+        <span>Facility & Criteria</span>
+      </button>
+      <button id="wizard-step-btn-2" onclick="setWizardStep(2)" class="text-slate-400 hover:text-white px-3 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 whitespace-nowrap">
+        <span class="w-5 h-5 rounded-full bg-slate-800 flex items-center justify-center text-[10px] font-extrabold">2</span>
+        <span>Establishment Type</span>
+      </button>
+      <button id="wizard-step-btn-3" onclick="setWizardStep(3)" class="text-slate-400 hover:text-white px-3 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 whitespace-nowrap">
+        <span class="w-5 h-5 rounded-full bg-slate-800 flex items-center justify-center text-[10px] font-extrabold">3</span>
+        <span>Sizing Variables</span>
+      </button>
+      <button id="wizard-step-btn-4" onclick="setWizardStep(4)" class="text-slate-400 hover:text-white px-3 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 whitespace-nowrap">
+        <span class="w-5 h-5 rounded-full bg-slate-800 flex items-center justify-center text-[10px] font-extrabold">4</span>
+        <span>Calculation Verification</span>
+      </button>
+      <button id="wizard-step-btn-5" onclick="setWizardStep(5)" class="text-slate-400 hover:text-white px-3 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 whitespace-nowrap">
+        <span class="w-5 h-5 rounded-full bg-slate-800 flex items-center justify-center text-[10px] font-extrabold">5</span>
+        <span>Proposal Sheet & Export</span>
+      </button>
+    </div>
+
+    <!-- CONTAINER FOR STEP PANES -->
+    <div id="stepPaneContainer">
+
+      <!-- STEP 1: FACILITY & CRITERIA -->
+      <div id="step-pane-1" class="glass-card rounded-2xl p-5 border border-slate-800 space-y-5 animate-fade-in">
+        <div class="border-b border-slate-800 pb-3 flex items-center justify-between">
+          <div>
+            <h2 class="text-base font-bold text-white flex items-center gap-2">
+              <i class="fa-solid fa-building text-amber-400"></i> Step 1: Facility Information & Proposal Criteria
+            </h2>
+            <p class="text-xs text-slate-400 mt-0.5">Enter the project address and contact details required for the official WRA submission header.</p>
+          </div>
+          <button onclick="setWizardStep(2)" class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl text-xs transition flex items-center gap-1.5 shadow-md shadow-amber-500/20">
+            <span>Next: Establishment Type</span> <i class="fa-solid fa-arrow-right"></i>
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">Proposal Date <span class="text-amber-400">*</span></label>
+            <input type="text" id="proposalDateInput" placeholder="e.g. 10/12/26" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white font-medium outline-none focus:border-amber-500">
+          </div>
+          <div class="sm:col-span-2">
+            <label class="block font-semibold text-slate-300 mb-1">Facility Name <span class="text-amber-400">*</span></label>
+            <input type="text" id="facilityNameInput" placeholder="e.g. Restaurant Generic" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white font-bold outline-none focus:border-amber-500">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">Facility Street Address <span class="text-amber-400">*</span></label>
+            <input type="text" id="facilityAddressInput" placeholder="e.g. 123 Generic Street" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-slate-200 outline-none focus:border-amber-500">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">City <span class="text-amber-400">*</span></label>
+            <input type="text" id="facilityCityInput" placeholder="e.g. Des Moines Metropolitan City" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-slate-200 outline-none focus:border-amber-500">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">Contact Name & Title</label>
+            <input type="text" id="contactNameInput" placeholder="e.g. General Engineering Group" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-slate-200 outline-none focus:border-amber-500">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">Phone Number</label>
+            <input type="text" id="contactPhoneInput" placeholder="e.g. (515) 555-5555" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-slate-200 outline-none focus:border-amber-500">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">Email Address</label>
+            <input type="text" id="contactEmailInput" placeholder="e.g. ProjectManager@generalengineering.com" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-slate-200 outline-none focus:border-amber-500">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">Contact Address (if different)</label>
+            <input type="text" id="contactAddressDiffInput" placeholder="e.g. 123 Engineering Road, Des Moines, IA" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-slate-200 outline-none focus:border-amber-500">
+          </div>
+          <div class="sm:col-span-2 lg:col-span-3">
+            <label class="block font-semibold text-slate-300 mb-1">Plumbing Contractor</label>
+            <input type="text" id="plumbingContractorInput" placeholder="e.g. XYZ Plumbing Company" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-slate-200 outline-none focus:border-amber-500">
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 2: ESTABLISHMENT TYPE (FSE) -->
+      <div id="step-pane-2" class="glass-card rounded-2xl p-5 border border-slate-800 space-y-5 hidden">
+        <div class="border-b border-slate-800 pb-3 flex items-center justify-between">
+          <div>
+            <h2 class="text-base font-bold text-white flex items-center gap-2">
+              <i class="fa-solid fa-utensils text-amber-400"></i> Step 2: Type of Food Service Establishment (FSE)
+            </h2>
+            <p class="text-xs text-slate-400 mt-0.5">Select the facility classification. Ordinance rules adjust default factors automatically.</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="setWizardStep(1)" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-xl text-xs transition">
+              <i class="fa-solid fa-arrow-left"></i> Back
+            </button>
+            <button onclick="setWizardStep(3)" class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl text-xs transition flex items-center gap-1.5 shadow-md shadow-amber-500/20">
+              <span>Next: Sizing Variables</span> <i class="fa-solid fa-arrow-right"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 text-xs">
+          
+          <label class="glass-card p-4 rounded-xl border border-slate-800 hover:border-amber-500/50 cursor-pointer transition block">
+            <div class="flex items-start gap-3">
+              <input type="radio" name="fseTypeRadio" value="full_service" checked class="mt-1 text-amber-500 focus:ring-amber-500">
+              <div>
+                <h3 class="font-bold text-white text-sm">Full Service Restaurant</h3>
+                <p class="text-slate-400 mt-1">Commercial sit-down kitchen, standard 45-minute meals. Default Meal Factor = 1.3.</p>
+              </div>
+            </div>
+          </label>
+
+          <label class="glass-card p-4 rounded-xl border border-slate-800 hover:border-amber-500/50 cursor-pointer transition block">
+            <div class="flex items-start gap-3">
+              <input type="radio" name="fseTypeRadio" value="assisted_living" class="mt-1 text-amber-500 focus:ring-amber-500">
+              <div>
+                <h3 class="font-bold text-white text-sm">Assisted Living / Nursing Facility</h3>
+                <p class="text-slate-400 mt-1">Ordinance Rule: Occupancy equals maximum licensed residents per State license.</p>
+              </div>
+            </div>
+          </label>
+
+          <label class="glass-card p-4 rounded-xl border border-slate-800 hover:border-amber-500/50 cursor-pointer transition block">
+            <div class="flex items-start gap-3">
+              <input type="radio" name="fseTypeRadio" value="single_service" class="mt-1 text-amber-500 focus:ring-amber-500">
+              <div>
+                <h3 class="font-bold text-white text-sm">Single Service Restaurant</h3>
+                <p class="text-slate-400 mt-1">All service is single use disposable, no commercial dishwasher, no garbage disposal.</p>
+              </div>
+            </div>
+          </label>
+
+          <label class="glass-card p-4 rounded-xl border border-slate-800 hover:border-amber-500/50 cursor-pointer transition block">
+            <div class="flex items-start gap-3">
+              <input type="radio" name="fseTypeRadio" value="grocery" class="mt-1 text-amber-500 focus:ring-amber-500">
+              <div>
+                <h3 class="font-bold text-white text-sm">Grocery</h3>
+                <p class="text-slate-400 mt-1">Deli, bakery, rotisserie or meat prep. Intermittent use FSE (Meal Factor = 1.0).</p>
+              </div>
+            </div>
+          </label>
+
+          <label class="glass-card p-4 rounded-xl border border-slate-800 hover:border-amber-500/50 cursor-pointer transition block">
+            <div class="flex items-start gap-3">
+              <input type="radio" name="fseTypeRadio" value="church" class="mt-1 text-amber-500 focus:ring-amber-500">
+              <div>
+                <h3 class="font-bold text-white text-sm">Church</h3>
+                <p class="text-slate-400 mt-1">Ordinance Rule: Include all dining areas used for meal service. Meal Factor = 1.0.</p>
+              </div>
+            </div>
+          </label>
+
+          <label class="glass-card p-4 rounded-xl border border-slate-800 hover:border-amber-500/50 cursor-pointer transition block">
+            <div class="flex items-start gap-3">
+              <input type="radio" name="fseTypeRadio" value="school" class="mt-1 text-amber-500 focus:ring-amber-500">
+              <div>
+                <h3 class="font-bold text-white text-sm">School / Daycare</h3>
+                <p class="text-slate-400 mt-1">Cafeteria / kitchen serving scheduled student body meals.</p>
+              </div>
+            </div>
+          </label>
+
+        </div>
+
+        <!-- OTHER SPECIFICATION OPTION -->
+        <div class="p-3.5 bg-slate-900/60 rounded-xl border border-slate-800 flex flex-col sm:flex-row sm:items-center gap-3 text-xs">
+          <label class="flex items-center gap-2 cursor-pointer font-bold text-slate-300">
+            <input type="radio" name="fseTypeRadio" value="other" class="text-amber-500 focus:ring-amber-500">
+            <span>Other Custom FSE Type:</span>
+          </label>
+          <input type="text" id="fseOtherTextInput" placeholder="Specify establishment classification..." disabled class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-white outline-none focus:border-amber-500 disabled:opacity-50">
+        </div>
+      </div>
+
+      <!-- STEP 3: SIZING VARIABLES -->
+      <div id="step-pane-3" class="glass-card rounded-2xl p-5 border border-slate-800 space-y-5 hidden">
+        <div class="border-b border-slate-800 pb-3 flex items-center justify-between">
+          <div>
+            <h2 class="text-base font-bold text-white flex items-center gap-2">
+              <i class="fa-solid fa-sliders text-amber-400"></i> Step 3: Identify Sizing Variables
+            </h2>
+            <p class="text-xs text-slate-400 mt-0.5">Determine the 4 core variables: Peak Meals/Hr, Waste Flow Rate, Retention Time, and Storage Factor.</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="setWizardStep(2)" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-xl text-xs transition">
+              <i class="fa-solid fa-arrow-left"></i> Back
+            </button>
+            <button onclick="setWizardStep(4)" class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl text-xs transition flex items-center gap-1.5 shadow-md shadow-amber-500/20">
+              <span>Next: Verification</span> <i class="fa-solid fa-arrow-right"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 text-xs">
+          
+          <!-- VARIABLE 1: PEAK MEALS PER HOUR -->
+          <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800 space-y-3.5">
+            <div class="flex items-center justify-between">
+              <h3 class="font-bold text-white text-sm flex items-center gap-1.5">
+                <span class="w-5 h-5 rounded-md bg-amber-500/20 text-amber-400 flex items-center justify-center text-xs font-bold">1</span>
+                <span>Peak Meals per Hour</span>
+              </h3>
+              <div class="flex items-center bg-slate-950 p-1 rounded-lg border border-slate-800">
+                <button id="btnModePeakCalc" onclick="setPeakMealsMode('calc')" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-amber-500 text-slate-950 shadow-md">By Formula</button>
+                <button id="btnModePeakDirect" onclick="setPeakMealsMode('direct')" class="px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-400 hover:text-white">Direct Entry</button>
+              </div>
+            </div>
+
+            <!-- FORMULA BLOCK -->
+            <div id="peakMealsCalcBlock" class="space-y-3">
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block font-semibold text-slate-300 mb-1">Seating Capacity / Occupancy *</label>
+                  <input type="number" id="seatingCapacityInput" value="50" min="0" step="1" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 font-bold text-white mono outline-none focus:border-amber-500">
+                  <span class="text-[10px] text-slate-500 mt-1 block">* Include all dining or resident capacity</span>
+                </div>
+                <div>
+                  <label class="block font-semibold text-slate-300 mb-1">Meal Factor **</label>
+                  <select id="mealFactorSelect" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 font-bold text-white outline-none focus:border-amber-500">
+                    <option value="1.3">1.3 (Standard 45-min meal)</option>
+                    <option value="1.0">1.0 (Intermittent use FSE)</option>
+                  </select>
+                  <span class="text-[10px] text-slate-500 mt-1 block">** 1.3 for 45-min meal, 1.0 for intermittent</span>
+                </div>
+              </div>
+              <div class="p-2.5 bg-slate-950 rounded-lg border border-slate-800 flex items-center justify-between text-xs">
+                <span class="text-slate-400">Peak Meals Result:</span>
+                <span class="font-bold text-amber-400 mono"><span id="formulaCalcSeats">50</span> × <span id="formulaCalcFactor">1.3</span> = <span id="formulaCalcPeakMeals">65</span> meals/hr</span>
+              </div>
+            </div>
+
+            <!-- DIRECT BLOCK -->
+            <div id="peakMealsDirectBlock" class="hidden space-y-2">
+              <label class="block font-semibold text-slate-300">Direct Peak Meals per Hour</label>
+              <input type="number" id="peakMealsDirectInput" value="65" min="1" step="1" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 font-bold text-white mono outline-none focus:border-amber-500">
+              <p class="text-[10px] text-slate-400">Enter established engineering demand if known from operational records.</p>
+            </div>
+          </div>
+
+          <!-- VARIABLE 2: WASTE FLOW RATE -->
+          <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800 space-y-3">
+            <div class="flex items-center justify-between">
+              <h3 class="font-bold text-white text-sm flex items-center gap-1.5">
+                <span class="w-5 h-5 rounded-md bg-amber-500/20 text-amber-400 flex items-center justify-center text-xs font-bold">2</span>
+                <span>Waste Flow Rate</span>
+              </h3>
+              <span class="text-[10px] font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">GPM Rating</span>
+            </div>
+
+            <div class="space-y-2">
+              <label class="flex items-center justify-between p-2 rounded-lg bg-slate-950 border border-slate-800 hover:border-amber-500/40 cursor-pointer">
+                <div class="flex items-center gap-2">
+                  <input type="radio" name="kitchenTypeRadio" value="comm_dw_1disp" class="text-amber-500 focus:ring-amber-500">
+                  <span class="text-slate-200">a. Dishwasher & 1 Garbage Disposal</span>
+                </div>
+                <span class="font-bold text-amber-400 mono">7 GPM</span>
+              </label>
+
+              <label class="flex items-center justify-between p-2 rounded-lg bg-slate-950 border border-slate-800 hover:border-amber-500/40 cursor-pointer">
+                <div class="flex items-center gap-2">
+                  <input type="radio" name="kitchenTypeRadio" value="comm_dw_no_disp" class="text-amber-500 focus:ring-amber-500">
+                  <span class="text-slate-200">b. Dishwasher, No Garbage Disposal</span>
+                </div>
+                <span class="font-bold text-amber-400 mono">6 GPM</span>
+              </label>
+
+              <label class="flex items-center justify-between p-2 rounded-lg bg-slate-950 border border-slate-800 hover:border-amber-500/40 cursor-pointer">
+                <div class="flex items-center gap-2">
+                  <input type="radio" name="kitchenTypeRadio" value="comm_no_dw_1disp" class="text-amber-500 focus:ring-amber-500">
+                  <span class="text-slate-200">c. No Dishwasher, 1 Garbage Disposal</span>
+                </div>
+                <span class="font-bold text-amber-400 mono">6 GPM</span>
+              </label>
+
+              <label class="flex items-center justify-between p-2 rounded-lg bg-slate-950 border border-slate-800 hover:border-amber-500/40 cursor-pointer">
+                <div class="flex items-center gap-2">
+                  <input type="radio" name="kitchenTypeRadio" value="comm_no_dw_no_disp" checked class="text-amber-500 focus:ring-amber-500">
+                  <span class="text-slate-200">d. No Dishwasher, No Garbage Disposal</span>
+                </div>
+                <span class="font-bold text-amber-400 mono">5 GPM</span>
+              </label>
+
+              <label class="flex items-center justify-between p-2 rounded-lg bg-slate-950 border border-slate-800 hover:border-amber-500/40 cursor-pointer">
+                <div class="flex items-center gap-2">
+                  <input type="radio" name="kitchenTypeRadio" value="single_service" class="text-amber-500 focus:ring-amber-500">
+                  <span class="text-slate-200">e. Single Service Kitchen (All single use)</span>
+                </div>
+                <span class="font-bold text-amber-400 mono">2 GPM</span>
+              </label>
+            </div>
+
+            <!-- ADDITIONAL GARBAGE DISPOSALS -->
+            <div class="pt-2 border-t border-slate-800 flex items-center justify-between">
+              <span class="text-slate-400">Additional disposals (+1 GPM each):</span>
+              <input type="number" id="additionalDisposalsInput" value="0" min="0" max="10" step="1" class="w-16 bg-slate-950 border border-slate-700 rounded-lg p-1 text-center font-bold text-white mono outline-none focus:border-amber-500">
+            </div>
+          </div>
+
+          <!-- VARIABLE 3: RETENTION TIME -->
+          <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800 space-y-3">
+            <div class="flex items-center justify-between">
+              <h3 class="font-bold text-white text-sm flex items-center gap-1.5">
+                <span class="w-5 h-5 rounded-md bg-amber-500/20 text-amber-400 flex items-center justify-center text-xs font-bold">3</span>
+                <span>Retention Time</span>
+              </h3>
+              <span class="text-[10px] font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">Select Option</span>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <label class="p-3 bg-slate-950 rounded-xl border border-slate-800 hover:border-amber-500/40 cursor-pointer flex flex-col justify-between transition">
+                <div class="flex items-start gap-2.5">
+                  <input type="radio" name="retentionTimeRadio" value="commercial" checked class="mt-0.5 text-amber-500 focus:ring-amber-500">
+                  <div>
+                    <h4 class="font-bold text-white text-xs">a. Commercial Kitchen</h4>
+                    <p class="text-[11px] text-slate-400 mt-0.5 leading-snug">Standard commercial retention requirement.</p>
+                  </div>
+                </div>
+                <div class="mt-3 pt-2 border-t border-slate-800/80 flex items-center justify-between">
+                  <span class="text-[10px] text-slate-500 font-semibold">Ordinance Factor</span>
+                  <span class="text-base font-extrabold text-amber-400 mono">2.5 hrs</span>
+                </div>
+              </label>
+
+              <label class="p-3 bg-slate-950 rounded-xl border border-slate-800 hover:border-amber-500/40 cursor-pointer flex flex-col justify-between transition">
+                <div class="flex items-start gap-2.5">
+                  <input type="radio" name="retentionTimeRadio" value="single" class="mt-0.5 text-amber-500 focus:ring-amber-500">
+                  <div>
+                    <h4 class="font-bold text-white text-xs">b. Single Service</h4>
+                    <p class="text-[11px] text-slate-400 mt-0.5 leading-snug">Quick-turn single use disposable kitchen.</p>
+                  </div>
+                </div>
+                <div class="mt-3 pt-2 border-t border-slate-800/80 flex items-center justify-between">
+                  <span class="text-[10px] text-slate-500 font-semibold">Ordinance Factor</span>
+                  <span class="text-base font-extrabold text-amber-400 mono">1.5 hrs</span>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- VARIABLE 4: STORAGE FACTOR -->
+          <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800 space-y-3">
+            <div class="flex items-center justify-between">
+              <h3 class="font-bold text-white text-sm flex items-center gap-1.5">
+                <span class="w-5 h-5 rounded-md bg-amber-500/20 text-amber-400 flex items-center justify-center text-xs font-bold">4</span>
+                <span>Storage Factor (Operating Hours)</span>
+              </h3>
+              <span class="text-[10px] font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">Schedule Multiplier</span>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              <label class="p-2 rounded-lg bg-slate-950 border border-slate-800 hover:border-amber-500/40 cursor-pointer flex flex-col justify-between">
+                <div class="flex items-center gap-1.5">
+                  <input type="radio" name="operatingHoursRadio" value="8" class="text-amber-500 focus:ring-amber-500">
+                  <span class="text-slate-300 font-semibold text-[11px]">Up to 8 hrs</span>
+                </div>
+                <span class="font-extrabold text-amber-400 mono text-right mt-1">1.0</span>
+              </label>
+
+              <label class="p-2 rounded-lg bg-slate-950 border border-slate-800 hover:border-amber-500/40 cursor-pointer flex flex-col justify-between">
+                <div class="flex items-center gap-1.5">
+                  <input type="radio" name="operatingHoursRadio" value="12" class="text-amber-500 focus:ring-amber-500">
+                  <span class="text-slate-300 font-semibold text-[11px]">Up to 12 hrs</span>
+                </div>
+                <span class="font-extrabold text-amber-400 mono text-right mt-1">1.5</span>
+              </label>
+
+              <label class="p-2 rounded-lg bg-slate-950 border border-slate-800 hover:border-amber-500/40 cursor-pointer flex flex-col justify-between">
+                <div class="flex items-center gap-1.5">
+                  <input type="radio" name="operatingHoursRadio" value="16" checked class="text-amber-500 focus:ring-amber-500">
+                  <span class="text-slate-300 font-semibold text-[11px]">Up to 16 hrs</span>
+                </div>
+                <span class="font-extrabold text-amber-400 mono text-right mt-1">2.0</span>
+              </label>
+
+              <label class="p-2 rounded-lg bg-slate-950 border border-slate-800 hover:border-amber-500/40 cursor-pointer flex flex-col justify-between">
+                <div class="flex items-center gap-1.5">
+                  <input type="radio" name="operatingHoursRadio" value="20" class="text-amber-500 focus:ring-amber-500">
+                  <span class="text-slate-300 font-semibold text-[11px]">Up to 20 hrs</span>
+                </div>
+                <span class="font-extrabold text-amber-400 mono text-right mt-1">2.5</span>
+              </label>
+
+              <label class="p-2 rounded-lg bg-slate-950 border border-slate-800 hover:border-amber-500/40 cursor-pointer flex flex-col justify-between">
+                <div class="flex items-center gap-1.5">
+                  <input type="radio" name="operatingHoursRadio" value="24" class="text-amber-500 focus:ring-amber-500">
+                  <span class="text-slate-300 font-semibold text-[11px]">Up to 24 hrs</span>
+                </div>
+                <span class="font-extrabold text-amber-400 mono text-right mt-1">3.0</span>
+              </label>
+
+              <label class="p-2 rounded-lg bg-slate-950 border border-slate-800 hover:border-amber-500/40 cursor-pointer flex flex-col justify-between">
+                <div class="flex items-center gap-1.5">
+                  <input type="radio" name="operatingHoursRadio" value="single" class="text-amber-500 focus:ring-amber-500">
+                  <span class="text-slate-300 font-semibold text-[11px]">Single Service</span>
+                </div>
+                <span class="font-extrabold text-amber-400 mono text-right mt-1">1.5</span>
+              </label>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- STEP 4: CALCULATION VERIFICATION SCREEN -->
+      <div id="step-pane-4" class="glass-card rounded-2xl p-5 border border-slate-800 space-y-5 hidden">
+        <div class="border-b border-slate-800 pb-3 flex items-center justify-between">
+          <div>
+            <h2 class="text-base font-bold text-white flex items-center gap-2">
+              <i class="fa-solid fa-calculator text-amber-400"></i> Step 4: Calculation Verification & Sizing Inspector
+            </h2>
+            <p class="text-xs text-slate-400 mt-0.5">Verify formula multiplication, code minimum compliance, and commercial interceptor selection.</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="setWizardStep(3)" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-xl text-xs transition">
+              <i class="fa-solid fa-arrow-left"></i> Back
+            </button>
+            <button onclick="setWizardStep(5)" class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl text-xs transition flex items-center gap-1.5 shadow-md shadow-amber-500/20">
+              <span>Next: Proposal Form</span> <i class="fa-solid fa-arrow-right"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- FORMULA MULTIPLICATION CAROUSEL / BREAKDOWN -->
+        <div class="p-4 bg-slate-900/90 rounded-2xl border border-slate-800 space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="text-xs uppercase font-extrabold text-slate-400 tracking-wider">Official Sizing Formula Verification</span>
+            <span class="text-xs text-amber-400 mono font-bold">WRA Formula #1</span>
+          </div>
+
+          <div class="flex flex-wrap items-center justify-center gap-3 sm:gap-4 py-3 text-center">
+            <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 min-w-[90px]">
+              <span class="text-[10px] text-slate-400 uppercase font-semibold block">Peak Meals/Hr</span>
+              <span id="formulaPeakMealsVal" class="text-lg sm:text-xl font-extrabold text-white mono">65</span>
+            </div>
+            <span class="text-lg font-bold text-slate-500">×</span>
+            <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 min-w-[90px]">
+              <span class="text-[10px] text-slate-400 uppercase font-semibold block">Flow Rate (GPM)</span>
+              <span id="formulaFlowRateVal" class="text-lg sm:text-xl font-extrabold text-white mono">5</span>
+            </div>
+            <span class="text-lg font-bold text-slate-500">×</span>
+            <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 min-w-[90px]">
+              <span class="text-[10px] text-slate-400 uppercase font-semibold block">Retention (Hrs)</span>
+              <span id="formulaRetentionVal" class="text-lg sm:text-xl font-extrabold text-white mono">2.5</span>
+            </div>
+            <span class="text-lg font-bold text-slate-500">×</span>
+            <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 min-w-[90px]">
+              <span class="text-[10px] text-slate-400 uppercase font-semibold block">Storage Factor</span>
+              <span id="formulaStorageVal" class="text-lg sm:text-xl font-extrabold text-white mono">2.0</span>
+            </div>
+            <span class="text-xl font-bold text-amber-400">=</span>
+            <div class="bg-gradient-to-tr from-amber-500/20 to-orange-500/10 p-3 rounded-xl border border-amber-500/40 min-w-[130px]">
+              <span class="text-[10px] text-amber-400 uppercase font-bold block">Calculated GI Size</span>
+              <span id="formulaResultVal" class="text-xl sm:text-2xl font-black text-white mono">1,625</span>
+              <span class="text-[9px] text-slate-400 block mt-0.5">Gallons Capacity</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CODE ORDINANCE ADVISORY BANNER -->
+        <div class="p-3.5 bg-slate-900/60 rounded-xl border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+          <div class="flex items-center gap-2.5">
+            <div class="p-2 bg-amber-500/10 text-amber-400 rounded-lg">
+              <i class="fa-solid fa-scale-balanced text-sm"></i>
+            </div>
+            <div>
+              <span class="font-bold text-white block">Ordinance Minimum Rule:</span>
+              <span class="text-slate-400 text-[11px]">Grease Interceptor sizing must not be less than the Ordinance minimum of <strong>1,000 gallons</strong>.</span>
+            </div>
+          </div>
+          <div class="p-1.5 px-3 rounded-lg bg-slate-950 border border-slate-800 text-[11px] text-slate-300 font-mono whitespace-nowrap">
+            Code Floor: 1,000 Gallons
+          </div>
+        </div>
+
+        <!-- DEDICATED PROPOSED INSTALLATION SPECIFICATION CARD -->
+        <div class="p-5 bg-slate-900/80 rounded-2xl border border-amber-500/30 space-y-4 shadow-xl">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 border-b border-slate-800 pb-3">
+            <div>
+              <h3 class="font-bold text-white text-sm flex items-center gap-2">
+                <i class="fa-solid fa-pen-to-square text-amber-400"></i>
+                <span>Designate Proposed Interceptor Installation (Official Proposal Field)</span>
+              </h3>
+              <p class="text-xs text-slate-400 mt-0.5">
+                The engineer can fill in or customize the text answer for this line below. This directly populates the <em>"Proposed installation is as follows:"</em> field in Step 5 and the printable official WRA proposal form.
+              </p>
+            </div>
+            <button onclick="resetProposedToAuto()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-400 font-bold rounded-lg text-xs transition border border-slate-700 flex items-center gap-1.5 self-start sm:self-auto whitespace-nowrap" title="Reset to auto-calculated standard tank size">
+              <i class="fa-solid fa-rotate-left"></i>
+              <span>Reset to Calculated (<span id="btnAutoRoundSizeDisplay">2,000 gal</span>)</span>
+            </button>
+          </div>
+
+          <!-- QUANTITY & TANK SIZE CONFIGURATION HELPER -->
+          <div class="p-3.5 bg-slate-950 rounded-xl border border-slate-800/80 space-y-3">
+            <span class="text-[11px] font-bold text-slate-300 uppercase tracking-wider block">
+              <i class="fa-solid fa-wand-magic-sparkles text-amber-400 mr-1"></i> Quick Configuration Helper: Select Quantity & Nominal Tank Size
+            </span>
+            <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs items-end">
+              <div>
+                <label class="block font-semibold text-slate-400 mb-1">Interceptor Quantity</label>
+                <select id="propQtySelect" onchange="handlePresetBuilderChange()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 font-bold text-white outline-none focus:border-amber-500">
+                  <option value="1">1 Unit (Single Interceptor)</option>
+                  <option value="2">2 Units (Dual Interceptors)</option>
+                  <option value="3">3 Units (Triple Interceptors)</option>
+                  <option value="4">4 Units</option>
+                </select>
+              </div>
+
+              <div class="sm:col-span-2">
+                <label class="block font-semibold text-slate-400 mb-1">Nominal Unit Capacity (Standard Sizes)</label>
+                <select id="propSizeSelect" onchange="handlePresetBuilderChange()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 font-bold text-white outline-none focus:border-amber-500">
+                  <option value="1000">1,000 Gallons (Ordinance Minimum)</option>
+                  <option value="1250">1,250 Gallons</option>
+                  <option value="1500">1,500 Gallons</option>
+                  <option value="1750">1,750 Gallons</option>
+                  <option value="2000" selected>2,000 Gallons</option>
+                  <option value="2500">2,500 Gallons</option>
+                  <option value="3000">3,000 Gallons</option>
+                  <option value="4000">4,000 Gallons</option>
+                  <option value="5000">5,000 Gallons</option>
+                  <option value="6000">6,000 Gallons</option>
+                  <option value="7500">7,500 Gallons</option>
+                  <option value="10000">10,000 Gallons</option>
+                </select>
+              </div>
+
+              <div>
+                <button onclick="applyProposedPreset()" class="w-full py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold rounded-lg text-xs transition shadow-md shadow-amber-500/20 flex items-center justify-center gap-1.5">
+                  <i class="fa-solid fa-arrow-down"></i> Apply to Line
+                </button>
+              </div>
+            </div>
+
+            <!-- TOTAL DESIGNATED CAPACITY STRIP -->
+            <div id="capacityComparisonStrip" class="pt-2 border-t border-slate-800/80 flex flex-wrap items-center justify-between text-[11px] text-slate-400 gap-2">
+              <span>Total Designated Capacity: <strong id="designatedTotalCapText" class="text-white mono">2,000 gal</strong></span>
+              <span id="capacityAdequacyBadge" class="text-emerald-400 font-bold flex items-center gap-1">
+                <i class="fa-solid fa-circle-check"></i> Meets Calculated Size (1,625 gal)
+              </span>
+            </div>
+          </div>
+
+          <!-- EDITABLE PROPOSAL TEXT BOX -->
+          <div class="space-y-1.5 text-xs">
+            <div class="flex items-center justify-between">
+              <label class="block font-bold text-slate-200">
+                Official Proposal Answer (Populates Printable Form Line) <span class="text-amber-400">*</span>
+              </label>
+              <span class="text-[10px] text-slate-400">Freely editable for custom wording</span>
+            </div>
+            <input type="text" id="proposedInstallationInput" value="Install one 2,000-gallon grease interceptor" oninput="handleProposedInput(this.value)" class="w-full bg-slate-950 border border-amber-500/60 rounded-xl p-3 font-bold text-white text-sm outline-none focus:border-amber-400 transition shadow-inner">
+            
+            <div class="p-2.5 rounded-lg bg-slate-950/80 border border-slate-800 flex items-center justify-between flex-wrap gap-2 text-xs">
+              <span class="text-slate-400 text-[11px]">Live Preview on Step 5 Official Proposal Sheet:</span>
+              <span class="font-bold text-amber-400 italic text-[11.5px] truncate max-w-full sm:max-w-[70%]" id="proposedLineLivePreview">"Install one 2,000-gallon grease interceptor"</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- OFFICIAL SUBMITTAL CHECKLIST -->
+        <div class="p-4 bg-slate-900/60 rounded-xl border border-slate-800 space-y-3">
+          <h3 class="font-bold text-white text-xs uppercase tracking-wider flex items-center gap-1.5">
+            <i class="fa-solid fa-list-check text-sky-400"></i> Official Submission Checklist (WRA Requirements)
+          </h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+            <label class="flex items-center gap-2.5 p-2 rounded-lg bg-slate-950/80 border border-slate-800 cursor-pointer">
+              <input type="checkbox" id="checkSubProposal" checked class="text-amber-500 rounded focus:ring-amber-500">
+              <span class="text-slate-300">Completed Grease Interceptor Sizing Proposal (PE / Plumber)</span>
+            </label>
+            <label class="flex items-center gap-2.5 p-2 rounded-lg bg-slate-950/80 border border-slate-800 cursor-pointer">
+              <input type="checkbox" id="checkSubBlueprint" checked class="text-amber-500 rounded focus:ring-amber-500">
+              <span class="text-slate-300">Kitchen plumbing blueprint</span>
+            </label>
+            <label class="flex items-center gap-2.5 p-2 rounded-lg bg-slate-950/80 border border-slate-800 cursor-pointer">
+              <input type="checkbox" id="checkSubEquipment" checked class="text-amber-500 rounded focus:ring-amber-500">
+              <span class="text-slate-300">Kitchen equipment list</span>
+            </label>
+            <label class="flex items-center gap-2.5 p-2 rounded-lg bg-slate-950/80 border border-slate-800 cursor-pointer">
+              <input type="checkbox" id="checkSubSitePlan" checked class="text-amber-500 rounded focus:ring-amber-500">
+              <span class="text-slate-300">FSE site plan showing seating capacity or occupancy</span>
+            </label>
+            <label class="flex items-center gap-2.5 p-2 rounded-lg bg-slate-950/80 border border-slate-800 cursor-pointer sm:col-span-2">
+              <input type="checkbox" id="checkSubVerification" class="text-amber-500 rounded focus:ring-amber-500">
+              <span class="text-slate-300">Verification of current Grease Interceptor size by a professional engineer or licensed plumber (if applicable)</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between pt-2 border-t border-slate-800">
+          <button onclick="setWizardStep(3)" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-xl text-xs transition flex items-center gap-1.5">
+            <i class="fa-solid fa-arrow-left"></i> <span>Back: Sizing Variables</span>
+          </button>
+          <button onclick="setWizardStep(5)" class="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-extrabold rounded-xl text-xs transition flex items-center gap-2 shadow-lg shadow-amber-500/25">
+            <span>Proceed to Step 5: Official Proposal Form</span> <i class="fa-solid fa-arrow-right"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- STEP 5: PROPOSAL FORM PREVIEW & EXPORT WORKSPACE -->
+      <div id="step-pane-5" class="glass-card rounded-2xl p-5 border border-slate-800 space-y-4 hidden">
+        
+        <!-- TOOLBAR: EXPORT, PRINT & ZOOM CONTROLS -->
+        <div id="step5Toolbar" class="no-print flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-800 pb-3">
+          <div>
+            <h2 class="text-base font-bold text-white flex items-center gap-2">
+              <i class="fa-solid fa-file-contract text-amber-400"></i> Step 5: Official Proposal Form (To-Scale Preview)
+            </h2>
+            <p class="text-xs text-slate-400 mt-0.5">True-to-scale 8.5" x 11" form with all criteria and calculations entered in clean black text.</p>
+          </div>
+
+          <div class="flex items-center gap-2 flex-wrap">
+            <select id="previewZoomSelect" onchange="setPreviewZoom(this.value)" class="bg-slate-900 border border-slate-700 text-slate-300 rounded-xl px-2.5 py-2 text-xs font-semibold outline-none focus:border-amber-500">
+              <option value="100">Zoom: 100%</option>
+              <option value="85">Zoom: 85%</option>
+              <option value="75">Zoom: 75%</option>
+              <option value="60">Zoom: 60%</option>
+            </select>
+
+            <button onclick="downloadProposalPDF()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white font-bold rounded-xl text-xs transition flex items-center gap-1.5 shadow-md" title="Download Form-Fillable PDF">
+              <i class="fa-solid fa-download text-amber-400"></i>
+              <span>Download PDF</span>
+            </button>
+
+            <button onclick="printProposalForm()" class="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold rounded-xl text-xs transition flex items-center gap-1.5 shadow-lg shadow-amber-500/25" title="Print 8.5x11 Form or Save as PDF">
+              <i class="fa-solid fa-print"></i>
+              <span>Print / Save to PDF</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- SCROLLABLE CANVAS CONTAINER FOR PREVIEW -->
+        <div id="previewOuterScrollWrapper" class="overflow-x-auto bg-slate-950/80 p-4 sm:p-6 rounded-2xl border border-slate-800 flex justify-center">
+          
+          <!-- PRINTABLE PROPOSAL PAGE CONTAINER (TARGET OF PRINT & VISUAL REPLICA) -->
+          <div id="printableProposalPage" class="transition-transform duration-200">
+            <div id="proposalPreviewSheet" class="proposal-paper-sheet">
+              
+              <!-- HEADER AREA: WRA LOGO | TITLE BOX | FOG BADGE -->
+              <div class="flex items-center justify-between mb-3">
+                
+                <!-- WRA LOGO (SVG VECTOR) -->
+                <div class="w-20 text-center">
+                  <div style="width: 72px; height: 42px; border: 2.2px solid #004488; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
+                    <span style="font-family: Arial, Helvetica, sans-serif; font-weight: 900; font-size: 19px; color: #004488; letter-spacing: -0.5px;">WRA</span>
+                  </div>
+                </div>
+
+                <!-- CENTER TITLE BOX -->
+                <div style="border: 1.8px solid #000000; padding: 6px 20px; text-align: center; background: #ffffff;">
+                  <h1 style="font-size: 16px; font-weight: bold; margin: 0; color: #000000; font-family: Arial, Helvetica, sans-serif;">
+                    WRA Grease Interceptor Sizing Proposal
+                  </h1>
+                </div>
+
+                <!-- FOG BADGE (SVG VECTOR) -->
+                <div class="w-20 text-center">
+                  <div style="width: 44px; height: 44px; border: 2px solid #cc2200; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 0 auto; background: #fff;">
+                    <span style="font-size: 5px; font-weight: bold; color: #cc2200; line-height: 1;">FATS - OIL - GREASE</span>
+                    <span style="font-size: 12px; font-weight: 900; color: #cc2200; line-height: 1.1;">FOG</span>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- CRITERIA SECTION -->
+              <div style="margin-bottom: 10px; font-size: 11px;">
+                <div style="margin-bottom: 5px;">
+                  <strong>Date:</strong> <span id="pvDate" class="form-underline" style="min-width: 140px;"></span>
+                </div>
+                
+                <div style="margin-bottom: 5px;">
+                  <strong>Facility Name:</strong> <span id="pvFacilityName" class="form-underline" style="width: 82%;"></span>
+                </div>
+
+                <div style="margin-bottom: 5px; display: flex;">
+                  <div style="width: 58%;">
+                    <strong>Address:</strong> <span id="pvAddress" class="form-underline" style="width: 80%;"></span>
+                  </div>
+                  <div style="width: 42%;">
+                    <strong>City:</strong> <span id="pvCity" class="form-underline" style="width: 84%;"></span>
+                  </div>
+                </div>
+
+                <div style="margin-bottom: 5px;">
+                  <strong>Contact Name and Title:</strong> <span id="pvContactName" class="form-underline" style="width: 72%;"></span>
+                </div>
+
+                <div style="margin-bottom: 5px; display: flex;">
+                  <div style="width: 45%;">
+                    <strong>Phone:</strong> <span id="pvPhone" class="form-underline" style="width: 80%;"></span>
+                  </div>
+                  <div style="width: 55%;">
+                    <strong>Email:</strong> <span id="pvEmail" class="form-underline" style="width: 85%;"></span>
+                  </div>
+                </div>
+
+                <div style="margin-bottom: 5px;">
+                  <strong>Contact Address (if different):</strong> <span id="pvContactAddressDiff" class="form-underline" style="width: 65%;"></span>
+                </div>
+
+                <div style="margin-bottom: 8px;">
+                  <strong>Plumbing Contractor:</strong> <span id="pvContractor" class="form-underline" style="width: 75%;"></span>
+                </div>
+              </div>
+
+              <!-- TYPE OF FOOD SERVICE ESTABLISHMENT (FSE) -->
+              <div style="margin-bottom: 8px;">
+                <div style="font-weight: bold; margin-bottom: 4px; font-size: 11.5px;">Type of Food Service Establishment (FSE)</div>
+                <div style="display: flex; margin-bottom: 3px;">
+                  <div style="width: 35%;"><span id="pvFse_full_service" class="box-checkbox"></span> Full Service Restaurant</div>
+                  <div style="width: 37%;"><span id="pvFse_assisted_living" class="box-checkbox"></span> Assisted Living / Nursing Facility</div>
+                  <div style="width: 28%;"><span id="pvFse_other" class="box-checkbox"></span> Other: <span id="pvFseOtherText" style="text-decoration: underline;"></span></div>
+                </div>
+                <div style="display: flex;">
+                  <div style="width: 35%;"><span id="pvFse_single_service" class="box-checkbox"></span> Single Service Restaurant</div>
+                  <div style="width: 22%;"><span id="pvFse_grocery" class="box-checkbox"></span> Grocery</div>
+                  <div style="width: 15%;"><span id="pvFse_church" class="box-checkbox"></span> Church</div>
+                  <div style="width: 28%;"><span id="pvFse_school" class="box-checkbox"></span> School / Daycare</div>
+                </div>
+              </div>
+
+              <!-- ORDINANCE HEADER LINE -->
+              <div style="font-weight: bold; font-size: 11.5px; border-bottom: 1.5px solid #000; padding-bottom: 2px; margin-bottom: 8px;">
+                Grease Interceptor Sizing – Must not be less than the Ordinance minimum of 1000 gallons.
+              </div>
+
+              <!-- SECTION 1: PEAK MEALS PER HOUR -->
+              <div style="margin-bottom: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                  <div style="font-weight: bold;">1.  Peak Meals per Hour <span style="font-weight: normal;">(if unknown use formula below)</span></div>
+                  <div style="font-size: 9.5px; line-height: 1.2; text-align: left; width: 45%;">
+                    * Church: include all area(s) used for meal service<br>
+                    * Assisted Living / Nursing Facility: equal to max<br>
+                    &nbsp;&nbsp;number of residents (per State license)<br>
+                    ** Meal Factor: 1.3 (for 45-minute meal) or<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;1.0 (for intermittent use FSE)
+                  </div>
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px; margin-bottom: 6px;">
+                  <div style="text-align: center;">
+                    <div style="font-size: 10px; margin-bottom: 2px;">Seating Capacity or<br>Occupancy of FSE*</div>
+                    <div id="pvSeats" class="calc-box" style="width: 75px;">50</div>
+                  </div>
+
+                  <span style="font-size: 14px; font-weight: bold; margin-top: 14px;">X</span>
+
+                  <div style="text-align: center;">
+                    <div style="font-size: 10px; margin-bottom: 2px;">Meal<br>Factor**</div>
+                    <div id="pvMealFactor" class="calc-box" style="width: 60px;">1.3</div>
+                  </div>
+
+                  <span style="font-size: 14px; font-weight: bold; margin-top: 14px;">=</span>
+
+                  <div style="text-align: center;">
+                    <div style="font-size: 10px; margin-bottom: 2px;">Peak Meals<br>per Hour</div>
+                    <div id="pvPeakMealsBox1" class="calc-box" style="width: 75px;">65</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- SECTION 2: WASTE FLOW RATE -->
+              <div style="margin-bottom: 8px;">
+                <div style="font-weight: bold; margin-bottom: 2px;">2.  Waste Flow Rate</div>
+                <div style="padding-left: 14px; font-size: 10.5px;">
+                  <div style="display: flex; justify-content: space-between; margin-bottom: 1px;">
+                    <span>a.  Commercial, equipped kitchen with dishwasher & one garbage disposal*</span>
+                    <span id="pvWasteRate_a" style="font-weight: bold; margin-right: 40px;">7</span>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; margin-bottom: 1px;">
+                    <span>b.  Commercial, equipped kitchen with dishwasher, no garbage disposal</span>
+                    <span id="pvWasteRate_b" style="font-weight: bold; margin-right: 40px;">6</span>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; margin-bottom: 1px;">
+                    <span>c.  Commercial, equipped kitchen with no dishwasher, one garbage disposal*</span>
+                    <span id="pvWasteRate_c" style="font-weight: bold; margin-right: 40px;">6</span>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; margin-bottom: 1px;">
+                    <span>d.  Commercial, equipped kitchen with no dishwasher, no garbage disposal</span>
+                    <span id="pvWasteRate_d" style="font-weight: bold; margin-right: 40px;">5</span>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; margin-bottom: 1px;">
+                    <span>e.  Single service kitchen**</span>
+                    <span id="pvWasteRate_e" style="font-weight: bold; margin-right: 40px;">2</span>
+                  </div>
+                  <div style="font-size: 9px; color: #444; margin-top: 2px;">
+                    * Each additional garbage disposal, add one (1) gallon<br>
+                    ** Single service kitchen = no garbage disposal, no dishwasher and all service is single use
+                  </div>
+                </div>
+              </div>
+
+              <!-- SECTION 3: RETENTION TIME -->
+              <div style="margin-bottom: 8px;">
+                <div style="font-weight: bold; margin-bottom: 2px;">3.  Retention Time</div>
+                <div style="padding-left: 14px; font-size: 10.5px;">
+                  <div style="display: flex; justify-content: space-between; margin-bottom: 1px;">
+                    <span>a.  Commercial kitchen</span>
+                    <span id="pvRetention_a" style="font-weight: bold; margin-right: 40px;">2.5</span>
+                  </div>
+                  <div style="display: flex; justify-content: space-between;">
+                    <span>b.  Single service kitchen</span>
+                    <span id="pvRetention_b" style="font-weight: bold; margin-right: 40px;">1.5</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- SECTION 4: STORAGE FACTOR -->
+              <div style="margin-bottom: 10px;">
+                <div style="font-weight: bold; margin-bottom: 2px;">4.  Storage Factor</div>
+                <div style="padding-left: 14px; font-size: 10.5px;">
+                  <div style="display: flex; justify-content: space-between; margin-bottom: 1px;">
+                    <span>a.  Commercial Kitchen up to 8 hours of operation</span>
+                    <span id="pvStorage_a" style="font-weight: bold; margin-right: 40px;">1</span>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; margin-bottom: 1px;">
+                    <span>b.  Commercial Kitchen up to 12 hours of operation</span>
+                    <span id="pvStorage_b" style="font-weight: bold; margin-right: 40px;">1.5</span>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; margin-bottom: 1px;">
+                    <span>c.  Commercial kitchen up to 16 hours of operation</span>
+                    <span id="pvStorage_c" style="font-weight: bold; margin-right: 40px;">2</span>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; margin-bottom: 1px;">
+                    <span>d.  Commercial kitchen up to 20 hours of operation</span>
+                    <span id="pvStorage_d" style="font-weight: bold; margin-right: 40px;">2.5</span>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; margin-bottom: 1px;">
+                    <span>e.  Commercial kitchen up to 24 hours of operation</span>
+                    <span id="pvStorage_e" style="font-weight: bold; margin-right: 40px;">3</span>
+                  </div>
+                  <div style="display: flex; justify-content: space-between;">
+                    <span>f.  Single service kitchen</span>
+                    <span id="pvStorage_f" style="font-weight: bold; margin-right: 40px;">1.5</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- MASTER SIZING CALCULATION SUMMARY BOXES -->
+              <div style="margin-bottom: 12px;">
+                <div style="display: flex; align-items: flex-end; gap: 8px;">
+                  
+                  <div style="text-align: center;">
+                    <div style="font-size: 10px; margin-bottom: 2px;">Peak Meals<br>per Hour</div>
+                    <div id="pvSummaryPeakMeals" class="calc-box" style="width: 65px;">65</div>
+                  </div>
+
+                  <span style="font-size: 14px; font-weight: bold; padding-bottom: 6px;">X</span>
+
+                  <div style="text-align: center;">
+                    <div style="font-size: 10px; margin-bottom: 2px;">Waste Flow<br>Rate</div>
+                    <div id="pvSummaryWasteFlow" class="calc-box" style="width: 65px;">5</div>
+                  </div>
+
+                  <span style="font-size: 14px; font-weight: bold; padding-bottom: 6px;">X</span>
+
+                  <div style="text-align: center;">
+                    <div style="font-size: 10px; margin-bottom: 2px;">Retention<br>Time</div>
+                    <div id="pvSummaryRetention" class="calc-box" style="width: 65px;">2.5</div>
+                  </div>
+
+                  <span style="font-size: 14px; font-weight: bold; padding-bottom: 6px;">X</span>
+
+                  <div style="text-align: center;">
+                    <div style="font-size: 10px; margin-bottom: 2px;">Storage<br>Factor</div>
+                    <div id="pvSummaryStorage" class="calc-box" style="width: 65px;">2</div>
+                  </div>
+
+                  <span style="font-size: 16px; font-weight: bold; padding-bottom: 6px;">=</span>
+
+                  <div style="text-align: center;">
+                    <div style="font-size: 10px; margin-bottom: 2px; font-weight: bold;">Calculated<br>GI Size</div>
+                    <div id="pvSummaryCalculatedGI" class="calc-box" style="width: 130px; font-size: 15px;">1,625</div>
+                    <div style="border: 0.8px solid #000; font-size: 8px; color: #555; padding: 1px 4px; margin-top: 1px;">Minimum 1,000 gallons</div>
+                  </div>
+
+                </div>
+              </div>
+
+              <!-- PROPOSED INSTALLATION SECTION -->
+              <div style="margin-bottom: 12px; font-size: 11px;">
+                <span style="font-weight: bold;">Proposed installation is as follows:</span>
+                <span id="pvProposedInstallation" class="form-underline" style="width: 62%; font-weight: bold;"></span>
+              </div>
+
+              <!-- SUBMITTAL CHECKLIST -->
+              <div style="border-top: 1.2px solid #000; padding-top: 6px; margin-bottom: 8px; font-size: 10.5px;">
+                <div style="font-weight: bold; margin-bottom: 4px;">The following must be submitted for an official sizing request:</div>
+                <div style="padding-left: 10px; line-height: 1.4;">
+                  <div><span id="pvCheck_proposal" class="box-checkbox" style="width: 11px; height: 11px; font-size: 8.5px;"></span> Completed Grease Interceptor Sizing Proposal (completed by a professional engineer or licensed plumber)</div>
+                  <div><span id="pvCheck_blueprint" class="box-checkbox" style="width: 11px; height: 11px; font-size: 8.5px;"></span> Kitchen plumbing blueprint</div>
+                  <div><span id="pvCheck_equipment" class="box-checkbox" style="width: 11px; height: 11px; font-size: 8.5px;"></span> Kitchen equipment list</div>
+                  <div><span id="pvCheck_sitePlan" class="box-checkbox" style="width: 11px; height: 11px; font-size: 8.5px;"></span> FSE site plan showing seating capacity OR square feet / occupancy</div>
+                  <div><span id="pvCheck_verification" class="box-checkbox" style="width: 11px; height: 11px; font-size: 8.5px;"></span> Verification of current Grease Interceptor size by a professional engineer or licensed plumber (if applicable)</div>
+                </div>
+              </div>
+
+              <!-- SUBMITTAL AUTHORITY FOOTER -->
+              <div style="text-align: center; font-size: 10px; line-height: 1.35; margin-top: 8px;">
+                <div><strong>Submit to: Jason Merk, WRA FOG Program (515) 323-8063 (fax) OR <a href="mailto:jcmerk@dmgov.org" style="color: #000; text-decoration: underline;">jcmerk@dmgov.org</a></strong></div>
+                <div>Des Moines Metropolitan Wastewater Reclamation Authority</div>
+                <div>3000 Vandalia Road, Des Moines, IA 50317, (515) 323-8000</div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- SUITE GLOBAL FOOTER -->
+  <footer class="bg-slate-900 border-t border-slate-800 py-4 text-center text-xs text-slate-500 mt-auto">
+    Mechanical & Plumbing System Calculations Suite — Commercial Engineering Edition (v5.00)
+  </footer>
+
+  <!-- SAVE SESSION MODAL -->
+  <div id="saveSessionModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div class="glass-card bg-slate-900/95 border border-slate-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-5 animate-fade-in relative">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-floppy-disk text-emerald-400"></i> Save & Sync Project Session
+        </h3>
+        <button onclick="closeSaveSessionModal()" class="text-slate-400 hover:text-white text-lg p-1">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <p class="text-xs text-slate-400 leading-normal">
+        Save your active project session to your browser library and cloud storage so you can recall it anytime across all tools.
+      </p>
+
+      <div class="space-y-4 text-xs">
+        <div>
+          <label class="block font-bold text-slate-300 mb-1">Save Option / Target Session</label>
+          <select id="saveSessionTargetSelect" onchange="handleSaveSessionTargetChange(this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 font-semibold text-white outline-none focus:border-amber-500 transition">
+            <option value="new">+ Save as New Project Session</option>
+          </select>
+        </div>
+        <div>
+          <label class="block font-bold text-slate-300 mb-1">Project Name <span class="text-emerald-400">*</span></label>
+          <input type="text" id="modalProjectName" placeholder="e.g. Commercial Restaurant Kitchen" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 font-bold text-white outline-none focus:border-emerald-500 transition">
+        </div>
+        <div>
+          <label class="block font-bold text-slate-400 mb-1">Author / Engineer</label>
+          <input type="text" id="modalAuthor" placeholder="e.g. Michael Salmon" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-slate-200 outline-none focus:border-emerald-500 transition">
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between gap-2 pt-3 border-t border-slate-800">
+        <button onclick="exportActiveSessionAsJSON()" class="px-3.5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold border border-slate-700 transition flex items-center gap-1.5" title="Download portable .json backup file">
+          <i class="fa-solid fa-download"></i> Export .JSON File
+        </button>
+        <div class="flex items-center gap-2">
+          <button onclick="closeSaveSessionModal()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition">Cancel</button>
+          <button onclick="saveActiveSessionToLibrary()" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs transition shadow-lg shadow-emerald-600/20 flex items-center gap-1.5">
+            <i class="fa-solid fa-floppy-disk"></i> Save Session
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EDIT SESSION DETAILS MODAL -->
+  <div id="editSessionModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div class="glass-card bg-slate-900/95 border border-slate-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-5 animate-fade-in relative">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-pen-to-square text-amber-400"></i> Edit Saved Session Details
+        </h3>
+        <button onclick="closeEditSessionModal()" class="text-slate-400 hover:text-white text-lg p-1">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <p class="text-xs text-slate-400 leading-normal">
+        Update the Project Name and Author for this saved session in your browser library.
+      </p>
+
+      <div class="space-y-4 text-xs">
+        <div>
+          <label class="block font-bold text-slate-300 mb-1">Project Name <span class="text-amber-400">*</span></label>
+          <input type="text" id="editModalProjectName" placeholder="e.g. Commercial Office Building" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 font-bold text-white outline-none focus:border-amber-500 transition">
+        </div>
+        <div>
+          <label class="block font-bold text-slate-400 mb-1">Author / Engineer <span class="text-amber-400">*</span></label>
+          <input type="text" id="editModalAuthor" placeholder="e.g. John Doe" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-slate-200 outline-none focus:border-amber-500 transition">
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
+        <button onclick="closeEditSessionModal()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition">Cancel</button>
+        <button onclick="saveEditedSessionDetails()" class="px-5 py-2.5 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-xl text-xs transition shadow-lg shadow-amber-600/20 flex items-center gap-1.5">
+          <i class="fa-solid fa-check"></i> Update Details
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="toastNotification" class="fixed bottom-6 right-6 z-50 hidden transition-all duration-300">
+    <div class="bg-slate-900 border border-slate-700 text-white px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3">
+      <div id="toastIcon" class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
+        <i class="fa-solid fa-circle-check"></i>
+      </div>
+      <div>
+        <p id="toastTitle" class="text-xs font-bold text-white">Project Exported</p>
+        <p id="toastMessage" class="text-[11px] text-slate-400">File downloaded successfully.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCRIPTS -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="shared_project_library.js"></script>
+  <script src="common.js"></script>
+  <script src="https://unpkg.com/pdf-lib@1.17.9/dist/pdf-lib.min.js"></script>
+  <script src="tool7.js"></script>
+
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      initTheme();
+      initTool7();
+      loadActiveDraftState();
+      initFirebaseFirestore();
+    });
+
+    window.addEventListener('input', () => saveActiveDraftState());
+    window.addEventListener('change', () => saveActiveDraftState());
+  </script>
+
+</body>
+</html>

@@ -90,6 +90,11 @@
     html.light .text-rose-400 { color: #9f1239 !important; font-weight: 700 !important; }
     html.light .bg-rose-500\/10 { background-color: #ffe4e6 !important; color: #881337 !important; border: 1px solid #fca5a5 !important; }
     html.light .group:hover .text-rose-400 { color: #be123c !important; }
+
+    /* Tool 7 (Grease Interceptor Sizer) Card Contrast in Light Mode */
+    html.light .text-amber-500 { color: #b45309 !important; font-weight: 700 !important; }
+    html.light .bg-amber-500\/10 { background-color: #fef3c7 !important; color: #92400e !important; border: 1px solid #fde68a !important; }
+    html.light .group:hover .text-amber-500 { color: #d97706 !important; }
   </style>
 </head>
 <body class="min-h-screen flex flex-col bg-slate-950 text-slate-100 antialiased selection:bg-sky-500 selection:text-white">
@@ -267,6 +272,26 @@
           </div>
           <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs font-bold text-rose-400">
             <span>Launch Loss Tool</span>
+            <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
+          </div>
+        </div>
+
+        <!-- CARD 7: GREASE INTERCEPTOR SIZER (WRA) -->
+        <div onclick="window.location.href='tool7_grease_interceptor.html'" class="glass-card rounded-2xl p-5 hover:border-amber-500/50 transition-all duration-300 cursor-pointer group flex flex-col justify-between hover:scale-[1.02] shadow-lg">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <div class="p-2.5 bg-amber-500/10 text-amber-500 rounded-xl group-hover:bg-amber-500 group-hover:text-white transition-colors">
+                <i class="fa-solid fa-kitchen-set text-xl"></i>
+              </div>
+              <span class="text-[10px] font-bold uppercase tracking-wider text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">WRA / FOG Program</span>
+            </div>
+            <h3 class="text-base font-bold text-white group-hover:text-amber-400 transition-colors">Grease Interceptor Sizer</h3>
+            <p class="text-xs text-slate-400 mt-1.5 leading-normal">
+              WRA ordinance sizing calculator & official proposal form generator with live to-scale preview & print/export.
+            </p>
+          </div>
+          <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs font-bold text-amber-400">
+            <span>Launch GI Tool</span>
             <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
           </div>
         </div>

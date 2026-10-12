@@ -43,6 +43,14 @@ function isTool6Active(t) {
          (t.tdlSupply && t.tdlSupply !== 55) ||
          (t.tdlReturn && t.tdlReturn !== 48);
 }
+function isTool7Active(t) {
+  if (!t) return false;
+  if (t.userModified) return true;
+  return !!((t.facilityName && t.facilityName.trim().length > 0) ||
+            (t.seatingCapacity && t.seatingCapacity !== 50) ||
+            (t.calculatedSize && t.calculatedSize !== 1625) ||
+            (t.fseType && t.fseType !== 'full_service'));
+}
 
 // ===================================================================
 // MECHANICAL SYSTEM CALCULATIONS SUITE - SHARED CORE UTILITIES (v5.00)
@@ -329,6 +337,38 @@ function saveActiveDraftState() {
       };
     }
 
+    // Tool 7 (Grease Interceptor Sizing - WRA) - Update if loaded, else preserve
+    if (typeof getTool7State === 'function') {
+      state.tool7 = getTool7State();
+    } else if (document.getElementById('facilityNameInput')) {
+      state.tool7 = {
+        userModified: !!(window.tool7_modified || isTool7Active(state.tool7)),
+        facilityName: document.getElementById('facilityNameInput')?.value || '',
+        address: document.getElementById('facilityAddressInput')?.value || '',
+        city: document.getElementById('facilityCityInput')?.value || '',
+        contactNameTitle: document.getElementById('contactNameInput')?.value || '',
+        phone: document.getElementById('contactPhoneInput')?.value || '',
+        email: document.getElementById('contactEmailInput')?.value || '',
+        contactAddress: document.getElementById('contactAddressDiffInput')?.value || '',
+        contractor: document.getElementById('plumbingContractorInput')?.value || '',
+        proposalDate: document.getElementById('proposalDateInput')?.value || '',
+        fseType: document.querySelector('input[name="fseTypeRadio"]:checked')?.value || 'full_service',
+        fseOtherText: document.getElementById('fseOtherTextInput')?.value || '',
+        peakMealsMode: typeof activePeakMealsMode !== 'undefined' ? activePeakMealsMode : 'calc',
+        seatingCapacity: parseFloat(document.getElementById('seatingCapacityInput')?.value) || 50,
+        mealFactor: parseFloat(document.getElementById('mealFactorSelect')?.value) || 1.3,
+        peakMealsDirect: parseFloat(document.getElementById('peakMealsDirectInput')?.value) || 65,
+        kitchenType: document.querySelector('input[name="kitchenTypeRadio"]:checked')?.value || 'comm_no_dw_no_disp',
+        additionalDisposals: parseInt(document.getElementById('additionalDisposalsInput')?.value, 10) || 0,
+        retentionTime: parseFloat(document.getElementById('retentionTimeInput')?.value) || 2.5,
+        operatingHours: document.querySelector('input[name="operatingHoursRadio"]:checked')?.value || '16',
+        storageFactor: parseFloat(document.getElementById('storageFactorInput')?.value) || 2.0,
+        calculatedSize: typeof currentCalculatedGISize !== 'undefined' ? currentCalculatedGISize : 1625,
+        proposedInstallation: document.getElementById('proposedInstallationInput')?.value || 'Install one 2,000-gallon grease interceptor',
+        activeTool7Step: typeof currentWizardStep !== 'undefined' ? currentWizardStep : 1
+      };
+    }
+
     localStorage.setItem(ACTIVE_SESSION_KEY, JSON.stringify(state));
   } catch (e) {
     console.error("Error saving active draft:", e);
@@ -370,6 +410,7 @@ function resetActiveDraftToDefaults() {
     window.tool4_modified = false;
     window.tool5_modified = false;
     window.tool6_modified = false;
+    window.tool7_modified = false;
 
     const draftKeys = [
       ACTIVE_SESSION_KEY,
@@ -862,8 +903,8 @@ function renderProjectLibraryTable() {
     } else if (sortMode === 'author_asc') {
       return (pA.metadata?.author || '').localeCompare(pB.metadata?.author || '');
     } else if (sortMode === 'tools_desc') {
-      const countA = (isTool1Active(pA.tool1) ? 1 : 0) + (isTool2Active(pA.tool2) ? 1 : 0) + (isTool3Active(pA.tool3) ? 1 : 0) + (isTool4Active(pA.tool4) ? 1 : 0) + (isTool5Active(pA.tool5) ? 1 : 0) + (isTool6Active(pA.tool6) ? 1 : 0);
-      const countB = (isTool1Active(pB.tool1) ? 1 : 0) + (isTool2Active(pB.tool2) ? 1 : 0) + (isTool3Active(pB.tool3) ? 1 : 0) + (isTool4Active(pB.tool4) ? 1 : 0) + (isTool5Active(pB.tool5) ? 1 : 0) + (isTool6Active(pB.tool6) ? 1 : 0);
+      const countA = (isTool1Active(pA.tool1) ? 1 : 0) + (isTool2Active(pA.tool2) ? 1 : 0) + (isTool3Active(pA.tool3) ? 1 : 0) + (isTool4Active(pA.tool4) ? 1 : 0) + (isTool5Active(pA.tool5) ? 1 : 0) + (isTool6Active(pA.tool6) ? 1 : 0) + (isTool7Active(pA.tool7) ? 1 : 0);
+      const countB = (isTool1Active(pB.tool1) ? 1 : 0) + (isTool2Active(pB.tool2) ? 1 : 0) + (isTool3Active(pB.tool3) ? 1 : 0) + (isTool4Active(pB.tool4) ? 1 : 0) + (isTool5Active(pB.tool5) ? 1 : 0) + (isTool6Active(pB.tool6) ? 1 : 0) + (isTool7Active(pB.tool7) ? 1 : 0);
       return countB - countA;
     }
     return 0;
@@ -899,6 +940,10 @@ function renderProjectLibraryTable() {
       const itemsCount = (proj.tool6.chainedScheduleRows && proj.tool6.chainedScheduleRows.length) || (proj.tool6.fittingsRows && proj.tool6.fittingsRows.length) || 0;
       const cfm = proj.tool6.designCFM || 1200;
       iconsHtml += `<span title="Duct Loss Estimator (${cfm} CFM${itemsCount > 0 ? ', ' + itemsCount + ' items' : ''})" class="p-1.5 bg-rose-500/10 text-rose-400 rounded-lg border border-rose-500/20"><i class="fa-solid fa-route text-xs"></i></span> `;
+    }
+    if (isTool7Active(proj.tool7)) {
+      const size = proj.tool7.calculatedSize || 1000;
+      iconsHtml += `<span title="Grease Interceptor Sizer (${size.toLocaleString()} gal)" class="p-1.5 bg-amber-500/10 text-amber-500 rounded-lg border border-amber-500/20"><i class="fa-solid fa-kitchen-set text-xs"></i></span> `;
     }
 
     if (!iconsHtml) {
@@ -1241,6 +1286,10 @@ function importProjectState(data) {
         switchTool6Tab(data.tool6.activeTool6Tab);
       }
       calculateDuctLoss();
+    }
+
+    if (data.tool7 && typeof importTool7State === 'function') {
+      importTool7State(data.tool7);
     }
   } catch (err) {
     console.error("Error restoring project state:", err);

@@ -1,6 +1,41 @@
 window.SHARED_PROJECT_LIBRARY = [
   {
     "metadata": {
+      "projectName": "Restaurant Generic (WRA Sizing)",
+      "author": "General Engineering Group",
+      "lastModified": "2026-10-12T09:40:00.000Z",
+      "savedDate": "2026-10-12T09:40:00.000Z"
+    },
+    "tool7": {
+      "userModified": true,
+      "proposalDate": "10/12/26",
+      "facilityName": "Restaurant Generic",
+      "address": "123 Generic Street",
+      "city": "Des Moines Metropolitan City",
+      "contactNameTitle": "General Engineering Group",
+      "phone": "(515) 555-5555",
+      "email": "ProjectManager@generalengineering.com",
+      "contactAddress": "123 Engineering Road, Des Moines, IA",
+      "contractor": "XYZ Plumbing Company",
+      "fseType": "full_service",
+      "fseOtherText": "",
+      "peakMealsMode": "calc",
+      "seatingCapacity": 50,
+      "mealFactor": 1.3,
+      "peakMealsDirect": 65,
+      "kitchenType": "comm_no_dw_no_disp",
+      "additionalDisposals": 0,
+      "retentionTime": 2.5,
+      "operatingHours": "16",
+      "storageFactor": 2.0,
+      "calculatedSize": 1625,
+      "recommendedStandardSize": 2000,
+      "proposedInstallation": "Install one 2,000-gallon grease interceptor",
+      "isProposedManual": false
+    }
+  },
+  {
+    "metadata": {
       "projectName": "123",
       "author": "123",
       "lastModified": "2026-08-28T19:29:47.914Z",
