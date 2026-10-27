@@ -53,6 +53,17 @@ function isTool7Active(t) {
 }
 
 // ===================================================================
+function isTool8Active(t) {
+  if (!t) return false;
+  if (t.userModified) return true;
+  return !!((t.supplyCFM && t.supplyCFM !== 4000) ||
+            (t.oaPct !== undefined && t.oaPct !== 15) ||
+            (t.seasonMode && t.seasonMode !== 'summer') ||
+            (t.fanArrangement && t.fanArrangement !== 'draw_through') ||
+            (t.cityId && t.cityId !== 'des_moines_ia') ||
+            (t.reheatEnabled));
+}
+
 // MECHANICAL SYSTEM CALCULATIONS SUITE - SHARED CORE UTILITIES (v5.00)
 // ===================================================================
 
@@ -369,6 +380,11 @@ function saveActiveDraftState() {
       };
     }
 
+    // Tool 8 (Psychrometric Analyzer & Coil Load Sizer) - Update if loaded, else preserve
+    if (typeof getTool8State === 'function') {
+      state.tool8 = getTool8State();
+    }
+
     localStorage.setItem(ACTIVE_SESSION_KEY, JSON.stringify(state));
   } catch (e) {
     console.error("Error saving active draft:", e);
@@ -411,6 +427,7 @@ function resetActiveDraftToDefaults() {
     window.tool5_modified = false;
     window.tool6_modified = false;
     window.tool7_modified = false;
+    window.tool8_modified = false;
 
     const draftKeys = [
       ACTIVE_SESSION_KEY,
@@ -903,8 +920,8 @@ function renderProjectLibraryTable() {
     } else if (sortMode === 'author_asc') {
       return (pA.metadata?.author || '').localeCompare(pB.metadata?.author || '');
     } else if (sortMode === 'tools_desc') {
-      const countA = (isTool1Active(pA.tool1) ? 1 : 0) + (isTool2Active(pA.tool2) ? 1 : 0) + (isTool3Active(pA.tool3) ? 1 : 0) + (isTool4Active(pA.tool4) ? 1 : 0) + (isTool5Active(pA.tool5) ? 1 : 0) + (isTool6Active(pA.tool6) ? 1 : 0) + (isTool7Active(pA.tool7) ? 1 : 0);
-      const countB = (isTool1Active(pB.tool1) ? 1 : 0) + (isTool2Active(pB.tool2) ? 1 : 0) + (isTool3Active(pB.tool3) ? 1 : 0) + (isTool4Active(pB.tool4) ? 1 : 0) + (isTool5Active(pB.tool5) ? 1 : 0) + (isTool6Active(pB.tool6) ? 1 : 0) + (isTool7Active(pB.tool7) ? 1 : 0);
+      const countA = (isTool1Active(pA.tool1) ? 1 : 0) + (isTool2Active(pA.tool2) ? 1 : 0) + (isTool3Active(pA.tool3) ? 1 : 0) + (isTool4Active(pA.tool4) ? 1 : 0) + (isTool5Active(pA.tool5) ? 1 : 0) + (isTool6Active(pA.tool6) ? 1 : 0) + (isTool7Active(pA.tool7) ? 1 : 0) + (isTool8Active(pA.tool8) ? 1 : 0);
+      const countB = (isTool1Active(pB.tool1) ? 1 : 0) + (isTool2Active(pB.tool2) ? 1 : 0) + (isTool3Active(pB.tool3) ? 1 : 0) + (isTool4Active(pB.tool4) ? 1 : 0) + (isTool5Active(pB.tool5) ? 1 : 0) + (isTool6Active(pB.tool6) ? 1 : 0) + (isTool7Active(pB.tool7) ? 1 : 0) + (isTool8Active(pB.tool8) ? 1 : 0);
       return countB - countA;
     }
     return 0;
@@ -944,6 +961,11 @@ function renderProjectLibraryTable() {
     if (isTool7Active(proj.tool7)) {
       const size = proj.tool7.calculatedSize || 1000;
       iconsHtml += `<span title="Grease Interceptor Sizer (${size.toLocaleString()} gal)" class="p-1.5 bg-amber-500/10 text-amber-500 rounded-lg border border-amber-500/20"><i class="fa-solid fa-kitchen-set text-xs"></i></span> `;
+    }
+    if (isTool8Active(proj.tool8)) {
+      const cfm = proj.tool8.supplyCFM || 4000;
+      const mode = (proj.tool8.seasonMode || 'summer').toUpperCase();
+      iconsHtml += `<span title="Psychrometric Analyzer (${cfm.toLocaleString()} CFM, ${mode})" class="p-1.5 bg-violet-500/10 text-violet-400 rounded-lg border border-violet-500/20"><i class="fa-solid fa-temperature-half text-xs"></i></span> `;
     }
 
     if (!iconsHtml) {
@@ -1290,6 +1312,9 @@ function importProjectState(data) {
 
     if (data.tool7 && typeof importTool7State === 'function') {
       importTool7State(data.tool7);
+    }
+    if (data.tool8 && typeof importTool8State === 'function') {
+      importTool8State(data.tool8);
     }
   } catch (err) {
     console.error("Error restoring project state:", err);

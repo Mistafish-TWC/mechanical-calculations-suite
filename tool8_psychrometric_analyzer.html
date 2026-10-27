@@ -1,0 +1,1771 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-950 text-slate-100 antialiased selection:bg-violet-500 selection:text-white">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Psychrometric Analyzer & Coil Load Sizer - Mechanical System Calculations Suite</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+
+    if (localStorage.getItem('ps_theme') === 'dark') {
+      document.documentElement.classList.remove('light');
+    } else {
+      document.documentElement.classList.add('light');
+    }
+  </script>
+
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #020617; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+    .glass-card {
+      background: rgba(30, 41, 59, 0.75);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .active-tab {
+      background-color: #7c3aed !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 12px rgba(124, 58, 237, 0.35);
+    }
+    .animate-fade-in { animation: fadeIn 0.2s ease-in-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ===================================================================
+       MCQUAY-STYLE VISUAL SCHEMATIC CANVAS STYLING (DARK & LIGHT MODES)
+       =================================================================== */
+    #mcquay-ahu-schematic {
+      background: radial-gradient(circle at 50% 30%, #0f172a 0%, #090d16 100%);
+      border: 1.5px solid #1e293b;
+      color: #f8fafc;
+    }
+    .mcq-duct-stroke { stroke: #38bdf8; }
+    .mcq-duct-fill { fill: #38bdf8; }
+    .mcq-comp-box { fill: #0f172a; stroke: #e2e8f0; }
+    .mcq-room-box {
+      background: rgba(15, 23, 42, 0.92);
+      border: 2px solid #94a3b8;
+    }
+    .mcq-input {
+      background-color: #020617;
+      border: 1.5px solid #475569;
+      border-radius: 5px;
+      padding: 1px 5px;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 12px;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .mcq-input:focus {
+      border-color: #8b5cf6;
+      box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.25);
+    }
+    .mcq-input-db { color: #f87171; }
+    .mcq-input-wb { color: #34d399; }
+    .mcq-input-rh { color: #38bdf8; }
+    .mcq-input-cfm { color: #f8fafc; }
+    .mcq-input-patm { color: #60a5fa; }
+
+    .mcq-text-db { color: #f87171; font-weight: 800; }
+    .mcq-text-wb { color: #34d399; font-weight: 700; }
+    .mcq-text-rh { color: #38bdf8; font-weight: 800; }
+    .mcq-text-blue { color: #38bdf8; font-weight: 800; }
+    .mcq-text-red { color: #f87171; font-weight: 800; }
+    .mcq-text-teal { color: #2dd4bf; font-weight: 800; }
+    .mcq-readout-list {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      line-height: 1.35;
+      color: #cbd5e1;
+    }
+    .mcq-sub-accent { color: #c4b5fd; font-weight: 700; }
+
+    .mcq-mode-toggle {
+      display: inline-flex;
+      align-items: center;
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+      user-select: none;
+      background: rgba(16, 185, 129, 0.18);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      transition: all 0.15s;
+    }
+    .mcq-mode-toggle:hover {
+      background: rgba(16, 185, 129, 0.3);
+      transform: translateY(-1px);
+    }
+
+    /* Status Pill Badges (Dark Mode Defaults) */
+    .status-pill-emerald { background: rgba(16, 185, 129, 0.15); color: #34d399; border-color: rgba(16, 185, 129, 0.35); }
+    .status-pill-amber { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border-color: rgba(245, 158, 11, 0.35); }
+    .status-pill-rose { background: rgba(244, 63, 94, 0.15); color: #fb7185; border-color: rgba(244, 63, 94, 0.35); }
+    .status-pill-sky { background: rgba(14, 165, 233, 0.15); color: #38bdf8; border-color: rgba(14, 165, 233, 0.35); }
+    .status-pill-violet { background: rgba(139, 92, 246, 0.15); color: #c4b5fd; border-color: rgba(139, 92, 246, 0.35); }
+
+    /* ===================================================================
+       HIGH-CONTRAST LIGHT MODE SYSTEM (COMPLETE VISIBILITY & BUTTON FIXES)
+       =================================================================== */
+    html.light { background-color: #f1f5f9 !important; color: #0f172a !important; }
+    html.light body { background-color: #f1f5f9 !important; color: #0f172a !important; }
+    html.light header { background-color: rgba(255, 255, 255, 0.98) !important; border-color: #cbd5e1 !important; color: #0f172a !important; }
+    html.light header h1, html.light header h2, html.light header h3 { color: #0f172a !important; }
+
+    html.light .glass-card {
+      background: #ffffff !important;
+      border: 1px solid #cbd5e1 !important;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06) !important;
+      color: #0f172a !important;
+    }
+    html.light .glass-card h2, html.light .glass-card h3, html.light .glass-card h4 { color: #0f172a !important; }
+    html.light .glass-card p { color: #475569 !important; }
+
+    /* Containers & Panels in Light Mode */
+    html.light .bg-slate-900,
+    html.light .bg-slate-900\/60,
+    html.light .bg-slate-900\/70,
+    html.light .bg-slate-900\/80,
+    html.light .bg-slate-900\/90,
+    html.light .bg-slate-950,
+    html.light .bg-slate-950\/60,
+    html.light .bg-slate-950\/70,
+    html.light .bg-slate-950\/80,
+    html.light .bg-slate-950\/90 {
+      background-color: #f8fafc !important;
+      color: #0f172a !important;
+      border-color: #cbd5e1 !important;
+    }
+    html.light .bg-slate-950\/70 {
+      background-color: #ffffff !important;
+      border-color: #cbd5e1 !important;
+      color: #0f172a !important;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+    }
+    html.light .schem-node-card {
+      background-color: #ffffff !important;
+      border-color: #cbd5e1 !important;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05) !important;
+    }
+
+    /* Tinted Callout & Diagnostic Boxes in Light Mode */
+    html.light .bg-sky-950\/40 { background-color: #e0f2fe !important; border-color: #7dd3fc !important; color: #0c4a6e !important; }
+    html.light .bg-emerald-950\/30 { background-color: #d1fae5 !important; border-color: #6ee7b7 !important; color: #064e3b !important; }
+    html.light .bg-violet-950\/40 { background-color: #ede9fe !important; border-color: #c4b5fd !important; color: #4c1d95 !important; }
+    html.light .bg-amber-950\/30,
+    html.light .bg-amber-950\/60 { background-color: #fef3c7 !important; border-color: #f59e0b !important; color: #78350f !important; }
+    html.light .bg-rose-950\/60 { background-color: #ffe4e6 !important; border-color: #f43f5e !important; color: #881337 !important; }
+
+    /* Form Inputs in Light Mode */
+    html.light input[type="text"],
+    html.light input[type="number"],
+    html.light select,
+    html.light textarea {
+      background-color: #ffffff !important;
+      color: #0f172a !important;
+      border: 1.5px solid #94a3b8 !important;
+      font-weight: 700 !important;
+    }
+    html.light input[type="text"]:focus,
+    html.light input[type="number"]:focus,
+    html.light select:focus {
+      border-color: #6d28d9 !important;
+    }
+
+    /* BUTTONS IN LIGHT MODE — GUARANTEED HIGH CONTRAST */
+    html.light button.bg-slate-800,
+    html.light .bg-slate-800,
+    html.light a.hover\:bg-slate-800 {
+      background-color: #e2e8f0 !important;
+      color: #0f172a !important;
+      border-color: #94a3b8 !important;
+      font-weight: 700 !important;
+    }
+    html.light button.bg-slate-800:hover,
+    html.light .bg-slate-800:hover,
+    html.light a.hover\:bg-slate-800:hover {
+      background-color: #cbd5e1 !important;
+      color: #020617 !important;
+    }
+
+    /* Inactive Segmented Toggle & Sub-Tab Buttons in Light Mode */
+    html.light .inactive-seg-btn,
+    html.light .inactive-tab-btn {
+      background-color: transparent !important;
+      color: #334155 !important;
+      font-weight: 700 !important;
+    }
+    html.light .inactive-seg-btn:hover,
+    html.light .inactive-tab-btn:hover {
+      background-color: #e2e8f0 !important;
+      color: #0f172a !important;
+    }
+
+    /* Active Colored Action Buttons in Light Mode (Keep White Text!) */
+    html.light button.bg-violet-600,
+    html.light .active-tab,
+    html.light .active-fan-btn {
+      background-color: #6d28d9 !important;
+      color: #ffffff !important;
+    }
+    html.light button.bg-violet-600 span,
+    html.light button.bg-violet-600 i,
+    html.light .active-tab span,
+    html.light .active-tab i {
+      color: #ffffff !important;
+    }
+    html.light button.bg-emerald-600 {
+      background-color: #059669 !important;
+      color: #ffffff !important;
+    }
+    html.light button.bg-emerald-600 span,
+    html.light button.bg-emerald-600 i {
+      color: #ffffff !important;
+    }
+    html.light button.bg-sky-600 {
+      background-color: #0284c7 !important;
+      color: #ffffff !important;
+    }
+    html.light button.bg-amber-500 {
+      background-color: #f59e0b !important;
+      color: #0f172a !important;
+    }
+
+    /* Status Pill Badges in Light Mode */
+    html.light .status-pill-emerald { background: #d1fae5 !important; color: #065f46 !important; border-color: #6ee7b7 !important; }
+    html.light .status-pill-amber { background: #fef3c7 !important; color: #92400e !important; border-color: #fcd34d !important; }
+    html.light .status-pill-rose { background: #ffe4e6 !important; color: #9f1239 !important; border-color: #fda4af !important; }
+    html.light .status-pill-sky { background: #e0f2fe !important; color: #075985 !important; border-color: #7dd3fc !important; }
+    html.light .status-pill-violet { background: #ede9fe !important; color: #5b21b6 !important; border-color: #c4b5fd !important; }
+
+    /* Typography in Light Mode */
+    html.light .text-white { color: #0f172a !important; }
+    html.light .text-slate-200 { color: #1e293b !important; }
+    html.light .text-slate-300, html.light .text-slate-400 { color: #334155 !important; }
+    html.light .text-violet-300, html.light .text-violet-400 { color: #5b21b6 !important; font-weight: 700 !important; }
+    html.light .text-sky-400, html.light .text-cyan-300, html.light .text-cyan-400 { color: #0369a1 !important; font-weight: 700 !important; }
+    html.light .text-emerald-400, html.light .text-teal-400 { color: #047857 !important; font-weight: 700 !important; }
+    html.light .text-amber-400 { color: #b45309 !important; font-weight: 700 !important; }
+    html.light .text-rose-400 { color: #be123c !important; font-weight: 700 !important; }
+    html.light .border-slate-800,
+    html.light .border-slate-800\/80,
+    html.light .border-slate-700,
+    html.light .border-slate-700\/80 { border-color: #cbd5e1 !important; }
+
+    /* McQuay Visual Schematic in Light Mode (Classic Royal Blue & White Blueprint Look!) */
+    html.light #mcquay-ahu-schematic {
+      background: #ffffff !important;
+      border: 2px solid #94a3b8 !important;
+      color: #0f172a !important;
+      box-shadow: inset 0 0 24px rgba(15, 23, 42, 0.03) !important;
+    }
+    html.light .mcq-duct-stroke { stroke: #1d4ed8 !important; }
+    html.light .mcq-duct-fill { fill: #1d4ed8 !important; }
+    html.light .mcq-comp-box { fill: #ffffff !important; stroke: #0f172a !important; }
+    html.light .mcq-room-box {
+      background: #ffffff !important;
+      border: 2px solid #0f172a !important;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08) !important;
+    }
+    html.light .mcq-input {
+      background-color: #ffffff !important;
+      border: 1.5px solid #64748b !important;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.06) !important;
+    }
+    html.light .mcq-input-db { color: #dc2626 !important; }
+    html.light .mcq-input-wb { color: #15803d !important; }
+    html.light .mcq-input-rh { color: #1d4ed8 !important; }
+    html.light .mcq-input-cfm { color: #0f172a !important; }
+    html.light .mcq-input-patm { color: #1d4ed8 !important; }
+
+    html.light .mcq-text-db { color: #dc2626 !important; }
+    html.light .mcq-text-wb { color: #15803d !important; }
+    html.light .mcq-text-rh { color: #1d4ed8 !important; }
+    html.light .mcq-text-blue { color: #1d4ed8 !important; }
+    html.light .mcq-text-red { color: #dc2626 !important; }
+    html.light .mcq-text-teal { color: #0f766e !important; }
+    html.light .mcq-readout-list { color: #0f172a !important; font-weight: 500; }
+    html.light .mcq-sub-accent { color: #5b21b6 !important; font-weight: 700; }
+    html.light .mcq-mode-toggle {
+      background: #d1fae5 !important;
+      color: #065f46 !important;
+      border-color: #34d399 !important;
+    }
+    html.light #mcqWinterHumidifierBox,
+    html.light .bg-slate-900\/95 {
+      background-color: #f8fafc !important;
+      border: 1.5px solid #475569 !important;
+      color: #0f172a !important;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08) !important;
+    }
+    html.light #mcqWinterHumidifierBox .text-slate-400 {
+      color: #1e293b !important;
+      font-weight: 800 !important;
+    }
+
+    html.light table th { background-color: #e2e8f0 !important; color: #0f172a !important; border-color: #cbd5e1 !important; }
+    html.light table td { border-color: #cbd5e1 !important; color: #0f172a !important; }
+    html.light table tr:hover { background-color: #f1f5f9 !important; }
+    html.light footer { background-color: #ffffff !important; border-color: #cbd5e1 !important; color: #475569 !important; }
+
+    @media print {
+      @page { margin: 0.3in; }
+      header, footer, #tool8-top-controls, #tool8-tab-bar, .no-print { display: none !important; }
+      html, body {
+        height: auto !important;
+        min-height: 0 !important;
+        display: block !important;
+        background: #ffffff !important;
+        color: #000000 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      .animate-fade-in {
+        animation: none !important;
+        transform: none !important;
+      }
+      main {
+        display: block !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+      main > * + *,
+      #tool8-schematic-view > * + * {
+        margin-top: 8px !important;
+      }
+      main > .glass-card:first-child {
+        padding: 8px 12px !important;
+        margin-bottom: 8px !important;
+        break-after: avoid !important;
+        page-break-after: avoid !important;
+      }
+      .glass-card {
+        background: #ffffff !important;
+        border: 1px solid #cbd5e1 !important;
+        box-shadow: none !important;
+        padding: 10px !important;
+      }
+      #mcquay-schematic-scroll-wrap {
+        overflow: visible !important;
+        width: 100% !important;
+        break-inside: avoid !important;
+      }
+      #mcquay-ahu-schematic {
+        zoom: 0.66 !important;
+        margin: 0 auto !important;
+      }
+      #tab1MiniChartPanel {
+        display: block !important;
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+      }
+      #tab1MiniChartPanel > div:last-child {
+        height: 260px !important;
+        background: #ffffff !important;
+        border-color: #cbd5e1 !important;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col bg-slate-950 text-slate-100 antialiased selection:bg-violet-500 selection:text-white">
+
+  <!-- SUITE STICKY HEADER -->
+  <header class="bg-slate-900/90 border-b border-slate-800 sticky top-0 z-50 backdrop-blur-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between py-2.5 md:py-0 md:h-16 gap-2.5 sm:gap-3 md:gap-4">
+        
+        <a href="Mechanical_Suite_Dashboard.html" onclick="saveActiveDraftState()" class="flex items-center gap-2.5 sm:gap-3 cursor-pointer min-w-0">
+          <div class="p-2 sm:p-2.5 bg-gradient-to-tr from-sky-600 to-blue-500 rounded-xl shadow-lg shadow-sky-500/20 text-white flex items-center justify-center shrink-0">
+            <i class="fa-solid fa-compass-drafting text-lg sm:text-xl" style="color:#ffffff !important;"></i>
+          </div>
+          <div class="min-w-0">
+            <h1 class="font-bold text-sm sm:text-base md:text-lg leading-snug tracking-tight text-white flex flex-wrap items-center gap-1.5 sm:gap-2">
+              <span>Mechanical System Calculations Suite</span>
+              <span class="status-pill-sky text-xs font-semibold border px-2 py-0.5 rounded-full shrink-0">v5.00</span>
+            </h1>
+          </div>
+        </a>
+
+        <div class="flex items-center flex-wrap gap-2">
+          <a href="Mechanical_Suite_Dashboard.html" onclick="saveActiveDraftState()" id="nav-btn-dashboard" class="px-3 py-1.5 sm:py-2 text-xs font-bold rounded-lg bg-slate-800 text-slate-200 hover:bg-slate-700 border border-slate-700 transition flex items-center gap-1.5 sm:gap-2" title="Return to Suite Dashboard Home">
+            <i class="fa-solid fa-house text-sky-400"></i>
+            <span>Dashboard</span>
+          </a>
+
+          <button onclick="openSaveSessionModal()" class="px-3 sm:px-3.5 py-1.5 sm:py-2 text-xs font-bold rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white transition flex items-center gap-1.5 shadow-md shadow-emerald-600/20" title="Save & Sync Project Session">
+            <i class="fa-solid fa-floppy-disk"></i>
+            <span>Save Session</span>
+          </button>
+
+          <button id="theme-toggle-btn" onclick="toggleTheme(); setTimeout(() => drawPsychrometricChart('psychChartCanvas', false), 50);" class="px-3 py-1.5 sm:py-2 text-xs font-bold rounded-lg bg-slate-800 text-slate-200 hover:bg-slate-700 border border-slate-700 transition flex items-center gap-1.5" title="Toggle Light/Dark Visual Theme">
+            <i id="theme-toggle-icon" class="fa-solid fa-sun text-amber-400 text-sm"></i>
+            <span id="theme-toggle-text" class="hidden sm:inline">Light</span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN WORKSPACE -->
+  <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 space-y-5">
+
+    <!-- MODULE TITLE BANNER & QUICK ACTIONS -->
+    <div class="glass-card rounded-2xl p-4 sm:p-5 border border-slate-800 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+      <div>
+        <div class="flex items-center gap-2.5 flex-wrap">
+          <span class="status-pill-violet px-2.5 py-0.5 rounded-full text-[11px] font-bold border">
+            Tool 8 • ASHRAE Ch. 1 & 14
+          </span>
+          <h2 class="text-base sm:text-lg font-extrabold text-white flex items-center gap-2">
+            <i class="fa-solid fa-temperature-half text-violet-400"></i>
+            Psychrometric Analyzer & Coil Load Sizer
+          </h2>
+        </div>
+        <p class="text-xs text-slate-400 mt-1">
+          Interactive AHU Schematic Modeler, Draw/Blow-Through Coil Solver, Steam/Water Humidification & Engineered Submittal Generator
+        </p>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2 no-print">
+        <button onclick="exportTool8SubmittalPDF()" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-violet-600 hover:bg-violet-500 text-white shadow-lg shadow-violet-600/25 transition flex items-center gap-1.5">
+          <i class="fa-solid fa-file-pdf"></i>
+          <span>Export Submittal PDF</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- SYSTEM CONFIGURATION & WEATHER TOOLBAR -->
+    <div id="tool8-top-controls" class="glass-card rounded-2xl p-4 border border-slate-800 space-y-3">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-3 items-end">
+
+        <!-- 1. Season Mode (Summer / Winter) -->
+        <div class="lg:col-span-2">
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Weather Mode</label>
+          <div class="flex bg-slate-900 p-1 rounded-xl border border-slate-700/80 gap-1">
+            <button id="btnSeasonSummer" onclick="setPsychSeasonMode('summer')" class="flex-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-500 text-slate-950 shadow transition flex items-center justify-center gap-1.5 active-season-btn">
+              <i class="fa-solid fa-sun"></i> Summer
+            </button>
+            <button id="btnSeasonWinter" onclick="setPsychSeasonMode('winter')" class="flex-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white transition flex items-center justify-center gap-1.5 inactive-seg-btn">
+              <i class="fa-solid fa-snowflake"></i> Winter
+            </button>
+          </div>
+        </div>
+
+        <!-- 2. Fan / Coil Arrangement (Draw-Through vs Blow-Through) -->
+        <div class="lg:col-span-3">
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Coil / Fan Topology</label>
+          <div class="flex bg-slate-900 p-1 rounded-xl border border-slate-700/80 gap-1">
+            <button id="btnFanDrawThrough" onclick="setPsychFanArrangement('draw_through')" class="flex-1 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-violet-600 text-white shadow transition flex items-center justify-center gap-1.5 active-fan-btn" title="Cooling Coil upstream of Supply Fan (Coil -> Fan)">
+              <span>Draw-Through</span>
+            </button>
+            <button id="btnFanBlowThrough" onclick="setPsychFanArrangement('blow_through')" class="flex-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white transition flex items-center justify-center gap-1.5 inactive-seg-btn" title="Supply Fan upstream of Cooling Coil (Fan -> Coil)">
+              <span>Blow-Through</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 3. ASHRAE Design Weather Location Dropdown -->
+        <div class="lg:col-span-4">
+          <div class="flex items-center justify-between mb-1">
+            <label class="text-[11px] font-bold uppercase tracking-wider text-slate-400">ASHRAE Weather Location</label>
+            <span id="psychWeatherBadge" class="status-pill-emerald text-[10px] font-bold px-2 py-0.5 rounded border">
+              ASHRAE Standard
+            </span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <select id="psychCitySelect" onchange="handlePsychCityChange(this.value)" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs font-bold text-white outline-none focus:border-violet-500">
+            </select>
+            <button onclick="applyCityWeatherPreset(true); calculateTool8();" class="px-2.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl border border-slate-700 text-xs font-bold" title="Reset Outside Air to Selected City ASHRAE Design Conditions">
+              <i class="fa-solid fa-rotate-left"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- 4. Barometric Pressure & Sea Level vs Local Elevation Toggle -->
+        <div class="lg:col-span-2">
+          <div class="flex items-center justify-between mb-1">
+            <label class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Pressure (psia)</label>
+            <label class="flex items-center gap-1 text-[10px] font-bold text-sky-400 cursor-pointer" title="Toggle between Sea Level (14.696 psia) and selected City Local Elevation Pressure">
+              <input type="checkbox" id="psychLocalElevCheck" onchange="toggleLocalElevationPressure(this.checked)" class="rounded border-slate-600 text-violet-600 focus:ring-0">
+              <span>Use City Elev</span>
+            </label>
+          </div>
+          <input type="number" id="psychPatmInput" value="14.696" step="0.01" min="9.0" max="15.5"
+                 oninput="handleTool8Input('patm', this.value)"
+                 class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs font-bold text-sky-400 mono outline-none focus:border-violet-500">
+        </div>
+
+        <!-- 5. Supply Fan Sensible Heat Gain (Delta-T °F) -->
+        <div class="lg:col-span-1">
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1" title="Sensible temperature rise across the supply fan (°F)">Fan ΔT (°F)</label>
+          <input type="number" id="psychFanDeltaTInput" value="2.0" step="0.5" min="0" max="15"
+                 oninput="handleTool8Input('fanDeltaT', this.value)"
+                 class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs font-bold text-amber-400 mono outline-none focus:border-violet-500">
+        </div>
+
+      </div>
+
+      <!-- MULTI-UNIT AHU SCHEDULE TAG BAR -->
+      <div class="pt-2.5 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-2 text-xs no-print">
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+            <i class="fa-solid fa-layer-group text-violet-400"></i> Project Units:
+          </span>
+          <div id="tool8MultiUnitBar" class="flex flex-wrap items-center gap-1.5"></div>
+          <button onclick="addNewUnitToSchedule()" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-violet-600 text-slate-200 font-bold border border-slate-700 transition flex items-center gap-1 text-[11px]" title="Duplicate current AHU settings as a new unit tag in this project">
+            <i class="fa-solid fa-plus text-[10px]"></i> Add / Duplicate Unit
+          </button>
+        </div>
+
+        <div class="flex items-center gap-1.5">
+          <span class="text-[11px] font-semibold text-slate-400">Active Tag:</span>
+          <input type="text" id="tab1SystemTagInput" value="AHU-1 (Main Office VAV)"
+                 oninput="tool8State.systemTag = this.value; tool8State.userModified = true; window.tool8_modified = true; renderMultiUnitTagBar(); updateTool8SubmittalPreview();"
+                 class="w-44 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-xs font-bold text-white outline-none focus:border-violet-500">
+        </div>
+      </div>
+    </div>
+
+    <!-- PROACTIVE ENGINEERING DIAGNOSTICS & SAFETY ALERTS BANNER -->
+    <div id="tool8DiagnosticsBanner" class="hidden space-y-2 no-print"></div>
+
+    <!-- WORKSPACE SUB-TAB NAVIGATION BAR -->
+    <div id="tool8-tab-bar" class="flex flex-wrap items-center justify-between gap-2 bg-slate-900/90 p-1.5 rounded-2xl border border-slate-800 text-xs font-bold shadow-inner">
+      <div class="flex flex-wrap gap-2">
+        <button id="tab-btn-tool8-schematic" onclick="switchTool8Tab('schematic')" class="px-4 py-2.5 rounded-xl font-bold transition-all shadow-md bg-violet-600 text-white flex items-center gap-2 active-tab">
+          <i class="fa-solid fa-diagram-project"></i> 1. Interactive AHU Schematic & Sizer
+        </button>
+        <button id="tab-btn-tool8-chart" onclick="switchTool8Tab('chart')" class="px-4 py-2.5 rounded-xl font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 transition-all flex items-center gap-2 inactive-tab-btn">
+          <i class="fa-solid fa-chart-area"></i> 2. Interactive Psychrometric Chart
+        </button>
+        <button id="tab-btn-tool8-report" onclick="switchTool8Tab('report')" class="px-4 py-2.5 rounded-xl font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 transition-all flex items-center gap-2 inactive-tab-btn">
+          <i class="fa-solid fa-file-contract"></i> 3. Engineered Submittal Report (PDF)
+        </button>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2 mr-1">
+        <button id="btnToggleMiniChart" onclick="toggleMiniChartOnTab1()" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-bold transition flex items-center gap-1.5" title="Toggle Live Mini-Psychrometric Chart on Tab 1">
+          <i class="fa-solid fa-eye-slash text-violet-400"></i> Hide Live Mini-Chart
+        </button>
+        <button onclick="window.print()" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-bold transition flex items-center gap-1.5">
+          <i class="fa-solid fa-print text-violet-400"></i> Print Active View
+        </button>
+      </div>
+    </div>
+
+    <!-- ===================================================================
+         TAB 1: INTERACTIVE AHU SCHEMATIC + NODE CARDS + STATE SCHEDULE
+         =================================================================== -->
+    <div id="tool8-schematic-view" class="space-y-6 animate-fade-in">
+
+      <!-- 1A. INTERACTIVE MCQUAY-STYLE VISUAL AHU SCHEMATIC DIAGRAM -->
+      <div class="glass-card rounded-2xl p-4 sm:p-5 border border-slate-800 space-y-3">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
+          <div>
+            <h3 class="text-sm font-extrabold text-white flex items-center gap-2">
+              <i class="fa-solid fa-compass-drafting text-violet-400"></i>
+              Interactive AHU Flow Schematic (Direct On-Diagram Editing)
+            </h3>
+            <p class="text-[11px] text-slate-400">
+              Type temperatures or airflows directly into the schematic boxes below. Click <span class="mcq-mode-toggle">°F wb ⇄</span> or <span class="mcq-mode-toggle">%RH ⇄</span> to switch moisture units.
+            </p>
+          </div>
+
+          <!-- Summer Reheat & Winter Humidifier Quick Control Strip -->
+          <div class="flex flex-wrap items-center gap-2">
+            <div id="winterHumidifierPanel" class="hidden flex flex-wrap items-center gap-2.5 bg-slate-900/90 border border-sky-500/30 px-3 py-1.5 rounded-xl text-xs">
+              <span class="font-bold text-sky-400"><i class="fa-solid fa-droplet"></i> Humidifier Mode:</span>
+              <label class="flex items-center gap-1 cursor-pointer">
+                <input type="radio" name="psychHumidModeRadio" value="steam" checked onchange="setHumidifierMode('steam')">
+                <span class="font-bold text-white">Steam</span>
+              </label>
+              <label class="flex items-center gap-1 cursor-pointer ml-1">
+                <input type="radio" name="psychHumidModeRadio" value="water" onchange="setHumidifierMode('water')">
+                <span class="font-bold text-white">Water</span>
+              </label>
+              <label class="flex items-center gap-1 cursor-pointer ml-1">
+                <input type="radio" name="psychHumidModeRadio" value="none" onchange="setHumidifierMode('none')">
+                <span class="font-bold text-slate-400">None</span>
+              </label>
+            </div>
+
+            <div id="summerReheatPanel" class="flex items-center gap-3 bg-slate-900/90 border border-slate-700/80 px-3 py-1.5 rounded-xl text-xs">
+              <label class="flex items-center gap-1.5 font-bold text-amber-400 cursor-pointer">
+                <input type="checkbox" id="psychReheatToggle" onchange="tool8State.reheatEnabled = this.checked; tool8State.userModified = true; window.tool8_modified = true; calculateTool8();" class="rounded border-slate-600 text-amber-500 focus:ring-0">
+                <span>Downstream Reheat Coil</span>
+              </label>
+              <div class="flex items-center gap-1">
+                <span class="text-slate-400 text-[11px] font-semibold">Target SA:</span>
+                <input type="number" id="psychReheatDBInput" value="65.0" step="0.5" min="50" max="105"
+                       oninput="handleTool8Input('reheatDB', this.value)"
+                       class="w-16 bg-slate-950 border border-slate-700 rounded px-1.5 py-0.5 text-xs font-bold text-rose-400 mono">
+                <span class="text-slate-400 text-[11px] font-bold">°F</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SCROLLABLE VISUAL SCHEMATIC STAGE (1020px x 455px) -->
+        <div id="mcquay-schematic-scroll-wrap" class="overflow-x-auto pb-1">
+          <div id="mcquay-ahu-schematic" class="relative w-[1020px] h-[455px] rounded-2xl mx-auto select-none overflow-hidden shadow-inner">
+
+            <!-- SVG DUCTWORK, ARROWS & AHU COMPONENT SYMBOLS -->
+            <svg class="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 1020 455">
+              <!-- Top Return Air Horizontal Line (Room x=835 left to Relief x=18) -->
+              <line x1="835" y1="74" x2="18" y2="74" class="mcq-duct-stroke" stroke-width="2.2" />
+              <!-- Relief Left Arrowhead (x=18, y=74) -->
+              <polyline points="30,65 18,74 30,83" fill="none" class="mcq-duct-stroke" stroke-width="2.2" />
+              <!-- Mid-Return Left Arrowhead (x=455, y=74) -->
+              <polyline points="467,65 455,74 467,83" fill="none" class="mcq-duct-stroke" stroke-width="2.2" />
+
+              <!-- Return Fan Scroll Symbol (x=580, y=74) -->
+              <g transform="translate(580, 74)">
+                <path d="M -16,-14 L 4,-14 A 14,14 0 1,1 -12,6 L -12,-6 L -16,-6 Z" class="mcq-comp-box" stroke-width="1.8" />
+                <circle cx="2" cy="0" r="6" fill="none" class="mcq-comp-box" stroke-width="1.5" />
+              </g>
+
+              <!-- Vertical Return Air Branch Dropping into Mixer (M) (x=176, y=74 to y=219) -->
+              <line x1="176" y1="74" x2="176" y2="219" class="mcq-duct-stroke" stroke-width="2.2" />
+              <!-- Downward Arrowhead into Mixer (M) -->
+              <polyline points="167,207 176,219 185,207" fill="none" class="mcq-duct-stroke" stroke-width="2.2" />
+
+              <!-- Main Supply Air Horizontal Line (x=18 to Room x=835 at y=235) -->
+              <line x1="18" y1="235" x2="835" y2="235" class="mcq-duct-stroke" stroke-width="2.2" />
+              <!-- OA Arrowhead into Mixer (M) -->
+              <polyline points="149,226 161,235 149,244" fill="none" class="mcq-duct-stroke" stroke-width="2.2" />
+
+              <!-- Mixer Circle (M) at (176, 235) -->
+              <circle cx="176" cy="235" r="14" class="mcq-comp-box" stroke-width="2" />
+              <text x="176" y="240" text-anchor="middle" font-family="Inter, sans-serif" font-weight="800" font-size="13" class="mcq-duct-fill">M</text>
+
+              <!-- Arrowhead entering Heating Coil [X] (scooted right to clear Mixed Air text) -->
+              <polyline points="368,226 380,235 368,244" fill="none" class="mcq-duct-stroke" stroke-width="2.2" />
+
+              <!-- Heating Coil Symbol [X] at (382, 206, w=26, h=58) -->
+              <rect x="382" y="206" width="26" height="58" class="mcq-comp-box" stroke-width="2" />
+              <line x1="382" y1="206" x2="408" y2="264" class="mcq-comp-box" stroke-width="1.6" />
+              <line x1="408" y1="206" x2="382" y2="264" class="mcq-comp-box" stroke-width="1.6" />
+              <!-- Red Upward Heat Arrow into Heating Coil (x=395) -->
+              <line x1="395" y1="312" x2="395" y2="267" stroke="#ef4444" stroke-width="2" />
+              <polyline points="387,278 395,267 403,278" fill="none" stroke="#ef4444" stroke-width="2" />
+
+              <!-- Arrowhead entering Humidifier (H) -->
+              <polyline points="430,226 442,235 430,244" fill="none" class="mcq-duct-stroke" stroke-width="2.2" />
+
+              <!-- Humidifier Circle (H) at (458, 235) -->
+              <circle cx="458" cy="235" r="14" class="mcq-comp-box" stroke-width="2" />
+              <text x="458" y="240" text-anchor="middle" font-family="Inter, sans-serif" font-weight="800" font-size="13" class="mcq-duct-fill">H</text>
+              <!-- Teal Upward Moisture Arrow into Humidifier (x=458) -->
+              <line x1="458" y1="282" x2="458" y2="251" stroke="#14b8a6" stroke-width="2" />
+              <polyline points="450,261 458,251 466,261" fill="none" stroke="#14b8a6" stroke-width="2" />
+
+              <!-- Arrowhead entering Cooling Coil [/] at x=582 -->
+              <polyline points="570,226 582,235 570,244" fill="none" class="mcq-duct-stroke" stroke-width="2.2" />
+
+              <!-- Cooling Coil Symbol [/] at (584, 206, w=26, h=58) -->
+              <rect x="584" y="206" width="26" height="58" class="mcq-comp-box" stroke-width="2" />
+              <line x1="610" y1="206" x2="584" y2="264" class="mcq-comp-box" stroke-width="1.8" />
+              <!-- Blue Upward Cooling Extraction Arrow from top of Cooling Coil (x=597) -->
+              <line x1="597" y1="204" x2="597" y2="170" class="mcq-duct-stroke" stroke-width="2" />
+              <polyline points="589,180 597,170 605,180" fill="none" class="mcq-duct-stroke" stroke-width="2" />
+
+              <!-- Arrowhead entering Room at x=835 -->
+              <polyline points="822,226 834,235 822,244" fill="none" class="mcq-duct-stroke" stroke-width="2.2" />
+
+              <!-- Room Top Exhaust Upward Arrow (x=858, y=62 up to y=26) -->
+              <line x1="858" y1="62" x2="858" y2="26" class="mcq-duct-stroke" stroke-width="2" />
+              <polyline points="850,36 858,26 866,36" fill="none" class="mcq-duct-stroke" stroke-width="2" />
+
+              <!-- Room Top Exfiltration Upward Arrow (x=915, y=62 up to y=42) -->
+              <line x1="915" y1="62" x2="915" y2="42" class="mcq-duct-stroke" stroke-width="2" />
+              <polyline points="907,52 915,42 923,52" fill="none" class="mcq-duct-stroke" stroke-width="2" />
+
+              <!-- Room Bottom Sensible Load Downward Arrow (x=895, y=332 down to y=366) -->
+              <line x1="895" y1="332" x2="895" y2="366" class="mcq-comp-box" stroke-width="2" />
+              <polyline points="887,355 895,366 903,355" fill="none" class="mcq-comp-box" stroke-width="2" />
+            </svg>
+
+            <!-- 1. TOP-LEFT RELIEF AIR & BAROMETRIC PRESSURE -->
+            <div class="absolute left-[38px] top-[80px] space-y-1.5">
+              <div id="mcqReliefCFM" class="text-sm font-extrabold mono">450 cfm</div>
+              <div class="flex items-center gap-1.5">
+                <input type="number" id="mcqPatmInput" value="14.696" step="0.01" min="9.0" max="15.5"
+                       oninput="handleTool8Input('patm', this.value)"
+                       class="mcq-input mcq-input-patm w-[76px] text-right">
+                <span class="text-xs font-extrabold mcq-text-blue">psia</span>
+              </div>
+            </div>
+
+            <!-- 2. RETURN AIR VERTICAL BRANCH READOUT (x=184, y=82) -->
+            <div class="absolute left-[184px] top-[82px]">
+              <div id="mcqRecircCFM" class="text-sm font-extrabold mono">3400 cfm</div>
+              <div class="flex items-center gap-3 text-xs mono mt-0.5">
+                <span id="mcqRAReadoutDB" class="mcq-text-db">72.0°F</span>
+                <span id="mcqRAReadoutRH" class="mcq-text-rh">50.0 %RH</span>
+              </div>
+              <div id="mcqRAReadoutList" class="mcq-readout-list mt-0.5"></div>
+            </div>
+
+            <!-- 3. OUTSIDE AIR (OA) % & CFM INPUTS (ABOVE OA DUCT) -->
+            <div class="absolute left-[18px] top-[156px] space-y-1.5">
+              <div class="flex items-center gap-1.5">
+                <input type="number" id="mcqOAPctInput" value="15" step="1" min="0" max="100"
+                       oninput="handleTool8Input('oaPct', this.value)"
+                       class="mcq-input mcq-input-cfm w-[56px]">
+                <span class="text-xs font-extrabold">%OA</span>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <input type="number" id="mcqOACFMInput" value="600" step="25" min="0" max="500000"
+                       oninput="handleTool8Input('oaCFM', this.value)"
+                       class="mcq-input mcq-input-cfm w-[76px]">
+                <span class="text-xs font-extrabold">cfm</span>
+              </div>
+            </div>
+
+            <!-- 4. OUTSIDE AIR (OA) DB, WB/%RH & PROPERTIES (BELOW OA DUCT) -->
+            <div class="absolute left-[18px] top-[248px] space-y-1">
+              <div class="flex items-center gap-1.5">
+                <input type="number" id="mcqOADBInput" value="93.0" step="0.5" min="-50" max="140"
+                       oninput="handleTool8Input('oaDB', this.value)"
+                       class="mcq-input mcq-input-db w-[74px]">
+                <span class="text-xs mcq-text-db">°F</span>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <input type="number" id="mcqOASecInput" value="74.99" step="0.5" min="-50" max="130"
+                       oninput="handleTool8Input('oaSec', this.value)"
+                       class="mcq-input mcq-input-wb w-[74px]">
+                <button id="mcqOAModeBtn" onclick="toggleOAInputMode()" class="mcq-mode-toggle" title="Click to toggle between °F Wet Bulb and %RH">
+                  °F wb ⇄
+                </button>
+              </div>
+              <div id="mcqOAReadoutList" class="mcq-readout-list pt-1"></div>
+            </div>
+
+            <!-- 5. MIXED AIR (MA) READOUT (BELOW MIXER M, x=196) -->
+            <div class="absolute left-[196px] top-[248px]">
+              <div id="mcqMADB" class="text-sm mcq-text-db mono">75.05°F</div>
+              <div id="mcqMAReadoutList" class="mcq-readout-list mt-0.5"></div>
+            </div>
+
+            <!-- 6. HEATING COIL & HUMIDIFIER CALLOUTS (SCOOTED RIGHT) -->
+            <div class="absolute left-[350px] top-[316px] text-center w-[90px]">
+              <div id="mcqPreheatBtu" class="text-xs mcq-text-red mono">0 Btu/h</div>
+            </div>
+            <div class="absolute left-[416px] top-[286px] text-center w-[85px]">
+              <div id="mcqHumidLbH" class="text-xs mcq-text-teal mono">0.00 lb/h</div>
+            </div>
+
+            <!-- WINTER HUMIDIFIER INLINE BOX (Matches McQuay Screenshot 3 Bottom-Left Box) -->
+            <div id="mcqWinterHumidifierBox" class="hidden absolute left-[206px] top-[354px] bg-slate-900/95 border border-slate-600 rounded-xl px-3 py-2 text-[11px] space-y-1 shadow-md">
+              <div class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Humidifier Source</div>
+              <div class="flex items-center gap-2">
+                <label class="flex items-center gap-1 font-bold mcq-text-red cursor-pointer">
+                  <input type="radio" name="mcqHumidModeRadio" value="steam" checked onchange="setHumidifierMode('steam')">
+                  <span>Steam</span>
+                </label>
+                <input type="number" id="mcqSteamTempInput" value="212" step="1" min="180" max="350"
+                       oninput="handleTool8Input('steamTempF', this.value)"
+                       class="mcq-input mcq-input-db w-[52px] text-right">
+                <span id="mcqSteamEnthalpyText" class="mono text-[10px] mcq-text-red">°F : 1,150.6 Btu/lb</span>
+              </div>
+              <div class="flex items-center gap-4">
+                <div class="flex items-center gap-1.5">
+                  <label class="flex items-center gap-1 font-bold mcq-text-blue cursor-pointer">
+                    <input type="radio" name="mcqHumidModeRadio" value="water" onchange="setHumidifierMode('water')">
+                    <span>Water</span>
+                  </label>
+                  <input type="number" id="mcqWaterTempInput" value="50" step="1" min="35" max="140"
+                         oninput="handleTool8Input('waterTempF', this.value)"
+                         class="mcq-input mcq-input-patm w-[46px] text-right">
+                  <span class="mono text-[10px] mcq-text-blue">°F</span>
+                </div>
+                <label class="flex items-center gap-1 font-bold text-slate-400 cursor-pointer">
+                  <input type="radio" name="mcqHumidModeRadio" value="none" onchange="setHumidifierMode('none')">
+                  <span>None</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- 7A. BLOW-THROUGH FAN POSITION (UPSTREAM OF COOLING COIL, x=502) -->
+            <div id="mcqBlowThroughFanGroup" class="hidden">
+              <!-- Post-Fan Condition Readout ABOVE the Fan CFM Input Box -->
+              <div class="absolute left-[472px] top-[122px]">
+                <div id="mcqBTFanDB" class="text-xs mcq-text-db mono font-bold">77.05°F</div>
+                <div id="mcqBTFanList" class="mcq-readout-list text-[10.5px]"></div>
+              </div>
+              <!-- Supply CFM Input above Blow-Through Fan -->
+              <div class="absolute left-[472px] top-[180px] flex items-center gap-1">
+                <input type="number" id="mcqSupplyCFMInputBT" value="4000" step="100" min="50" max="500000"
+                       oninput="handleTool8Input('supplyCFM', this.value)"
+                       class="mcq-input mcq-input-cfm w-[74px]">
+                <span class="text-xs font-extrabold">cfm</span>
+              </div>
+              <!-- Blow-Through Fan Scroll Symbol on Duct at x=522, y=235 (Discharging Right) -->
+              <svg class="absolute left-[501px] top-[221px] w-[42px] h-[42px] pointer-events-none" viewBox="-22 -22 44 44">
+                <path d="M 16,-14 L -4,-14 A 14,14 0 1,0 12,6 L 12,-6 L 16,-6 Z" class="mcq-comp-box" stroke-width="1.8" />
+                <circle cx="-2" cy="0" r="6" fill="none" class="mcq-comp-box" stroke-width="1.5" />
+              </svg>
+            </div>
+
+            <!-- 8. COOLING COIL TOP LOAD CALLOUT & BOTTOM INPUTS (x=558) -->
+            <div id="mcqCoolingCalloutTop" class="absolute left-[550px] top-[106px] text-xs mcq-text-blue mono leading-tight">
+              <div class="font-extrabold">7.9 ton</div>
+              <div class="font-bold">95,269 Btu/h</div>
+              <div class="text-[10px] font-bold">Δh: 4.94 Btu/lb</div>
+              <div class="text-[10px]">5.7 lb/h at 23.1 Btu/lb</div>
+            </div>
+
+            <div class="absolute left-[558px] top-[270px] space-y-1">
+              <div class="flex items-center gap-1">
+                <input type="number" id="mcqCoilDBInput" value="55.0" step="0.5" min="35" max="120"
+                       oninput="handleTool8Input('coilDB', this.value)"
+                       class="mcq-input mcq-input-db w-[68px]">
+                <span class="text-xs mcq-text-db">°F</span>
+              </div>
+              <div class="flex items-center gap-1">
+                <input type="number" id="mcqCoilSecInput" value="54.51" step="0.1" min="30" max="100"
+                       oninput="handleTool8Input('coilSec', this.value)"
+                       class="mcq-input mcq-input-wb w-[68px]">
+                <button id="mcqCoilModeBtn" onclick="toggleCoilInputMode()" class="mcq-mode-toggle" title="Toggle °F Wet Bulb vs %RH">
+                  °F wb ⇄
+                </button>
+              </div>
+              <div id="mcqCoilReadoutList" class="mcq-readout-list pt-0.5"></div>
+              <label class="flex items-center gap-1 text-[10px] font-bold cursor-pointer pt-0.5" title="Toggle between Auto SAH/Twb (90% RH / ADP curve) and Manual Coil Wet-Bulb entry">
+                <input type="checkbox" id="mcqCoilAutoWBCheck" checked
+                       onchange="toggleCoilAutoWB(this.checked)"
+                       class="rounded border-slate-500 text-emerald-500 focus:ring-0">
+                <span id="mcqCoilAutoStatusText">Auto SAH/Twb</span>
+              </label>
+            </div>
+
+            <!-- 7B. DRAW-THROUGH FAN POSITION (DOWNSTREAM OF COOLING COIL, x=692) -->
+            <div id="mcqDrawThroughFanGroup">
+              <!-- Post-Fan Condition Readout ABOVE the Fan CFM Input Box -->
+              <div class="absolute left-[668px] top-[122px]">
+                <div id="mcqDTFanDB" class="text-xs mcq-text-db mono font-bold">57.0°F</div>
+                <div id="mcqDTFanList" class="mcq-readout-list text-[10.5px]"></div>
+              </div>
+              <!-- Supply CFM Input above Draw-Through Fan -->
+              <div class="absolute left-[668px] top-[180px] flex items-center gap-1">
+                <input type="number" id="mcqSupplyCFMInputDT" value="4000" step="100" min="50" max="500000"
+                       oninput="handleTool8Input('supplyCFM', this.value)"
+                       class="mcq-input mcq-input-cfm w-[74px]">
+                <span class="text-xs font-extrabold">cfm</span>
+              </div>
+              <!-- Draw-Through Fan Scroll Symbol on Duct at x=712, y=235 (Discharging Right) -->
+              <svg class="absolute left-[690px] top-[221px] w-[42px] h-[42px] pointer-events-none" viewBox="-22 -22 44 44">
+                <path d="M 16,-14 L -4,-14 A 14,14 0 1,0 12,6 L 12,-6 L 16,-6 Z" class="mcq-comp-box" stroke-width="1.8" />
+                <circle cx="-2" cy="0" r="6" fill="none" class="mcq-comp-box" stroke-width="1.5" />
+              </svg>
+            </div>
+
+            <!-- 8B. OPTIONAL DOWNSTREAM REHEAT COIL ON SCHEMATIC (x=772, ALL DATA BELOW COIL) -->
+            <div id="mcqReheatGroup" class="hidden">
+              <svg class="absolute left-[772px] top-[206px] w-[28px] h-[90px] pointer-events-none" viewBox="0 0 28 90">
+                <rect x="2" y="2" width="22" height="54" class="mcq-comp-box" stroke-width="2" />
+                <line x1="2" y1="2" x2="24" y2="56" stroke="#f59e0b" stroke-width="1.8" />
+                <line x1="24" y1="2" x2="2" y2="56" stroke="#f59e0b" stroke-width="1.8" />
+                <line x1="13" y1="88" x2="13" y2="60" stroke="#ef4444" stroke-width="2" />
+                <polyline points="7,68 13,60 19,68" fill="none" stroke="#ef4444" stroke-width="2" />
+              </svg>
+              <!-- All Reheat Coil Readouts Placed Below the Reheat Coil (x=714..832) -->
+              <div class="absolute left-[714px] top-[298px] w-[118px] text-center space-y-0.5">
+                <div class="flex items-center justify-center gap-1">
+                  <span class="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/40">Reheat</span>
+                  <span id="mcqReheatOutDB" class="text-xs mcq-text-db mono font-bold">65.0°F</span>
+                </div>
+                <div id="mcqReheatLoadText" class="text-[10.5px] mcq-text-red mono font-extrabold">
+                  0 Btu/h
+                </div>
+                <div id="mcqReheatSubList" class="mcq-readout-list text-[9.5px]"></div>
+              </div>
+            </div>
+
+            <!-- 9. TOP-RIGHT EXHAUST & EXFILTRATION INPUTS (ABOVE ROOM BOX) -->
+            <div class="absolute left-[822px] top-[4px] flex items-center gap-1">
+              <input type="number" id="mcqExhaustCFMInput" value="100" step="25" min="0" max="100000"
+                     oninput="handleTool8Input('exhaustCFM', this.value)"
+                     class="mcq-input mcq-input-cfm w-[62px]">
+              <span class="text-[11px] font-bold">cfm Exhaust</span>
+            </div>
+
+            <div class="absolute left-[875px] top-[28px] flex items-center gap-1">
+              <input type="number" id="mcqExfilCFMInput" value="50" step="25" min="0" max="100000"
+                     oninput="handleTool8Input('exfilCFM', this.value)"
+                     class="mcq-input mcq-input-cfm w-[56px]">
+              <span class="text-[11px] font-bold">cfm Exfil</span>
+            </div>
+
+            <!-- 10. RIGHT-SIDE CONDITIONED ROOM ENCLOSURE BOX (x=835, y=62, w=175, h=270) -->
+            <div class="mcq-room-box absolute left-[835px] top-[62px] w-[175px] h-[270px] rounded-lg p-3 flex flex-col justify-between">
+              <div class="space-y-1.5">
+                <div class="text-sm font-extrabold tracking-tight border-b border-slate-700/60 pb-1">Room</div>
+
+                <div class="flex items-center gap-1.5">
+                  <input type="number" id="mcqRoomDBInput" value="72.0" step="0.5" min="45" max="105"
+                         oninput="handleTool8Input('roomDB', this.value)"
+                         class="mcq-input mcq-input-db w-[68px]">
+                  <span class="text-xs mcq-text-db">°F</span>
+                </div>
+
+                <div class="flex items-center gap-1.5">
+                  <input type="number" id="mcqRoomSecInput" value="50.0" step="1.0" min="5" max="95"
+                         oninput="handleTool8Input('roomSec', this.value)"
+                         class="mcq-input mcq-input-rh w-[68px]">
+                  <button id="mcqRoomModeBtn" onclick="toggleRoomInputMode()" class="mcq-mode-toggle" title="Click to toggle between %RH and °F Wet Bulb">
+                    %RH ⇄
+                  </button>
+                </div>
+
+                <div id="mcqRoomReadoutList" class="mcq-readout-list pt-1.5"></div>
+              </div>
+
+              <div class="text-[10px] text-slate-400 font-semibold flex items-center justify-between pt-1 border-t border-slate-700/50">
+                <span>Space Target</span>
+                <i class="fa-solid fa-building-circle-check text-emerald-400"></i>
+              </div>
+            </div>
+
+            <!-- 11. BOTTOM-RIGHT ROOM SENSIBLE & LATENT LOAD + MINI PSYCH CHART LAUNCHER -->
+            <div class="absolute left-[825px] top-[368px] w-[145px] text-center leading-tight">
+              <div id="mcqRoomSensibleText" class="text-[11px] mcq-text-blue mono font-extrabold">64,800 Btu/h Sens</div>
+              <div id="mcqRoomLatentText" class="text-[10.5px] mcq-text-teal mono font-bold mt-0.5">+15,400 Btu/h Lat</div>
+            </div>
+
+            <button onclick="toggleMiniChartOnTab1()" title="Toggle Live Mini-Psychrometric Chart below Schematic"
+                    class="absolute right-[12px] bottom-[12px] w-[48px] h-[42px] rounded-lg bg-slate-900 border-2 border-violet-500/60 hover:border-violet-400 flex flex-col items-center justify-center shadow-lg transition hover:scale-105 cursor-pointer">
+              <i class="fa-solid fa-chart-area text-violet-400 text-base"></i>
+              <span class="text-[8px] font-extrabold uppercase text-slate-300 mt-0.5">Chart</span>
+            </button>
+
+          </div>
+        </div>
+
+        <!-- HYDRONIC COIL GPM, Δh/ADP/BF & TARGET SPACE LOAD VERIFICATION BAR -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 pt-2 border-t border-slate-800/80 text-xs">
+          <!-- Hydronic Flow & Coil Physics Card (CHW & HW on Separate Lines, Full Decimal Width) -->
+          <div class="lg:col-span-6 bg-slate-900/90 border border-slate-800 rounded-xl p-3.5 space-y-2.5">
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-1.5">
+              <span class="text-[11px] font-extrabold uppercase tracking-wider text-sky-400 flex items-center gap-1.5">
+                <i class="fa-solid fa-faucet-drip"></i> Hydronic & Coil Physics
+              </span>
+              <div class="flex flex-wrap items-center gap-3 text-[11px] mono">
+                <span title="Enthalpy Change Across Conditioning Coil (Δh = |h_entering - h_leaving|)"><b>Coil Δh:</b> <span id="tab1CoilDeltaHReadout" class="text-emerald-400 font-bold">4.94 Btu/lb</span></span>
+                <span title="Cooling Coil Apparatus Dew Point Temperature"><b>ADP:</b> <span id="tab1CoilADPReadout" class="text-cyan-400 font-bold">53.8°F</span></span>
+                <span title="Cooling Coil Bypass Factor"><b>BF:</b> <span id="tab1CoilBFReadout" class="text-violet-400 font-bold">5.6%</span></span>
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <!-- Line 1: Chilled Water (CHW) -->
+              <div class="flex items-center justify-between gap-2 bg-slate-950/70 border border-slate-800/80 rounded-lg px-2.5 py-1.5" title="Chilled Water Temperature Rise (ΔT) and Required Flow Rate">
+                <span class="text-[11px] text-slate-300 font-semibold">Chilled Water (CHW) Coil ΔT:</span>
+                <div class="flex items-center gap-2">
+                  <input type="number" id="tab1CHWDeltaTInput" value="12.0" step="0.5" min="6" max="24"
+                         oninput="handleTool8Input('chwDeltaT', this.value)"
+                         class="w-20 bg-slate-900 border border-slate-700 rounded px-2 py-0.5 text-right font-bold text-sky-400 mono">
+                  <span class="text-[11px] text-slate-400 font-bold">°F →</span>
+                  <span id="tab1CHWGPMReadout" class="font-extrabold text-sky-400 mono w-20 text-right">15.9 GPM</span>
+                </div>
+              </div>
+
+              <!-- Line 2: Heating Water (HW) -->
+              <div class="flex items-center justify-between gap-2 bg-slate-950/70 border border-slate-800/80 rounded-lg px-2.5 py-1.5" title="Heating Water Temperature Drop (ΔT) and Required Flow Rate">
+                <span class="text-[11px] text-slate-300 font-semibold">Heating Water (HW) Coil ΔT:</span>
+                <div class="flex items-center gap-2">
+                  <input type="number" id="tab1HWDeltaTInput" value="20.0" step="1.0" min="10" max="60"
+                         oninput="handleTool8Input('hwDeltaT', this.value)"
+                         class="w-20 bg-slate-900 border border-slate-700 rounded px-2 py-0.5 text-right font-bold text-rose-400 mono">
+                  <span class="text-[11px] text-slate-400 font-bold">°F →</span>
+                  <span id="tab1HWGPMReadout" class="font-extrabold text-rose-400 mono w-20 text-right">0.0 GPM</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Target Space Load Verification & 1-Click Auto-Size Supply CFM -->
+          <div class="lg:col-span-6 bg-slate-900/90 border border-slate-800 rounded-xl p-3.5 flex flex-col justify-between space-y-2.5">
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-1.5">
+              <div>
+                <span class="text-[11px] font-extrabold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+                  <i class="fa-solid fa-bullseye"></i> Target Space Load Check & CFM Auto-Sizer
+                </span>
+              </div>
+              <button onclick="solveCFMForTargetSpaceLoad()" title="Reverse-solve required Supply Air CFM (and Leaving Coil DB if needed) to satisfy your Target Sensible & Latent Room Loads"
+                      class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px] transition flex items-center gap-1 cursor-pointer">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> Auto-Size CFM for Target Load
+              </button>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div class="flex items-center justify-between gap-2 bg-slate-950/70 border border-slate-800/80 rounded-lg px-2.5 py-1.5" title="Enter your building load calculation's required Room Sensible Load (Btu/h)">
+                <span class="text-[11px] text-slate-300 font-semibold">Target Sensible:</span>
+                <div class="flex items-center gap-1">
+                  <input type="number" id="tab1TargetSensInput" value="64800" step="1000" min="0"
+                         oninput="handleTool8Input('targetSpaceSens', this.value)"
+                         class="w-24 bg-slate-900 border border-slate-700 rounded px-2 py-0.5 text-right text-xs font-bold text-white mono">
+                  <span class="text-[10px] text-slate-400 font-bold">Btu/h</span>
+                </div>
+              </div>
+              <div class="flex items-center justify-between gap-2 bg-slate-950/70 border border-slate-800/80 rounded-lg px-2.5 py-1.5" title="Enter your building load calculation's required Room Latent Load (Btu/h)">
+                <span class="text-[11px] text-slate-300 font-semibold">Target Latent:</span>
+                <div class="flex items-center gap-1">
+                  <input type="number" id="tab1TargetLatInput" value="12000" step="500" min="0"
+                         oninput="handleTool8Input('targetSpaceLat', this.value)"
+                         class="w-24 bg-slate-900 border border-slate-700 rounded px-2 py-0.5 text-right text-xs font-bold text-white mono">
+                  <span class="text-[10px] text-slate-400 font-bold">Btu/h</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between pt-0.5">
+              <span class="text-[10px] text-slate-400">Delivered vs. Target Capacity:</span>
+              <span id="tab1SpaceCheckStatus" class="text-[11px] font-bold mono text-slate-300"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- NEW: INLINE LIVE MINI-PSYCHROMETRIC CHART DRAWER ON TAB 1 -->
+        <div id="tab1MiniChartPanel" class="pt-3 border-t border-slate-800 space-y-2 animate-fade-in">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-violet-400 flex items-center gap-1.5">
+              <i class="fa-solid fa-chart-area"></i> Live Docked Psychrometric Process Preview (Updates in Real Time with Schematic)
+            </span>
+            <div class="flex items-center gap-2 no-print">
+              <button onclick="switchTool8Tab('chart')" class="text-[11px] font-bold text-sky-400 hover:underline">Open Full-Screen Chart →</button>
+              <button onclick="toggleMiniChartOnTab1()" class="text-xs text-slate-400 hover:text-white px-2 py-0.5 rounded bg-slate-800">Hide</button>
+            </div>
+          </div>
+          <div class="w-full h-[320px] rounded-xl overflow-hidden border border-slate-800 bg-slate-950 relative">
+            <canvas id="psychMiniChartCanvas" class="w-full h-full block"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4-CARD KPI SUMMARY RIBBON (ABOVE DETAILED NODE INSPECTOR CARDS) -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="glass-card rounded-xl p-4 border-l-4 border-l-sky-500">
+          <p id="kpiCard1Title" class="text-xs text-slate-400 font-semibold">Cooling Coil Total Capacity</p>
+          <h3 id="kpiCard1Main" class="text-2xl font-extrabold text-white mono mt-1">7.9 Tons</h3>
+          <p id="kpiCard1Sub" class="text-[11px] text-slate-400 mt-1.5"><span class="text-sky-400 font-bold mono">95,269 Btu/h</span> • Δh 4.94 • ~15.9 GPM</p>
+        </div>
+
+        <div class="glass-card rounded-xl p-4 border-l-4 border-l-cyan-500">
+          <p id="kpiCard2Title" class="text-xs text-slate-400 font-semibold">Condensate, SHR & Coil ADP</p>
+          <h3 id="kpiCard2Main" class="text-2xl font-extrabold text-white mono mt-1">5.7 lb/h</h3>
+          <p id="kpiCard2Sub" class="text-[11px] text-slate-400 mt-1.5"><span class="text-cyan-400 font-bold mono">0.68 GPH</span> • SHR <span class="font-bold text-white mono">0.94</span> • ADP <span class="font-bold text-emerald-400 mono">54.1°F</span></p>
+        </div>
+
+        <div class="glass-card rounded-xl p-4 border-l-4 border-l-emerald-500">
+          <p class="text-xs text-slate-400 font-semibold">Supply & Ventilation Balance</p>
+          <h3 id="kpiCard3Main" class="text-2xl font-extrabold text-white mono mt-1">4,000 CFM</h3>
+          <p id="kpiCard3Sub" class="text-[11px] text-slate-400 mt-1.5">OA: <span class="font-bold text-white mono">600</span> (15%) • <span class="text-emerald-400 font-bold">+450 CFM Relief</span></p>
+        </div>
+
+        <div class="glass-card rounded-xl p-4 border-l-4 border-l-violet-500">
+          <p class="text-xs text-slate-400 font-semibold">Net Space Load & SHR</p>
+          <h3 id="kpiCard4Main" class="text-2xl font-extrabold text-white mono mt-1">64,800 Btu/h</h3>
+          <p id="kpiCard4Sub" class="text-[11px] text-slate-400 mt-1.5">Sens • Lat • Room SHR: <span class="font-bold text-violet-400 mono">1.00</span></p>
+        </div>
+      </div>
+
+      <!-- 1B. COLLAPSIBLE DETAILED NODE INSPECTOR CARDS (OA, MA, COIL, ROOM) -->
+      <div class="glass-card rounded-2xl p-4 border border-slate-800 space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div class="flex items-center gap-3">
+            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+              <i class="fa-solid fa-grip text-violet-400"></i>
+              Detailed Node Inspector Cards (Synced with Schematic)
+            </h3>
+            <button id="btnToggleNodeCards" onclick="toggleNodeCardsOnTab1()"
+                    class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-[11px] font-bold transition flex items-center gap-1.5 cursor-pointer">
+              <i class="fa-solid fa-chevron-down text-violet-400"></i> Expand Inspector Cards (4 Nodes)
+            </button>
+          </div>
+          <div class="flex items-center gap-2 text-xs">
+            <span id="schemReliefBadge" class="status-pill-emerald text-[10px] font-bold px-2 py-0.5 rounded border">Relief Air Out</span>
+            <span id="schemReliefCFM" class="font-bold mono text-white">450 cfm</span>
+            <span class="text-slate-400">•</span>
+            <span class="text-slate-400">Recirc RA:</span>
+            <span id="schemRecircCFM" class="font-bold mono text-amber-400">3,400 cfm</span>
+            <span id="schemRAReadout" class="hidden xl:inline text-[11px] text-slate-400 mono"></span>
+          </div>
+        </div>
+
+        <div id="tab1NodeCardsDrawer" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-2 border-t border-slate-800">
+
+          <!-- CARD 1: OUTSIDE AIR (OA) -->
+          <div class="schem-node-card bg-slate-900/90 border border-sky-500/30 rounded-2xl p-3.5 flex flex-col justify-between space-y-3">
+            <div class="space-y-2.5">
+              <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                <span class="text-xs font-extrabold text-sky-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <i class="fa-solid fa-cloud-sun"></i> 1. Outside Air (OA)
+                </span>
+                <span class="text-[10px] font-mono text-slate-400">Intake</span>
+              </div>
+
+              <div class="grid grid-cols-2 gap-2 bg-slate-950/80 p-2 rounded-xl border border-slate-800">
+                <div>
+                  <label class="block text-[10px] font-bold text-slate-400 mb-0.5">% Outside Air</label>
+                  <div class="flex items-center gap-1">
+                    <input type="number" id="psychOAPctInput" value="15" step="1" min="0" max="100"
+                           oninput="handleTool8Input('oaPct', this.value)"
+                           class="w-full bg-slate-900 border border-slate-700 rounded px-1.5 py-1 text-xs font-bold text-white mono outline-none focus:border-sky-500">
+                    <span class="text-[10px] font-bold text-slate-400">%</span>
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-[10px] font-bold text-slate-400 mb-0.5">OA Volume</label>
+                  <div class="flex items-center gap-1">
+                    <input type="number" id="psychOACFMInput" value="600" step="25" min="0" max="500000"
+                           oninput="handleTool8Input('oaCFM', this.value)"
+                           class="w-full bg-slate-900 border border-slate-700 rounded px-1.5 py-1 text-xs font-bold text-sky-400 mono outline-none focus:border-sky-500">
+                    <span class="text-[10px] font-bold text-slate-400">cfm</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="space-y-1.5 bg-slate-950/80 p-2 rounded-xl border border-slate-800">
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-[11px] font-bold text-slate-300">Dry Bulb:</span>
+                  <div class="flex items-center gap-1">
+                    <input type="number" id="psychOADBInput" value="93.0" step="0.5" min="-50" max="140"
+                           oninput="handleTool8Input('oaDB', this.value)"
+                           class="w-20 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs font-bold text-rose-400 mono text-right outline-none">
+                    <span class="text-xs font-bold text-rose-400 w-10">°F DB</span>
+                  </div>
+                </div>
+
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-[11px] font-bold text-slate-300">Moisture:</span>
+                  <div class="flex items-center gap-1">
+                    <input type="number" id="psychOASecInput" value="74.99" step="0.5" min="-50" max="130"
+                           oninput="handleTool8Input('oaSec', this.value)"
+                           class="w-20 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs font-bold text-emerald-400 mono text-right outline-none">
+                    <button id="psychOAModeToggleBtn" onclick="toggleOAInputMode()" class="mcq-mode-toggle">
+                      °F wb ⇄
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div id="schemOADetails" class="pt-2 border-t border-slate-800/80"></div>
+          </div>
+
+          <!-- CARD 2: MIXED AIR (MA) -->
+          <div class="schem-node-card bg-slate-900/90 border border-violet-500/30 rounded-2xl p-3.5 flex flex-col justify-between space-y-3">
+            <div class="space-y-2.5">
+              <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                <span class="text-xs font-extrabold text-violet-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <span class="status-pill-violet w-5 h-5 rounded-full border flex items-center justify-center text-[10px] font-black">M</span>
+                  2. Mixed Air (MA)
+                </span>
+                <span id="schemMADB" class="text-sm font-black text-rose-400 mono">75.05°F</span>
+              </div>
+
+              <div id="schemMADetails" class="bg-slate-950/80 p-2.5 rounded-xl border border-slate-800"></div>
+            </div>
+
+            <div class="space-y-2 pt-2 border-t border-slate-800/80">
+              <div class="grid grid-cols-2 gap-2">
+                <div class="bg-slate-950/90 border border-slate-800 rounded-xl p-2 text-center">
+                  <div class="text-[10px] font-bold text-slate-400 flex items-center justify-center gap-1">
+                    <i class="fa-solid fa-fire text-rose-400"></i> Preheat Coil
+                  </div>
+                  <div id="schemPreheatLoad" class="text-xs font-extrabold text-rose-400 mono mt-0.5">0 Btu/h</div>
+                </div>
+                <div class="bg-slate-950/90 border border-slate-800 rounded-xl p-2 text-center">
+                  <div class="text-[10px] font-bold text-slate-400 flex items-center justify-center gap-1">
+                    <i class="fa-solid fa-droplet text-teal-400"></i> Humidifier (H)
+                  </div>
+                  <div id="schemHumidLoad" class="text-xs font-extrabold text-teal-400 mono mt-0.5">0.00 lb/h</div>
+                </div>
+              </div>
+
+              <div id="schemBlowThroughFanBox" class="hidden bg-violet-950/40 border border-violet-500/40 rounded-xl p-2.5 space-y-1">
+                <div class="flex items-center justify-between text-[11px] font-bold text-violet-300">
+                  <span><i class="fa-solid fa-fan"></i> Blow-Thru Supply Fan</span>
+                  <span id="schemBTFanLeavingDB" class="text-rose-400 mono">77.05°F</span>
+                </div>
+                <div class="flex items-center justify-between text-[10px] mono text-slate-300">
+                  <span id="schemBTFanLeavingH">28.599 Btu/lb</span>
+                  <span id="schemBTFanLeavingV">13.73204 ft³/lb</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- CARD 3: CONDITIONING COIL & SUPPLY FAN -->
+          <div class="schem-node-card bg-slate-900/90 border border-cyan-500/30 rounded-2xl p-3.5 flex flex-col justify-between space-y-3">
+            <div class="space-y-2.5">
+              <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                <span class="text-xs font-extrabold text-cyan-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <i class="fa-solid fa-snowflake"></i> 3. Conditioning Coil
+                </span>
+                <label class="flex items-center gap-1 text-[10px] font-bold text-emerald-400 cursor-pointer" title="Toggle between Auto SAH/Twb and Manual Coil Wet Bulb">
+                  <input type="checkbox" id="psychCoilAutoWBCheck" checked
+                         onchange="toggleCoilAutoWB(this.checked)"
+                         class="rounded border-slate-600 text-emerald-500 focus:ring-0">
+                  <span>Auto SAH/Twb</span>
+                </label>
+              </div>
+
+              <div class="bg-sky-950/40 border border-sky-500/30 rounded-xl p-2.5 space-y-0.5">
+                <div class="flex items-center justify-between">
+                  <span id="schemCoolingTons" class="text-sm font-black text-sky-400 mono">7.9 ton</span>
+                  <span id="schemCoolingBtu" class="text-xs font-extrabold text-white mono">95,269 Btu/h</span>
+                </div>
+                <div id="schemCondensateText" class="text-[10px] font-semibold text-cyan-300 mono">
+                  5.7 lb/h (0.68 GPH) @ 23.1 Btu/lb
+                </div>
+              </div>
+
+              <div class="space-y-1.5 bg-slate-950/80 p-2 rounded-xl border border-slate-800">
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-[11px] font-bold text-slate-300">Leaving DB:</span>
+                  <div class="flex items-center gap-1">
+                    <input type="number" id="psychCoilDBInput" value="55.0" step="0.5" min="35" max="120"
+                           oninput="handleTool8Input('coilDB', this.value)"
+                           class="w-20 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs font-bold text-rose-400 mono text-right outline-none">
+                    <span class="text-xs font-bold text-rose-400 w-10">°F DB</span>
+                  </div>
+                </div>
+
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-[11px] font-bold text-slate-300">Leaving WB:</span>
+                  <div class="flex items-center gap-1">
+                    <input type="number" id="psychCoilSecInput" value="54.51" step="0.1" min="30" max="100"
+                           oninput="handleTool8Input('coilSec', this.value)"
+                           class="w-20 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs font-bold text-emerald-400 mono text-right outline-none">
+                    <button id="psychCoilModeToggleBtn" onclick="toggleCoilInputMode()" class="mcq-mode-toggle">
+                      °F wb ⇄
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div id="schemCoilLeavingDetails" class="pt-1"></div>
+            </div>
+
+            <div class="pt-2 border-t border-slate-800/80 space-y-2">
+              <div class="flex items-center justify-between bg-slate-950/90 border border-slate-700 rounded-xl px-2.5 py-1.5">
+                <span class="text-[11px] font-bold text-slate-300 flex items-center gap-1.5">
+                  <i class="fa-solid fa-fan text-emerald-400"></i> Supply Air:
+                </span>
+                <div class="flex items-center gap-1">
+                  <input type="number" id="psychSupplyCFMInput" value="4000" step="100" min="50" max="500000"
+                         oninput="handleTool8Input('supplyCFM', this.value)"
+                         class="w-20 bg-slate-900 border border-slate-700 rounded px-1.5 py-0.5 text-xs font-extrabold text-white mono text-right outline-none">
+                  <span class="text-xs font-bold text-slate-400">cfm</span>
+                </div>
+              </div>
+
+              <div id="schemDrawThroughFanBox" class="bg-emerald-950/30 border border-emerald-500/30 rounded-xl p-2 space-y-0.5">
+                <div class="flex items-center justify-between text-[11px] font-bold">
+                  <span class="text-emerald-400">Leaving Fan (Draw-Thru):</span>
+                  <span id="schemDTFanLeavingDB" class="text-rose-400 mono font-extrabold">57.0°F</span>
+                </div>
+                <div class="flex items-center justify-between text-[10px] mono text-slate-300">
+                  <span id="schemDTFanLeavingH">23.3674 Btu/lb</span>
+                  <span id="schemDTFanLeavingV">13.21255 ft³/lb</span>
+                </div>
+              </div>
+
+              <div id="schemReheatDetailsBox" class="hidden bg-amber-950/30 border border-amber-500/40 rounded-xl p-2 space-y-0.5">
+                <div class="flex items-center justify-between text-[11px] font-bold">
+                  <span class="text-amber-400">Reheat Coil:</span>
+                  <span id="schemReheatBtu" class="text-rose-400 mono">0 Btu/h</span>
+                </div>
+                <div id="schemReheatSADB" class="text-[10px] mono text-slate-200">65.0°F DB</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- CARD 4: CONDITIONED ROOM -->
+          <div class="schem-node-card bg-slate-900/90 border border-emerald-500/30 rounded-2xl p-3.5 flex flex-col justify-between space-y-3">
+            <div class="space-y-2.5">
+              <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                <span class="text-xs font-extrabold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <i class="fa-solid fa-building-user"></i> 4. Conditioned Room
+                </span>
+                <span class="text-[10px] font-mono text-slate-400">Space</span>
+              </div>
+
+              <div class="grid grid-cols-2 gap-2 bg-slate-950/80 p-2 rounded-xl border border-slate-800">
+                <div>
+                  <label class="block text-[9px] font-bold uppercase text-slate-400">Exhaust CFM</label>
+                  <input type="number" id="psychExhaustCFMInput" value="100" step="25" min="0" max="100000"
+                         oninput="handleTool8Input('exhaustCFM', this.value)"
+                         class="w-full bg-slate-900 border border-slate-700 rounded px-1.5 py-0.5 text-xs font-bold text-white mono outline-none">
+                </div>
+                <div>
+                  <label class="block text-[9px] font-bold uppercase text-slate-400">Exfil CFM</label>
+                  <input type="number" id="psychExfilCFMInput" value="50" step="25" min="0" max="100000"
+                         oninput="handleTool8Input('exfiltrationCFM', this.value)"
+                         class="w-full bg-slate-900 border border-slate-700 rounded px-1.5 py-0.5 text-xs font-bold text-white mono outline-none">
+                </div>
+              </div>
+
+              <div class="space-y-1.5 bg-slate-950/80 p-2 rounded-xl border border-slate-800">
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-[11px] font-bold text-slate-300">Room DB:</span>
+                  <div class="flex items-center gap-1">
+                    <input type="number" id="psychRoomDBInput" value="72.0" step="0.5" min="45" max="105"
+                           oninput="handleTool8Input('roomDB', this.value)"
+                           class="w-20 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs font-bold text-rose-400 mono text-right outline-none">
+                    <span class="text-xs font-bold text-rose-400 w-10">°F DB</span>
+                  </div>
+                </div>
+
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-[11px] font-bold text-slate-300">Room Hum:</span>
+                  <div class="flex items-center gap-1">
+                    <input type="number" id="psychRoomSecInput" value="50.0" step="1.0" min="5" max="95"
+                           oninput="handleTool8Input('roomSec', this.value)"
+                           class="w-20 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs font-bold text-sky-400 mono text-right outline-none">
+                    <button id="psychRoomModeToggleBtn" onclick="toggleRoomInputMode()" class="mcq-mode-toggle">
+                      %RH ⇄
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div id="schemRoomDetails" class="pt-1"></div>
+            </div>
+
+            <div class="pt-2 border-t border-slate-800/80">
+              <div class="bg-sky-950/40 border border-sky-500/30 rounded-xl p-2.5 text-center">
+                <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center justify-center gap-1">
+                  <i class="fa-solid fa-arrow-down text-sky-400"></i> Net Space Capacity
+                </div>
+                <div id="schemRoomSensibleLoad" class="text-xs font-black text-sky-400 mono mt-0.5">
+                  64,800 Sens | 15,400 Lat Btu/h
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- 1C. COMPREHENSIVE 9-PROPERTY PSYCHROMETRIC STATE POINT SCHEDULE TABLE -->
+      <div class="glass-card rounded-2xl p-5 border border-slate-800 space-y-3">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+              <i class="fa-solid fa-table-list text-violet-400"></i>
+              Complete Psychrometric State Point Schedule
+            </h3>
+            <p class="text-[11px] text-slate-400">
+              Full thermodynamic properties at every air-side node (Dry Bulb, Wet Bulb, %RH, Dew Point, Enthalpy, Humidity Ratio, Grains, Specific Volume & Vapor Pressure)
+            </p>
+          </div>
+          <button onclick="switchTool8Tab('chart')" class="px-3.5 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-bold transition flex items-center gap-1.5 self-start sm:self-auto no-print">
+            <i class="fa-solid fa-chart-area"></i> View on Psychrometric Chart →
+          </button>
+        </div>
+
+        <div class="overflow-x-auto rounded-xl border border-slate-800">
+          <table class="w-full text-left text-xs mono">
+            <thead class="bg-slate-900 text-slate-300 border-b border-slate-800 uppercase text-[10px] font-bold">
+              <tr>
+                <th class="p-2.5 font-sans">Air Stream / System Node</th>
+                <th class="p-2.5 text-right">Airflow (CFM)</th>
+                <th class="p-2.5 text-right">Dry Bulb (°F)</th>
+                <th class="p-2.5 text-right">Wet Bulb (°F)</th>
+                <th class="p-2.5 text-right">Rel. Hum (%)</th>
+                <th class="p-2.5 text-right">Dew Point (°F)</th>
+                <th class="p-2.5 text-right">Enthalpy (Btu/lb)</th>
+                <th class="p-2.5 text-right">Hum. Ratio (lb/lb)</th>
+                <th class="p-2.5 text-right">Grains (gr/lb)</th>
+                <th class="p-2.5 text-right">Spec. Vol (ft³/lb)</th>
+                <th class="p-2.5 text-right">Vapor Press (psia)</th>
+              </tr>
+            </thead>
+            <tbody id="psychStateTableBody" class="divide-y divide-slate-800/80 text-slate-200"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ===================================================================
+         TAB 2: INTERACTIVE PSYCHROMETRIC CHART VIEW
+         =================================================================== -->
+    <div id="tool8-chart-view" class="hidden space-y-5 animate-fade-in">
+      <div class="glass-card rounded-2xl p-5 border border-slate-800 space-y-4">
+        
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+          <div>
+            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+              <i class="fa-solid fa-chart-area text-violet-400"></i>
+              Interactive ASHRAE Psychrometric Chart & Process Vector Analyzer
+            </h3>
+            <p id="psychChartHoverReadout" class="text-xs mono text-slate-400 mt-1">
+              Hover anywhere inside the chart to inspect live Dry Bulb, Wet Bulb, %RH, Dew Point, Enthalpy, and Grains.
+            </p>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-3 bg-slate-900/90 border border-slate-800 px-3.5 py-2 rounded-xl text-xs no-print">
+            <label class="flex items-center gap-1.5 cursor-pointer font-semibold text-slate-300">
+              <input type="checkbox" checked onchange="tool8State.chartShowRH = this.checked; drawPsychrometricChart('psychChartCanvas', false);">
+              <span>%RH Curves</span>
+            </label>
+            <label class="flex items-center gap-1.5 cursor-pointer font-semibold text-slate-300">
+              <input type="checkbox" checked onchange="tool8State.chartShowWB = this.checked; drawPsychrometricChart('psychChartCanvas', false);">
+              <span>Wet-Bulb Lines</span>
+            </label>
+            <label class="flex items-center gap-1.5 cursor-pointer font-semibold text-slate-300">
+              <input type="checkbox" checked onchange="tool8State.chartShowSHR = this.checked; drawPsychrometricChart('psychChartCanvas', false);">
+              <span>SHR & ADP Vector</span>
+            </label>
+            <label class="flex items-center gap-1.5 cursor-pointer font-semibold text-emerald-400" title="Overlay ASHRAE Standard 55 Summer/Winter Thermal Comfort Envelope">
+              <input type="checkbox" checked onchange="tool8State.chartShowComfortZone = this.checked; drawPsychrometricChart('psychChartCanvas', false);">
+              <span>ASHRAE 55 Comfort Zone</span>
+            </label>
+            <label class="flex items-center gap-1.5 cursor-pointer font-semibold text-slate-300">
+              <input type="checkbox" checked onchange="tool8State.chartShowLabels = this.checked; drawPsychrometricChart('psychChartCanvas', false);">
+              <span>Node Labels</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- NEW: QUICK-ADJUST PARAMETER BAR ON TAB 2 (NO TAB SWITCHING NEEDED) -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 bg-slate-900/90 border border-slate-800 p-3 rounded-xl text-xs no-print">
+          <div>
+            <label class="block text-[10px] font-bold uppercase text-sky-400 mb-0.5">% Outside Air</label>
+            <div class="flex items-center gap-1">
+              <input type="number" id="chartQuickOAPct" value="15" step="1" min="0" max="100"
+                     oninput="handleTool8Input('oaPct', this.value)"
+                     class="w-full bg-slate-950 border border-slate-700 rounded px-2 py-1 font-bold text-white mono">
+              <span class="text-slate-400 font-bold">%</span>
+            </div>
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold uppercase text-rose-400 mb-0.5">Outside Air DB</label>
+            <div class="flex items-center gap-1">
+              <input type="number" id="chartQuickOADB" value="93.0" step="0.5" min="-50" max="140"
+                     oninput="handleTool8Input('oaDB', this.value)"
+                     class="w-full bg-slate-950 border border-slate-700 rounded px-2 py-1 font-bold text-rose-400 mono">
+              <span class="text-slate-400 font-bold">°F</span>
+            </div>
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold uppercase text-cyan-400 mb-0.5">Leaving Coil DB</label>
+            <div class="flex items-center gap-1">
+              <input type="number" id="chartQuickCoilDB" value="55.0" step="0.5" min="35" max="120"
+                     oninput="handleTool8Input('coilDB', this.value)"
+                     class="w-full bg-slate-950 border border-slate-700 rounded px-2 py-1 font-bold text-cyan-400 mono">
+              <span class="text-slate-400 font-bold">°F</span>
+            </div>
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold uppercase text-amber-400 mb-0.5">Room Setpoint DB</label>
+            <div class="flex items-center gap-1">
+              <input type="number" id="chartQuickRoomDB" value="72.0" step="0.5" min="45" max="105"
+                     oninput="handleTool8Input('roomDB', this.value)"
+                     class="w-full bg-slate-950 border border-slate-700 rounded px-2 py-1 font-bold text-amber-400 mono">
+              <span class="text-slate-400 font-bold">°F</span>
+            </div>
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold uppercase text-emerald-400 mb-0.5">Room Humidity</label>
+            <div class="flex items-center gap-1">
+              <input type="number" id="chartQuickRoomRH" value="50.0" step="1" min="5" max="95"
+                     oninput="tool8State.roomInputMode='rh'; handleTool8Input('roomSec', this.value)"
+                     class="w-full bg-slate-950 border border-slate-700 rounded px-2 py-1 font-bold text-emerald-400 mono">
+              <span class="text-slate-400 font-bold">%RH</span>
+            </div>
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold uppercase text-violet-400 mb-0.5">Supply Airflow</label>
+            <div class="flex items-center gap-1">
+              <input type="number" id="chartQuickSupplyCFM" value="4000" step="100" min="50" max="500000"
+                     oninput="handleTool8Input('supplyCFM', this.value)"
+                     class="w-full bg-slate-950 border border-slate-700 rounded px-2 py-1 font-bold text-white mono">
+              <span class="text-slate-400 font-bold">CFM</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="w-full h-[560px] rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 relative">
+          <canvas id="psychChartCanvas" class="w-full h-full block cursor-crosshair"></canvas>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-between gap-3 pt-2 text-xs text-slate-300">
+          <div class="flex flex-wrap items-center gap-4">
+            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-sky-500 inline-block"></span> <b>OA:</b> Outside Air</span>
+            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-amber-500 inline-block"></span> <b>RA:</b> Return Air</span>
+            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-purple-500 inline-block"></span> <b>MA:</b> Mixed Air</span>
+            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-cyan-500 inline-block"></span> <b>LC:</b> Leaving Coil</span>
+            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span> <b>SA:</b> Supply Air</span>
+          </div>
+          <div class="flex items-center gap-2 no-print">
+            <button onclick="exportTool8SubmittalPDF()" class="px-3.5 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-bold text-xs transition flex items-center gap-1.5">
+              <i class="fa-solid fa-file-pdf"></i> Download Full Submittal PDF
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ===================================================================
+         TAB 3: ENGINEERED SUBMITTAL REPORT & PDF EXPORT VIEW
+         =================================================================== -->
+    <div id="tool8-report-view" class="hidden space-y-6 animate-fade-in">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+        <div class="lg:col-span-4 glass-card rounded-2xl p-5 border border-slate-800 space-y-4 no-print">
+          <h3 class="text-sm font-bold text-white flex items-center gap-2 border-b border-slate-800 pb-2.5">
+            <i class="fa-solid fa-pen-ruler text-violet-400"></i>
+            Submittal Report Details
+          </h3>
+
+          <div class="space-y-3 text-xs">
+            <div>
+              <label class="block font-semibold text-slate-300 mb-1">System / Equipment Tag</label>
+              <input type="text" id="psychSystemTagInput" value="AHU-1 (Main Office VAV)"
+                     oninput="handleTool8Input('systemTag', this.value)"
+                     class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 font-bold text-white outline-none focus:border-violet-500">
+            </div>
+
+            <div>
+              <label class="block font-semibold text-slate-300 mb-1">Job / Project Number</label>
+              <input type="text" id="psychJobNoInput" value="WALD-2026-08"
+                     oninput="handleTool8Input('jobNumber', this.value)"
+                     class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 font-bold text-white outline-none focus:border-violet-500">
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block font-semibold text-slate-300 mb-1">CHW Coil ΔT (°F)</label>
+                <input type="number" id="psychCHWDeltaTInput" value="12.0" step="1" min="6" max="24"
+                       oninput="handleTool8Input('chwDeltaT', this.value)"
+                       class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 font-bold text-sky-400 mono outline-none">
+              </div>
+              <div>
+                <label class="block font-semibold text-slate-300 mb-1">HW Coil ΔT (°F)</label>
+                <input type="number" id="psychHWDeltaTInput" value="20.0" step="2" min="10" max="60"
+                       oninput="handleTool8Input('hwDeltaT', this.value)"
+                       class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 font-bold text-rose-400 mono outline-none">
+              </div>
+            </div>
+
+            <div>
+              <label class="block font-semibold text-slate-300 mb-1">Engineering Notes / Remarks</label>
+              <textarea id="psychReportNotesInput" rows="3"
+                        oninput="handleTool8Input('reportNotes', this.value)"
+                        class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-slate-200 outline-none focus:border-violet-500">Design analysis per ASHRAE Fundamentals Ch. 1. Coil capacities include sensible fan heat gain and adiabatic mass mixing.</textarea>
+            </div>
+          </div>
+
+          <div class="pt-3 border-t border-slate-800 space-y-2">
+            <button onclick="exportTool8SubmittalPDF()" class="w-full py-2.5 px-4 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-bold text-xs shadow-lg shadow-violet-600/25 transition flex items-center justify-center gap-2">
+              <i class="fa-solid fa-file-pdf"></i> Download Engineered PDF Submittal
+            </button>
+            <button onclick="window.print()" class="w-full py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold text-xs transition flex items-center justify-center gap-2">
+              <i class="fa-solid fa-print"></i> Print Submittal Sheet
+            </button>
+          </div>
+        </div>
+
+        <div class="lg:col-span-8 bg-white text-slate-900 rounded-2xl p-6 sm:p-8 shadow-2xl border border-slate-300 space-y-5">
+          
+          <div class="bg-sky-700 text-white p-4 rounded-xl flex items-center justify-between">
+            <div>
+              <h2 class="text-base font-black tracking-tight uppercase" style="color:#ffffff !important;">Psychrometric & Coil Load Engineering Submittal</h2>
+              <p class="text-[11px] text-sky-100" style="color:#e0f2fe !important;">ASHRAE Fundamentals Ch. 1 • Mechanical System Calculations Suite (v5.00)</p>
+            </div>
+            <div class="text-right text-xs font-mono">
+              <div id="subReportDate" class="font-bold" style="color:#ffffff !important;">Oct 27, 2026</div>
+              <div id="subReportJobNo" class="text-sky-200" style="color:#bae6fd !important;">WALD-2026-08</div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-100 border border-slate-300 rounded-xl p-3 text-xs">
+            <div>
+              <span class="text-[10px] font-bold uppercase text-slate-500 block">Project Name</span>
+              <span id="subReportJobName" class="font-bold text-slate-900">Commercial AHU Study</span>
+            </div>
+            <div>
+              <span class="text-[10px] font-bold uppercase text-slate-500 block">System / Tag</span>
+              <span id="subReportSystemTag" class="font-bold text-sky-800">AHU-1</span>
+            </div>
+            <div>
+              <span class="text-[10px] font-bold uppercase text-slate-500 block">Design Location</span>
+              <span id="subReportLocation" class="font-semibold text-slate-800">Des Moines, IA</span>
+            </div>
+            <div>
+              <span class="text-[10px] font-bold uppercase text-slate-500 block">Engineer</span>
+              <span id="subReportEngineer" class="font-semibold text-slate-800">Mechanical Engineer</span>
+            </div>
+            <div class="col-span-2 sm:col-span-4 pt-1 border-t border-slate-300 text-[11px] font-bold text-sky-800" id="subReportMode">
+              SUMMER MODE • DRAW-THROUGH FAN (+2.0°F Fan Heat)
+            </div>
+          </div>
+
+          <div>
+            <h4 class="text-xs font-black uppercase tracking-wider text-slate-800 mb-2">1. Equipment & Coil Load Summary</h4>
+            <div id="subReportEquipSummary"></div>
+          </div>
+
+          <div>
+            <h4 class="text-xs font-black uppercase tracking-wider text-slate-800 mb-2">2. Psychrometric State Point Schedule</h4>
+            <div class="overflow-x-auto border border-slate-300 rounded-lg">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="bg-slate-200 text-slate-800 border-b border-slate-300 text-[9.5px] font-bold uppercase">
+                    <th class="py-1.5 px-2">State Node</th>
+                    <th class="py-1.5 px-2 text-right">CFM</th>
+                    <th class="py-1.5 px-2 text-right">DB (°F)</th>
+                    <th class="py-1.5 px-2 text-right">WB (°F)</th>
+                    <th class="py-1.5 px-2 text-right">%RH</th>
+                    <th class="py-1.5 px-2 text-right">DP (°F)</th>
+                    <th class="py-1.5 px-2 text-right">h (Btu/lb)</th>
+                    <th class="py-1.5 px-2 text-right">W (lb/lb)</th>
+                    <th class="py-1.5 px-2 text-right">Grains</th>
+                    <th class="py-1.5 px-2 text-right">v (ft³/lb)</th>
+                    <th class="py-1.5 px-2 text-right">Pw (psia)</th>
+                  </tr>
+                </thead>
+                <tbody id="subReportStateTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div>
+            <h4 class="text-xs font-black uppercase tracking-wider text-slate-800 mb-2">3. ASHRAE Psychrometric Process Diagram</h4>
+            <div class="w-full h-[360px] border border-slate-300 rounded-xl overflow-hidden bg-white">
+              <canvas id="subReportChartCanvas" class="w-full h-full block"></canvas>
+            </div>
+          </div>
+
+          <div class="pt-2 border-t border-slate-300 flex items-center justify-between text-[10px] text-slate-600">
+            <span id="subReportNotes">Design analysis per ASHRAE Fundamentals Ch. 1.</span>
+            <span class="font-bold">The Waldinger Corporation — Engineering Suite</span>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+
+  <!-- SUITE GLOBAL FOOTER -->
+  <footer class="bg-slate-900 border-t border-slate-800 py-4 text-center text-xs text-slate-500 mt-auto">
+    Mechanical & Plumbing System Calculations Suite — Commercial Engineering Edition (v5.00)
+  </footer>
+
+  <!-- SAVE SESSION MODAL -->
+  <div id="saveSessionModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4 no-print">
+    <div class="glass-card bg-slate-900/95 border border-slate-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-5 animate-fade-in relative">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-floppy-disk text-emerald-400"></i> Save & Sync Project Session
+        </h3>
+        <button onclick="closeSaveSessionModal()" class="text-slate-400 hover:text-white text-lg p-1">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <p class="text-xs text-slate-400 leading-normal">
+        Save your working session to your browser library and cloud database so you can recall it anytime across all tools.
+      </p>
+
+      <div class="space-y-4 text-xs">
+        <div>
+          <label class="block font-bold text-slate-300 mb-1">Save Option / Target Session</label>
+          <select id="saveSessionTargetSelect" onchange="handleSaveSessionTargetChange(this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 font-semibold text-white outline-none focus:border-violet-500 transition">
+            <option value="new">+ Save as New Project Session</option>
+          </select>
+        </div>
+        <div>
+          <label class="block font-bold text-slate-300 mb-1">Project Name <span class="text-emerald-400">*</span></label>
+          <input type="text" id="modalProjectName" placeholder="e.g. Commercial Office Building" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 font-bold text-white outline-none focus:border-emerald-500 transition">
+        </div>
+        <div>
+          <label class="block font-bold text-slate-400 mb-1">Author / Engineer</label>
+          <input type="text" id="modalAuthor" placeholder="e.g. Michael Salmon" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-slate-200 outline-none focus:border-emerald-500 transition">
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between gap-2 pt-3 border-t border-slate-800">
+        <button onclick="exportActiveSessionAsJSON()" class="px-3.5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold border border-slate-700 transition flex items-center gap-1.5" title="Download portable .json backup file">
+          <i class="fa-solid fa-download"></i> Export .JSON File
+        </button>
+        <div class="flex items-center gap-2">
+          <button onclick="closeSaveSessionModal()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition">Cancel</button>
+          <button onclick="saveActiveSessionToLibrary()" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs transition shadow-lg shadow-emerald-600/20 flex items-center gap-1.5">
+            <i class="fa-solid fa-floppy-disk"></i> Save Session
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="toastNotification" class="fixed bottom-6 right-6 z-50 hidden transition-all duration-300 no-print">
+    <div class="bg-slate-900 border border-slate-700 text-white px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3">
+      <div id="toastIcon" class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
+        <i class="fa-solid fa-circle-check"></i>
+      </div>
+      <div>
+        <p id="toastTitle" class="text-xs font-bold text-white">Project Saved</p>
+        <p id="toastMessage" class="text-[11px] text-slate-400">Session synced successfully.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCRIPTS -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="shared_project_library.js"></script>
+  <script src="common.js"></script>
+  <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+  <script src="tool8.js"></script>
+
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      initTheme();
+      initTool8();
+      loadActiveDraftState();
+      initFirebaseFirestore();
+    });
+
+    window.addEventListener('input', () => saveActiveDraftState());
+    window.addEventListener('change', () => saveActiveDraftState());
+  </script>
+
+</body>
+</html>

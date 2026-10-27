@@ -24,6 +24,8 @@ The **Mechanical System Calculations Suite** is an engineering calculation platf
      - **Tool 4 (HVAC Ductulator):** `tool4_hvac_ductulator.html` + `tool4.js`
      - **Tool 5 (Fuel Gas Sizer):** `tool5_fuel_gas.html` + `tool5.js`
      - **Tool 6 (Duct Loss Estimator):** `tool6_duct_loss.html` + `tool6.js`
+     - **Tool 7 (Grease Interceptor Sizer):** `tool7_grease_interceptor.html` + `tool7.js`
+     - **Tool 8 (Psychrometric Analyzer):** `tool8_psychrometric_analyzer.html` + `tool8.js`
      - **Shared Core:** `common.js` + `shared_project_library.js`
      - **Optional Local Server:** `suite_server.py`
 
@@ -58,6 +60,10 @@ mechanical-calculations-suite/         # Primary active Git repository & GitHub 
 ├── tool5.js                          # Tool 5 Engine: Spitzglass / Weymouth equations, gas properties DB
 ├── tool6_duct_loss.html              # Tool 6 UI: Critical path equivalent length & static pressure loss sizer
 ├── tool6.js                          # Tool 6 Engine: Loren Cook Cookbook fitting loss tables & solver
+├── tool7_grease_interceptor.html     # Tool 7 UI: WRA Grease Interceptor sizer & official proposal generator
+├── tool7.js                          # Tool 7 Engine: WRA FOG ordinance calculation & pdf-lib vector form export
+├── tool8_psychrometric_analyzer.html # Tool 8 UI: Interactive AHU schematic, psychrometric chart & submittal report
+├── tool8.js                          # Tool 8 Engine: ASHRAE Ch. 1 psychrometric solver, coil curves & PDF export
 ├── common.js                         # Core framework: state sync, session library, Firestore, theme toggling
 ├── shared_project_library.js         # Static serialized JavaScript array for team-wide project sharing
 ├── LAUNCH_LOCAL_SERVER.bat           # 1-click local server launcher
@@ -226,6 +232,8 @@ The suite employs a dual-theme architecture: **Dark Glassmorphic Theme** (defaul
 | **Tool 4: Ductulator** | Teal / Mint | `bg-teal-600` | `focus:border-teal-500` | `bg-teal-500/10 text-teal-600 border-teal-500/20` |
 | **Tool 5: Fuel Gas** | Amber / Orange | `bg-amber-600` | `focus:border-amber-500` | `bg-amber-500/10 text-amber-400 border-amber-500/20` |
 | **Tool 6: Duct Loss** | Rose / Crimson | `bg-rose-600` | `focus:border-rose-500` | `bg-rose-500/10 text-rose-400 border-rose-500/20` |
+| **Tool 7: Grease Sizer** | Amber / Gold | `bg-amber-600` | `focus:border-amber-500` | `bg-amber-500/10 text-amber-500 border-amber-500/20` |
+| **Tool 8: Psychrometrics** | Violet / Purple | `bg-violet-600` | `focus:border-violet-500` | `bg-violet-500/10 text-violet-400 border-violet-500/20` |
 
 ### 5.2 Light Mode CSS Blueprint
 Every tool HTML file contains a `<style>` block with explicit Light Mode contrast rules. When adding new custom cards or tables, add matching rules:
