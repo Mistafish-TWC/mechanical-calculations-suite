@@ -1,6 +1,11 @@
 // ===================================================================
 // TOOL 4 ENGINE (HVAC DUCTULATOR)
 // ===================================================================
+const TOOL4_MAX_CFM = 100000;
+const TOOL4_MAX_RECT_DIM = 240;
+const TOOL4_MAX_PLENUM_Y = 120;
+const TOOL4_MAX_REV_ROUND = 144;
+
 var activeDuctMode = 'friction';
 var currentDuctCFM = 2500;
 var currentDuctFriction = 0.08;
@@ -33,15 +38,15 @@ function setDuctMode(mode) {
 }
 
 function onDuctCFMInput(src, val) {
-  const num = Math.max(10, Math.min(50000, parseFloat(val) || 10));
+  const num = Math.max(10, Math.min(TOOL4_MAX_CFM, parseFloat(val) || 10));
   currentDuctCFM = num;
   const slider = document.getElementById('ductSliderCFM');
   const input = document.getElementById('ductInputCFM');
   const display = document.getElementById('ductDisplayCFM');
   
-  if (slider) slider.value = Math.min(50000, num);
-  if (input && document.activeElement !== input) input.value = Math.round(num);
-  if (display) display.innerText = num.toLocaleString() + ' CFM';
+  if (slider) slider.value = Math.min(TOOL4_MAX_CFM, num);
+  if (input && (src === 'blur' || document.activeElement !== input)) input.value = Math.round(num);
+  if (display) display.innerText = Math.round(num).toLocaleString() + ' CFM';
   calculateDuctulator('cfm');
 }
 
@@ -76,8 +81,28 @@ function calcHuebscherDe(a, b) {
   return 1.30 * Math.pow(a * b, 0.625) / Math.pow(a + b, 0.25);
 }
 
+/**
+ * Find the smallest positive integer side length (up to 10,000 in) whose
+ * Huebscher equivalent diameter meets or exceeds targetDe for a fixed side.
+ */
+function solveRectSideForDe(fixedSide, targetDe) {
+  if (fixedSide <= 0 || targetDe <= 0 || calcHuebscherDe(fixedSide, 1) >= targetDe) return 1;
+  let lo = 1;
+  let hi = 10000;
+  if (calcHuebscherDe(fixedSide, hi) < targetDe) return hi;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    if (calcHuebscherDe(fixedSide, mid) >= targetDe) {
+      hi = mid;
+    } else {
+      lo = mid + 1;
+    }
+  }
+  return lo;
+}
+
 function syncDuctX(src, val) {
-  const num = Math.max(4, Math.min(120, parseInt(val, 10) || 18));
+  const num = Math.max(4, Math.min(TOOL4_MAX_RECT_DIM, parseInt(val, 10) || 18));
   currentDuctX = num;
   const slider = document.getElementById('ductSliderX');
   const input = document.getElementById('ductInputX');
@@ -90,7 +115,7 @@ function syncDuctX(src, val) {
 }
 
 function syncDuctY(src, val) {
-  let num = Math.max(4, Math.min(120, parseInt(val, 10) || 16));
+  let num = Math.max(4, Math.min(TOOL4_MAX_RECT_DIM, parseInt(val, 10) || 16));
   if (isPlenumLimitLocked && num > plenumLimitY) {
     num = plenumLimitY;
   }
@@ -117,7 +142,7 @@ function togglePlenumLimit(forceState) {
 }
 
 function onPlenumLimitInput(val) {
-  const num = Math.max(4, Math.min(60, parseInt(val, 10) || 15));
+  const num = Math.max(4, Math.min(TOOL4_MAX_PLENUM_Y, parseInt(val, 10) || 15));
   plenumLimitY = num;
   const inp = document.getElementById('inputPlenumLimitY');
   if (inp && document.activeElement !== inp) inp.value = num;
@@ -166,7 +191,7 @@ function updatePlenumLimitUI() {
       badge.classList.add('hidden');
     }
     if (sliderY) {
-      sliderY.max = 120;
+      sliderY.max = TOOL4_MAX_RECT_DIM;
     }
     const box = document.getElementById('ductRecSizeBox');
     if (box) box.classList.add('hidden');
@@ -176,7 +201,7 @@ function updatePlenumLimitUI() {
 function findOptimalRecommendedDuct(Q, De_exact, maxY) {
   const candidates = [];
   for (let y = 4; y <= maxY; y++) {
-    for (let x = 4; x <= 120; x++) {
+    for (let x = 4; x <= TOOL4_MAX_RECT_DIM; x++) {
       const de = calcHuebscherDe(x, y);
       if (de >= De_exact) {
         const aspect = Math.max(x, y) / Math.min(x, y);
@@ -204,7 +229,7 @@ function findOptimalRecommendedDuct(Q, De_exact, maxY) {
     let best = null;
     let minAsp = 999;
     for (let y = 4; y <= maxY; y++) {
-      for (let x = 4; x <= 120; x++) {
+      for (let x = 4; x <= TOOL4_MAX_RECT_DIM; x++) {
         const de = calcHuebscherDe(x, y);
         if (de >= De_exact) {
           const aspect = Math.max(x, y) / Math.min(x, y);
@@ -250,7 +275,7 @@ function applyRecommendedDuctSize() {
   const sX = document.getElementById('ductSliderX');
   if (dX) dX.innerText = currentDuctX + '"';
   if (iX) iX.value = currentDuctX;
-  if (sX) sX.value = Math.min(120, currentDuctX);
+  if (sX) sX.value = Math.min(TOOL4_MAX_RECT_DIM, currentDuctX);
 
   const dY = document.getElementById('ductDisplayY');
   const iY = document.getElementById('ductInputY');
@@ -283,7 +308,7 @@ function calculateDuctulator(changedSource) {
     const sF = document.getElementById('ductSliderFriction');
     if (dF) dF.innerText = currentDuctFriction.toFixed(2) + ' in. w.g.';
     if (iF && document.activeElement !== iF) iF.value = currentDuctFriction.toFixed(2);
-    if (sF) sF.value = currentDuctFriction;
+    if (sF) sF.value = Math.min(1.0, Math.max(0.01, currentDuctFriction));
   } else {
     const dV = document.getElementById('ductDisplayVelocity');
     const iV = document.getElementById('ductInputVelocity');
@@ -305,18 +330,14 @@ function calculateDuctulator(changedSource) {
     if (changedSource !== 'y') {
       Y = plenumLimitY;
       currentDuctY = Y;
-      let solvedX = 1;
-      while (calcHuebscherDe(solvedX, Y) < De_exact && solvedX < 200) solvedX++;
-      X = solvedX;
+      X = solveRectSideForDe(Y, De_exact);
       currentDuctX = X;
     } else {
       if (Y > plenumLimitY) {
         Y = plenumLimitY;
         currentDuctY = Y;
       }
-      let solvedX = 1;
-      while (calcHuebscherDe(solvedX, Y) < De_exact && solvedX < 200) solvedX++;
-      X = solvedX;
+      X = solveRectSideForDe(Y, De_exact);
       currentDuctX = X;
     }
     const dX = document.getElementById('ductDisplayX');
@@ -324,7 +345,7 @@ function calculateDuctulator(changedSource) {
     const sX = document.getElementById('ductSliderX');
     if (dX) dX.innerText = X + '"';
     if (iX && document.activeElement !== iX) iX.value = X;
-    if (sX) sX.value = Math.min(120, X);
+    if (sX) sX.value = Math.min(TOOL4_MAX_RECT_DIM, X);
 
     const dY = document.getElementById('ductDisplayY');
     const iY = document.getElementById('ductInputY');
@@ -338,27 +359,23 @@ function calculateDuctulator(changedSource) {
   } else {
     // Normal unlocked standard sizing
     if (changedSource !== 'y') {
-      let solvedY = 1;
-      while (calcHuebscherDe(X, solvedY) < De_exact && solvedY < 200) solvedY++;
-      Y = solvedY;
+      Y = solveRectSideForDe(X, De_exact);
       currentDuctY = Y;
       const dY = document.getElementById('ductDisplayY');
       const iY = document.getElementById('ductInputY');
       const sY = document.getElementById('ductSliderY');
       if (dY) dY.innerText = Y + '"';
       if (iY && document.activeElement !== iY) iY.value = Y;
-      if (sY) sY.value = Math.min(120, Y);
+      if (sY) sY.value = Math.min(TOOL4_MAX_RECT_DIM, Y);
     } else {
-      let solvedX = 1;
-      while (calcHuebscherDe(solvedX, Y) < De_exact && solvedX < 200) solvedX++;
-      X = solvedX;
+      X = solveRectSideForDe(Y, De_exact);
       currentDuctX = X;
       const dX = document.getElementById('ductDisplayX');
       const iX = document.getElementById('ductInputX');
       const sX = document.getElementById('ductSliderX');
       if (dX) dX.innerText = X + '"';
       if (iX && document.activeElement !== iX) iX.value = X;
-      if (sX) sX.value = Math.min(120, X);
+      if (sX) sX.value = Math.min(TOOL4_MAX_RECT_DIM, X);
     }
   }
 
@@ -410,7 +427,18 @@ function calculateDuctulator(changedSource) {
       if (recDims) recDims.innerText = `${recommendedDuctSize.x}" × ${recommendedDuctSize.y}"`;
       if (recVel) recVel.innerText = `${Math.round(recommendedDuctSize.vel).toLocaleString()} FPM`;
       if (recDe) recDe.innerText = `${recommendedDuctSize.de.toFixed(2)}"`;
-      if (recBadge) recBadge.innerText = `Aspect ${recommendedDuctSize.aspect.toFixed(1)}:1 (Optimal)`;
+      if (recBadge) {
+        if (recommendedDuctSize.aspect <= 2.5) {
+          recBadge.innerText = `Aspect ${recommendedDuctSize.aspect.toFixed(1)}:1 (Optimal)`;
+          recBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
+        } else if (recommendedDuctSize.aspect <= 4.0) {
+          recBadge.innerText = `Aspect ${recommendedDuctSize.aspect.toFixed(1)}:1 (High)`;
+          recBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30';
+        } else {
+          recBadge.innerText = `Aspect ${recommendedDuctSize.aspect.toFixed(1)}:1 (>4:1 Exceeds SMACNA)`;
+          recBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded bg-rose-500/20 text-rose-500 border border-rose-500/30';
+        }
+      }
 
       const isCurrentApplied = (X === recommendedDuctSize.x && Y === recommendedDuctSize.y);
       if (isCurrentApplied) {
@@ -627,7 +655,7 @@ function onRevDuctVelocityInput(src, val) {
 function solveBestRectY(X, targetDe) {
   let bestY = 4;
   let minDiff = 999999;
-  for (let y = 4; y <= 120; y++) {
+  for (let y = 4; y <= TOOL4_MAX_RECT_DIM; y++) {
     const de = calcHuebscherDe(X, y);
     const diff = Math.abs(de - targetDe);
     if (diff < minDiff) {
@@ -640,14 +668,14 @@ function solveBestRectY(X, targetDe) {
 
 // Tandem Handler 1: Round Duct Diameter Changed
 function onRevDuctRoundInput(src, val) {
-  const num = Math.max(4, Math.min(100, parseInt(val, 10) || 18));
+  const num = Math.max(4, Math.min(TOOL4_MAX_REV_ROUND, parseInt(val, 10) || 18));
   revDuctRoundD = num;
 
   const slider = document.getElementById('revDuctSliderRound');
   const input = document.getElementById('revDuctInputRound');
   const display = document.getElementById('revDuctDisplayRound');
 
-  if (slider) slider.value = Math.min(60, num);
+  if (slider) slider.value = Math.min(TOOL4_MAX_REV_ROUND, num);
   if (input && document.activeElement !== input) input.value = num;
   if (display) display.innerText = num + '"';
 
@@ -658,7 +686,7 @@ function onRevDuctRoundInput(src, val) {
   const sliderY = document.getElementById('revDuctSliderY');
   const inputY = document.getElementById('revDuctInputY');
   const displayY = document.getElementById('revDuctDisplayY');
-  if (sliderY) sliderY.value = Math.min(120, solvedY);
+  if (sliderY) sliderY.value = Math.min(TOOL4_MAX_RECT_DIM, solvedY);
   if (inputY && document.activeElement !== inputY) inputY.value = solvedY;
   if (displayY) displayY.innerText = solvedY + '"';
 
@@ -667,7 +695,7 @@ function onRevDuctRoundInput(src, val) {
 
 // Tandem Handler 2: Rectangular Width (Side X) Changed
 function onRevDuctXInput(src, val) {
-  const num = Math.max(4, Math.min(120, parseInt(val, 10) || 18));
+  const num = Math.max(4, Math.min(TOOL4_MAX_RECT_DIM, parseInt(val, 10) || 18));
   revDuctX = num;
 
   const slider = document.getElementById('revDuctSliderX');
@@ -679,13 +707,13 @@ function onRevDuctXInput(src, val) {
   if (display) display.innerText = num + '"';
 
   // Tandem coupling: Update Round Duct diameter to match equivalent diameter
-  const equivD = Math.max(4, Math.min(100, Math.round(calcHuebscherDe(revDuctX, revDuctY))));
+  const equivD = Math.max(4, Math.min(TOOL4_MAX_REV_ROUND, Math.round(calcHuebscherDe(revDuctX, revDuctY))));
   revDuctRoundD = equivD;
 
   const sliderRound = document.getElementById('revDuctSliderRound');
   const inputRound = document.getElementById('revDuctInputRound');
   const displayRound = document.getElementById('revDuctDisplayRound');
-  if (sliderRound) sliderRound.value = Math.min(60, equivD);
+  if (sliderRound) sliderRound.value = Math.min(TOOL4_MAX_REV_ROUND, equivD);
   if (inputRound && document.activeElement !== inputRound) inputRound.value = equivD;
   if (displayRound) displayRound.innerText = equivD + '"';
 
@@ -694,7 +722,7 @@ function onRevDuctXInput(src, val) {
 
 // Tandem Handler 3: Rectangular Height (Side Y) Changed
 function onRevDuctYInput(src, val) {
-  const num = Math.max(4, Math.min(120, parseInt(val, 10) || 16));
+  const num = Math.max(4, Math.min(TOOL4_MAX_RECT_DIM, parseInt(val, 10) || 16));
   revDuctY = num;
 
   const slider = document.getElementById('revDuctSliderY');
@@ -706,13 +734,13 @@ function onRevDuctYInput(src, val) {
   if (display) display.innerText = num + '"';
 
   // Tandem coupling: Update Round Duct diameter to match equivalent diameter
-  const equivD = Math.max(4, Math.min(100, Math.round(calcHuebscherDe(revDuctX, revDuctY))));
+  const equivD = Math.max(4, Math.min(TOOL4_MAX_REV_ROUND, Math.round(calcHuebscherDe(revDuctX, revDuctY))));
   revDuctRoundD = equivD;
 
   const sliderRound = document.getElementById('revDuctSliderRound');
   const inputRound = document.getElementById('revDuctInputRound');
   const displayRound = document.getElementById('revDuctDisplayRound');
-  if (sliderRound) sliderRound.value = Math.min(60, equivD);
+  if (sliderRound) sliderRound.value = Math.min(TOOL4_MAX_REV_ROUND, equivD);
   if (inputRound && document.activeElement !== inputRound) inputRound.value = equivD;
   if (displayRound) displayRound.innerText = equivD + '"';
 
@@ -941,31 +969,31 @@ function loadTool4ReverseDraft() {
     if (revState.friction) onRevDuctFrictionInput('program', revState.friction);
     if (revState.velocity) onRevDuctVelocityInput('program', revState.velocity);
     if (revState.roundD) {
-      revDuctRoundD = revState.roundD;
+      revDuctRoundD = Math.max(4, Math.min(TOOL4_MAX_REV_ROUND, parseInt(revState.roundD, 10) || 18));
       const s = document.getElementById('revDuctSliderRound');
       const i = document.getElementById('revDuctInputRound');
       const d = document.getElementById('revDuctDisplayRound');
-      if (s) s.value = revState.roundD;
-      if (i) i.value = revState.roundD;
-      if (d) d.innerText = revState.roundD + '"';
+      if (s) s.value = Math.min(TOOL4_MAX_REV_ROUND, revDuctRoundD);
+      if (i) i.value = revDuctRoundD;
+      if (d) d.innerText = revDuctRoundD + '"';
     }
     if (revState.x) {
-      revDuctX = revState.x;
+      revDuctX = Math.max(4, Math.min(TOOL4_MAX_RECT_DIM, parseInt(revState.x, 10) || 18));
       const s = document.getElementById('revDuctSliderX');
       const i = document.getElementById('revDuctInputX');
       const d = document.getElementById('revDuctDisplayX');
-      if (s) s.value = revState.x;
-      if (i) i.value = revState.x;
-      if (d) d.innerText = revState.x + '"';
+      if (s) s.value = Math.min(TOOL4_MAX_RECT_DIM, revDuctX);
+      if (i) i.value = revDuctX;
+      if (d) d.innerText = revDuctX + '"';
     }
     if (revState.y) {
-      revDuctY = revState.y;
+      revDuctY = Math.max(4, Math.min(TOOL4_MAX_RECT_DIM, parseInt(revState.y, 10) || 16));
       const s = document.getElementById('revDuctSliderY');
       const i = document.getElementById('revDuctInputY');
       const d = document.getElementById('revDuctDisplayY');
-      if (s) s.value = revState.y;
-      if (i) i.value = revState.y;
-      if (d) d.innerText = revState.y + '"';
+      if (s) s.value = Math.min(TOOL4_MAX_RECT_DIM, revDuctY);
+      if (i) i.value = revDuctY;
+      if (d) d.innerText = revDuctY + '"';
     }
     calculateReverseDuctulator('program');
     if (revState.activeTab && revState.activeTab !== activeTool4Tab) {

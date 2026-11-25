@@ -446,8 +446,8 @@
                   <span id="ductDisplayCFM" class="text-xs font-bold text-teal-600 mono">2,500 CFM</span>
                 </div>
                 <div class="flex items-center gap-2">
-                  <input type="range" id="ductSliderCFM" min="10" max="50000" step="10" value="2500" oninput="onDuctCFMInput('slider', this.value)" class="w-full accent-teal-500">
-                  <input type="number" id="ductInputCFM" min="10" max="100000" step="10" value="2500" oninput="onDuctCFMInput('input', this.value)" class="w-28 bg-slate-950 border border-slate-700 rounded-lg p-1.5 text-xs font-bold text-white text-right mono outline-none focus:border-teal-500">
+                  <input type="range" id="ductSliderCFM" min="10" max="100000" step="10" value="2500" oninput="onDuctCFMInput('slider', this.value)" class="w-full accent-teal-500">
+                  <input type="number" id="ductInputCFM" min="10" max="100000" step="10" value="2500" oninput="onDuctCFMInput('input', this.value)" onblur="onDuctCFMInput('blur', this.value)" class="w-28 bg-slate-950 border border-slate-700 rounded-lg p-1.5 text-xs font-bold text-white text-right mono outline-none focus:border-teal-500">
                 </div>
               </div>
 
@@ -499,7 +499,7 @@
                     <span id="textPlenumLock">Lock Height (Plenum Limit)</span>
                   </button>
                   <div class="flex items-center gap-1">
-                    <input type="number" id="inputPlenumLimitY" min="4" max="60" step="1" value="15" oninput="onPlenumLimitInput(this.value)" class="w-12 bg-slate-950 border border-slate-700 rounded-lg p-1 text-xs font-bold text-white text-center mono outline-none focus:border-sky-500" title="Plenum Height Limit (Inches)">
+                    <input type="number" id="inputPlenumLimitY" min="4" max="120" step="1" value="15" oninput="onPlenumLimitInput(this.value)" class="w-12 bg-slate-950 border border-slate-700 rounded-lg p-1 text-xs font-bold text-white text-center mono outline-none focus:border-sky-500" title="Plenum Height Limit (Inches)">
                     <span class="text-xs font-bold text-slate-400">"</span>
                   </div>
                 </div>
@@ -508,8 +508,8 @@
                 <div class="space-y-1">
                   <div class="flex items-center justify-between"><label class="text-xs font-semibold text-slate-300">Duct Width - Side X (Inches)</label><span id="ductDisplayX" class="text-xs font-bold text-sky-400 mono">18"</span></div>
                   <div class="flex items-center gap-2">
-                    <input type="range" id="ductSliderX" min="4" max="120" step="1" value="18" oninput="syncDuctX('slider', this.value)" class="w-full accent-sky-500">
-                    <input type="number" id="ductInputX" min="4" max="120" step="1" value="18" oninput="syncDuctX('input', this.value)" class="w-20 bg-slate-950 border border-slate-700 rounded-lg p-1 text-xs font-bold text-white text-right mono outline-none focus:border-sky-500">
+                    <input type="range" id="ductSliderX" min="4" max="240" step="1" value="18" oninput="syncDuctX('slider', this.value)" class="w-full accent-sky-500">
+                    <input type="number" id="ductInputX" min="4" max="240" step="1" value="18" oninput="syncDuctX('input', this.value)" class="w-20 bg-slate-950 border border-slate-700 rounded-lg p-1 text-xs font-bold text-white text-right mono outline-none focus:border-sky-500">
                   </div>
                 </div>
                 <div class="space-y-1">
@@ -521,8 +521,8 @@
                     <span id="ductDisplayY" class="text-xs font-bold text-amber-400 mono">16"</span>
                   </div>
                   <div class="flex items-center gap-2">
-                    <input type="range" id="ductSliderY" min="4" max="120" step="1" value="16" oninput="syncDuctY('slider', this.value)" class="w-full accent-amber-500">
-                    <input type="number" id="ductInputY" min="4" max="120" step="1" value="16" oninput="syncDuctY('input', this.value)" class="w-20 bg-slate-950 border border-slate-700 rounded-lg p-1 text-xs font-bold text-white text-right mono outline-none focus:border-amber-500">
+                    <input type="range" id="ductSliderY" min="4" max="240" step="1" value="16" oninput="syncDuctY('slider', this.value)" class="w-full accent-amber-500">
+                    <input type="number" id="ductInputY" min="4" max="240" step="1" value="16" oninput="syncDuctY('input', this.value)" class="w-20 bg-slate-950 border border-slate-700 rounded-lg p-1 text-xs font-bold text-white text-right mono outline-none focus:border-amber-500">
                   </div>
                 </div>
               </div>
@@ -691,8 +691,8 @@
                     <span id="revDuctDisplayRound" class="text-xs font-bold text-teal-400 mono">18"</span>
                   </div>
                   <div class="flex items-center gap-2">
-                    <input type="range" id="revDuctSliderRound" min="4" max="60" step="1" value="18" oninput="onRevDuctRoundInput('slider', this.value)" class="w-full accent-teal-500">
-                    <input type="number" id="revDuctInputRound" min="4" max="100" step="1" value="18" oninput="onRevDuctRoundInput('input', this.value)" class="w-20 bg-slate-950 border border-slate-700 rounded-lg p-1 text-xs font-bold text-teal-300 text-right mono outline-none focus:border-teal-500">
+                    <input type="range" id="revDuctSliderRound" min="4" max="144" step="1" value="18" oninput="onRevDuctRoundInput('slider', this.value)" class="w-full accent-teal-500">
+                    <input type="number" id="revDuctInputRound" min="4" max="144" step="1" value="18" oninput="onRevDuctRoundInput('input', this.value)" class="w-20 bg-slate-950 border border-slate-700 rounded-lg p-1 text-xs font-bold text-teal-300 text-right mono outline-none focus:border-teal-500">
                   </div>
                 </div>
 
@@ -704,8 +704,8 @@
                       <span id="revDuctDisplayX" class="text-xs font-bold text-sky-400 mono">18"</span>
                     </div>
                     <div class="flex items-center gap-2">
-                      <input type="range" id="revDuctSliderX" min="4" max="120" step="1" value="18" oninput="onRevDuctXInput('slider', this.value)" class="w-full accent-sky-500">
-                      <input type="number" id="revDuctInputX" min="4" max="120" step="1" value="18" oninput="onRevDuctXInput('input', this.value)" class="w-20 bg-slate-950 border border-slate-700 rounded-lg p-1 text-xs font-bold text-white text-right mono outline-none focus:border-sky-500">
+                      <input type="range" id="revDuctSliderX" min="4" max="240" step="1" value="18" oninput="onRevDuctXInput('slider', this.value)" class="w-full accent-sky-500">
+                      <input type="number" id="revDuctInputX" min="4" max="240" step="1" value="18" oninput="onRevDuctXInput('input', this.value)" class="w-20 bg-slate-950 border border-slate-700 rounded-lg p-1 text-xs font-bold text-white text-right mono outline-none focus:border-sky-500">
                     </div>
                   </div>
 
@@ -716,8 +716,8 @@
                       <span id="revDuctDisplayY" class="text-xs font-bold text-amber-400 mono">16"</span>
                     </div>
                     <div class="flex items-center gap-2">
-                      <input type="range" id="revDuctSliderY" min="4" max="120" step="1" value="16" oninput="onRevDuctYInput('slider', this.value)" class="w-full accent-amber-500">
-                      <input type="number" id="revDuctInputY" min="4" max="120" step="1" value="16" oninput="onRevDuctYInput('input', this.value)" class="w-20 bg-slate-950 border border-slate-700 rounded-lg p-1 text-xs font-bold text-white text-right mono outline-none focus:border-amber-500">
+                      <input type="range" id="revDuctSliderY" min="4" max="240" step="1" value="16" oninput="onRevDuctYInput('slider', this.value)" class="w-full accent-amber-500">
+                      <input type="number" id="revDuctInputY" min="4" max="240" step="1" value="16" oninput="onRevDuctYInput('input', this.value)" class="w-20 bg-slate-950 border border-slate-700 rounded-lg p-1 text-xs font-bold text-white text-right mono outline-none focus:border-amber-500">
                     </div>
                   </div>
                 </div>

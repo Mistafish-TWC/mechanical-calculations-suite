@@ -1131,7 +1131,7 @@ function importProjectState(data) {
         const sCFM = document.getElementById('ductSliderCFM');
         const iCFM = document.getElementById('ductInputCFM');
         const dCFM = document.getElementById('ductDisplayCFM');
-        if (sCFM) sCFM.value = Math.min(50000, currentDuctCFM);
+        if (sCFM) sCFM.value = Math.min(100000, currentDuctCFM);
         if (iCFM) iCFM.value = currentDuctCFM;
         if (dCFM) dCFM.innerText = currentDuctCFM.toLocaleString() + ' CFM';
       }
@@ -1158,7 +1158,7 @@ function importProjectState(data) {
         const sX = document.getElementById('ductSliderX');
         const iX = document.getElementById('ductInputX');
         const dX = document.getElementById('ductDisplayX');
-        if (sX) sX.value = Math.min(120, currentDuctX);
+        if (sX) sX.value = Math.min(240, currentDuctX);
         if (iX) iX.value = currentDuctX;
         if (dX) dX.innerText = currentDuctX + '"';
       }
@@ -1167,7 +1167,7 @@ function importProjectState(data) {
         const sY = document.getElementById('ductSliderY');
         const iY = document.getElementById('ductInputY');
         const dY = document.getElementById('ductDisplayY');
-        if (sY) sY.value = Math.min(typeof plenumLimitY !== 'undefined' && isPlenumLimitLocked ? plenumLimitY : 120, currentDuctY);
+        if (sY) sY.value = Math.min(typeof plenumLimitY !== 'undefined' && isPlenumLimitLocked ? plenumLimitY : 240, currentDuctY);
         if (iY) iY.value = currentDuctY;
         if (dY) dY.innerText = currentDuctY + '"';
       }
@@ -1190,7 +1190,7 @@ function importProjectState(data) {
         const s = document.getElementById('revDuctSliderRound');
         const i = document.getElementById('revDuctInputRound');
         const d = document.getElementById('revDuctDisplayRound');
-        if (s) s.value = revDuctRoundD;
+        if (s) s.value = Math.min(144, revDuctRoundD);
         if (i) i.value = revDuctRoundD;
         if (d) d.innerText = revDuctRoundD + '"';
       }
@@ -1199,7 +1199,7 @@ function importProjectState(data) {
         const s = document.getElementById('revDuctSliderX');
         const i = document.getElementById('revDuctInputX');
         const d = document.getElementById('revDuctDisplayX');
-        if (s) s.value = revDuctX;
+        if (s) s.value = Math.min(240, revDuctX);
         if (i) i.value = revDuctX;
         if (d) d.innerText = revDuctX + '"';
       }
@@ -1208,7 +1208,7 @@ function importProjectState(data) {
         const s = document.getElementById('revDuctSliderY');
         const i = document.getElementById('revDuctInputY');
         const d = document.getElementById('revDuctDisplayY');
-        if (s) s.value = revDuctY;
+        if (s) s.value = Math.min(240, revDuctY);
         if (i) i.value = revDuctY;
         if (d) d.innerText = revDuctY + '"';
       }
